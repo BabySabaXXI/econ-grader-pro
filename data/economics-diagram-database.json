@@ -1,0 +1,27 @@
+{
+    "metadata": {
+          "version": "1.0.0",
+          "examBoard": "Edexcel IAL (Pearson International)",
+          "qualification": "AS and A Level Economics",
+          "lastUpdated": "2025-02"
+    },
+    "units": {
+          "unit1": {"code": "WEC11", "name": "Markets in Action"},
+          "unit2": {"code": "WEC12", "name": "Macroeconomic Performance and Policy"},
+          "unit3": {"code": "WEC13", "name": "Business Behaviour"},
+          "unit4": {"code": "WEC14", "name": "Developments in the Global Economy"}
+    },
+    "diagramCategories": [
+          "Supply and Demand",
+          "Externalities (MSC/MPC/MSB/MPB)",
+          "Government Intervention",
+          "AD/AS Model",
+          "Phillips Curve",
+          "Market Structures",
+          "Labour Markets",
+          "International Trade",
+          "Exchange Rates"
+    ],
+    "totalDiagrams": 273,
+    "referenceFile": "COMPLETE_EDEXCEL_DIAGRAM_DATABASE.md"
+}
