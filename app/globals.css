@@ -4,36 +4,50 @@
 
 @layer base {
   :root {
-    /* Zen Japanese Color Palette */
-    --background: 30 20% 99%;
-    --foreground: 30 10% 10%;
+    /* Claude-Style Color Palette - Warm & Sophisticated */
+    --bg-0: #FAF9F5;
+    --bg-000: #FAF9F5;
+    --bg-100: #FFFFFF;
+    --bg-200: #F0EEE6;
+    --bg-300: #DDDDDD;
+    --text-100: #1F1E1D;
+    --text-200: #3D3D3A;
+    --text-300: #73726C;
+    --text-400: #888888;
+    --text-500: #999999;
+    --accent: #D97757;
+    --accent-hover: #C6613F;
+    --radius: 0.75rem;
+    --ease-silk: cubic-bezier(0.2, 0.0, 0, 1.0);
+
+    /* shadcn/ui compatible variables */
+    --background: 40 33% 97%;
+    --foreground: 30 5% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 30 10% 10%;
+    --card-foreground: 30 5% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 30 10% 10%;
+    --popover-foreground: 30 5% 12%;
 
-    --primary: 30 6% 20%;
-    --primary-foreground: 30 20% 98%;
+    --primary: 17 60% 60%;
+    --primary-foreground: 40 33% 97%;
 
-    --secondary: 30 10% 96%;
-    --secondary-foreground: 30 10% 25%;
+    --secondary: 40 20% 93%;
+    --secondary-foreground: 30 5% 25%;
 
-    --muted: 30 10% 96%;
-    --muted-foreground: 30 6% 45%;
+    --muted: 40 20% 93%;
+    --muted-foreground: 30 3% 46%;
 
-    --accent: 30 10% 94%;
-    --accent-foreground: 30 10% 20%;
+    --accent-color: 17 60% 60%;
+    --accent-foreground: 40 33% 97%;
 
     --destructive: 0 60% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 10% 90%;
-    --input: 30 10% 90%;
-    --ring: 30 6% 30%;
-
-    --radius: 0.75rem;
+    --border: 40 10% 87%;
+    --input: 40 10% 87%;
+    --ring: 17 60% 50%;
 
     /* Functional colors - muted but distinguishable */
     --success: 142 40% 40%;
@@ -42,6 +56,42 @@
     --warning-light: 38 50% 95%;
     --info: 200 50% 50%;
     --info-light: 200 40% 95%;
+
+    /* Shadows */
+    --shadow-input: 0 1px 2px -1px rgba(0, 0, 0, 0.08), 0 2px 8px -2px rgba(0, 0, 0, 0.04);
+    --shadow-input-hover: 0 1px 2px -1px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+    --shadow-input-focus: 0 0 0 2px rgba(217, 119, 87, 0.1), 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+  }
+
+  .dark {
+    --bg-0: #212121;
+    --bg-000: #212121;
+    --bg-100: #262624;
+    --bg-200: #30302E;
+    --bg-300: #454540;
+    --text-100: #ECECEC;
+    --text-200: #E1E1E0;
+    --text-300: #B4B4B4;
+    --text-400: #8A8A88;
+    --text-500: #6B6B65;
+    --accent: #D2996E;
+    --accent-hover: #E5AA7F;
+
+    --background: 0 0% 13%;
+    --foreground: 0 0% 93%;
+    --card: 30 3% 15%;
+    --card-foreground: 0 0% 93%;
+    --popover: 30 3% 15%;
+    --popover-foreground: 0 0% 93%;
+    --primary: 27 52% 63%;
+    --primary-foreground: 0 0% 13%;
+    --secondary: 30 3% 19%;
+    --secondary-foreground: 0 0% 93%;
+    --muted: 30 3% 19%;
+    --muted-foreground: 30 3% 54%;
+    --border: 30 3% 27%;
+    --input: 30 3% 27%;
+    --ring: 27 52% 63%;
   }
 
   * {
@@ -55,10 +105,12 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: "Inter", "Onest", system-ui, sans-serif;
   }
 
   ::selection {
-    @apply bg-stone-200 text-stone-900;
+    background-color: rgba(217, 119, 87, 0.2);
+    color: #1F1E1D;
   }
 }
 
@@ -84,7 +136,7 @@
     @apply bg-rose-50 text-rose-700 border-rose-200;
   }
 
-  /* AO Progress bar colors */
+  /* AO Progress bar colors - using accent-aware tones */
   .ao-bar-ao1 {
     @apply bg-gradient-to-r from-sky-400 to-sky-500;
   }
@@ -116,7 +168,8 @@
   }
 
   .plan-argument {
-    @apply bg-stone-50/50 border border-stone-100;
+    background-color: var(--bg-200);
+    @apply border border-[var(--bg-300)];
   }
 
   .plan-evaluation {
@@ -130,10 +183,126 @@
   .plan-conclusion {
     @apply bg-emerald-50/50 border-l-2 border-emerald-400;
   }
+
+  /* Claude-style card */
+  .claude-card {
+    background-color: var(--bg-100);
+    border: 1px solid var(--bg-300);
+    border-radius: 1rem;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.2s ease;
+  }
+
+  .claude-card:hover {
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.12);
+  }
+
+  /* Claude-style button */
+  .claude-btn {
+    background-color: var(--accent);
+    color: var(--bg-0);
+    border-radius: 0.75rem;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+
+  .claude-btn:hover {
+    background-color: var(--accent-hover);
+  }
+
+  .claude-btn:active {
+    transform: scale(0.98);
+  }
+
+  .claude-btn:disabled {
+    background-color: rgba(217, 119, 87, 0.3);
+    color: rgba(250, 249, 245, 0.6);
+    cursor: default;
+  }
+
+  /* Inline feedback annotation */
+  .inline-feedback {
+    position: relative;
+    display: inline;
+  }
+
+  .inline-feedback-marker {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    margin-left: 1rem;
+    white-space: nowrap;
+    z-index: 10;
+  }
+
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--bg-300);
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-400);
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Claude-style text colors */
+  .text-accent {
+    color: var(--accent);
+  }
+
+  .bg-accent {
+    background-color: var(--accent);
+  }
+
+  .border-accent {
+    border-color: var(--accent);
+  }
+
+  /* Smooth transitions */
+  .transition-silk {
+    transition-timing-function: var(--ease-silk);
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.2, 0, 0, 1) forwards;
 }

@@ -66,10 +66,10 @@ function BackButton({ onClick, label = "Edit Answer" }: { onClick: () => void; l
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       onClick={onClick}
-      className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 transition-colors mb-6"
+      className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--bg-200)] hover:bg-[var(--bg-300)] transition-colors mb-6"
     >
-      <ArrowLeft className="w-4 h-4 text-stone-500 group-hover:-translate-x-0.5 transition-transform" />
-      <span className="text-sm font-medium text-stone-600">{label}</span>
+      <ArrowLeft className="w-4 h-4 text-[var(--text-400)] group-hover:-translate-x-0.5 transition-transform" />
+      <span className="text-sm font-medium text-[var(--text-300)]">{label}</span>
     </motion.button>
   );
 }
@@ -642,31 +642,31 @@ function PlanResultDisplay({ result, onBack }: { result: PlanResult; onBack: () 
     >
       <BackButton onClick={onBack} label="Edit Question" />
 
-      {/* Mode Toggle */}
+      {/* Mode Toggle - Guidance vs Full */}
       <div className="flex items-center justify-center gap-3 mb-8">
         <button
           onClick={() => setPlanMode("skeleton")}
           className={cn(
             "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all",
             planMode === "skeleton"
-              ? "bg-stone-800 text-white shadow-lg"
-              : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+              ? "bg-[var(--accent)] text-[var(--bg-0)] shadow-lg"
+              : "bg-[var(--bg-200)] text-[var(--text-300)] hover:bg-[var(--bg-300)]"
           )}
         >
           <List className="w-4 h-4" />
-          Skeleton View
+          Guidance Only
         </button>
         <button
           onClick={() => setPlanMode("full")}
           className={cn(
             "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all",
             planMode === "full"
-              ? "bg-stone-800 text-white shadow-lg"
-              : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+              ? "bg-[var(--accent)] text-[var(--bg-0)] shadow-lg"
+              : "bg-[var(--bg-200)] text-[var(--text-300)] hover:bg-[var(--bg-300)]"
           )}
         >
           <FileText className="w-4 h-4" />
-          Full Detail
+          Full Content
         </button>
       </div>
 
@@ -1141,12 +1141,12 @@ function GraderInputForm({
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="w-16 h-16 rounded-2xl bg-gradient-to-br from-stone-100 to-stone-200 flex items-center justify-center mx-auto mb-5"
+          className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--bg-200)] to-[var(--bg-300)] flex items-center justify-center mx-auto mb-5"
         >
-          <CheckCircle2 className="w-8 h-8 text-stone-500" />
+          <CheckCircle2 className="w-8 h-8 text-[var(--accent)]" />
         </motion.div>
-        <h2 className="text-2xl font-light text-stone-800 mb-2">Grade Your Answer</h2>
-        <p className="text-sm text-stone-500">Get AI-powered feedback on your economics essay</p>
+        <h2 className="text-2xl font-light text-[var(--text-100)] mb-2">Grade Your Answer</h2>
+        <p className="text-sm text-[var(--text-400)]">Get AI-powered feedback on your economics essay</p>
       </div>
 
       <div className="space-y-6">
@@ -1256,12 +1256,12 @@ function PlannerInputForm({
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="w-16 h-16 rounded-2xl bg-gradient-to-br from-stone-100 to-stone-200 flex items-center justify-center mx-auto mb-5"
+          className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--bg-200)] to-[var(--bg-300)] flex items-center justify-center mx-auto mb-5"
         >
-          <FileText className="w-8 h-8 text-stone-500" />
+          <FileText className="w-8 h-8 text-[var(--accent)]" />
         </motion.div>
-        <h2 className="text-2xl font-light text-stone-800 mb-2">Plan Your Essay</h2>
-        <p className="text-sm text-stone-500">Generate a comprehensive A*-grade essay structure</p>
+        <h2 className="text-2xl font-light text-[var(--text-100)] mb-2">Plan Your Essay</h2>
+        <p className="text-sm text-[var(--text-400)]">Generate a comprehensive A*-grade essay structure</p>
       </div>
 
       <div className="space-y-6">
@@ -1489,13 +1489,13 @@ export default function HomePage() {
                    (activeMode === "planner" && plannerView === "input");
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--background))]">
+    <div className="min-h-screen bg-[var(--bg-0)]">
       {/* Header */}
-      <header className="text-center py-10 px-6 border-b border-stone-100">
+      <header className="text-center py-10 px-6 border-b border-[var(--bg-300)]">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-[11px] font-medium tracking-[0.2em] uppercase text-stone-400 mb-2"
+          className="text-[11px] font-medium tracking-[0.2em] uppercase text-[var(--text-400)] mb-2"
         >
           Pearson Edexcel IAL
         </motion.div>
@@ -1503,7 +1503,7 @@ export default function HomePage() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="text-3xl md:text-4xl font-light text-stone-800 mb-2"
+          className="text-3xl md:text-4xl font-light text-[var(--text-100)] mb-2"
         >
           Economics
         </motion.h1>
@@ -1511,7 +1511,7 @@ export default function HomePage() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-sm text-stone-400"
+          className="text-sm text-[var(--text-400)]"
         >
           AS & A Level · Units 1–4
         </motion.div>
@@ -1524,7 +1524,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="flex justify-center py-6 px-4 border-b border-stone-100"
+            className="flex justify-center py-6 px-4 border-b border-[var(--bg-300)]"
           >
             <AnimatedPillTabs
               items={tabItems}
@@ -1605,11 +1605,11 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="text-center py-10 text-xs border-t border-stone-100 mt-10">
-        <p className="text-stone-400">
+      <footer className="text-center py-10 text-xs border-t border-[var(--bg-300)] mt-10">
+        <p className="text-[var(--text-400)]">
           AI-powered grading aligned with Edexcel IAL Economics mark schemes
         </p>
-        <p className="text-stone-300 mt-1">
+        <p className="text-[var(--text-500)] mt-1">
           Always verify with your teacher or official mark schemes
         </p>
       </footer>

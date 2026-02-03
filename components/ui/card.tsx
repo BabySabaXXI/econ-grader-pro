@@ -11,8 +11,8 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-2xl border border-stone-200/60 bg-white/80 backdrop-blur-sm shadow-sm",
-      "transition-shadow duration-300 hover:shadow-md",
+      "rounded-2xl border border-[var(--bg-300)] bg-[var(--bg-100)]",
+      "shadow-claude transition-shadow duration-200 hover:shadow-claude-md",
       className
     )}
     {...props}
@@ -39,7 +39,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-sm font-medium leading-none tracking-tight text-stone-700",
+      "text-sm font-medium leading-none tracking-tight text-[var(--text-200)]",
       className
     )}
     {...props}
@@ -53,7 +53,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-stone-500", className)}
+    className={cn("text-sm text-[var(--text-400)]", className)}
     {...props}
   />
 ));
@@ -90,8 +90,8 @@ const AnimatedCard = React.forwardRef<HTMLDivElement, AnimatedCardProps>(
   ({ className, delay = 0, children }, ref) => (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 16, filter: "blur(4px)" }}
+      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
       transition={{
         type: "spring",
         stiffness: 300,
@@ -99,8 +99,8 @@ const AnimatedCard = React.forwardRef<HTMLDivElement, AnimatedCardProps>(
         delay: delay,
       }}
       className={cn(
-        "rounded-2xl border border-stone-200/60 bg-white/80 backdrop-blur-sm shadow-sm",
-        "transition-shadow duration-300 hover:shadow-md",
+        "rounded-2xl border border-[var(--bg-300)] bg-[var(--bg-100)]",
+        "shadow-claude transition-shadow duration-200 hover:shadow-claude-md",
         className
       )}
     >

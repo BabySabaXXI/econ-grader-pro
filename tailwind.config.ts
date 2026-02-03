@@ -31,7 +31,8 @@ const config: Config = {
           foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
+          DEFAULT: "var(--accent)",
+          hover: "var(--accent-hover)",
           foreground: "hsl(var(--accent-foreground))",
         },
         popover: {
@@ -42,21 +43,26 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Zen-specific colors
-        zen: {
-          stone: "hsl(var(--zen-stone))",
-          bamboo: "hsl(var(--zen-bamboo))",
-          sand: "hsl(var(--zen-sand))",
-          ink: "hsl(var(--zen-ink))",
-          paper: "hsl(var(--zen-paper))",
-          moss: "hsl(var(--zen-moss))",
-          clay: "hsl(var(--zen-clay))",
-          water: "hsl(var(--zen-water))",
+        // Claude-style semantic colors
+        bg: {
+          "0": "var(--bg-0)",
+          "000": "var(--bg-000)",
+          "100": "var(--bg-100)",
+          "200": "var(--bg-200)",
+          "300": "var(--bg-300)",
+        },
+        text: {
+          "100": "var(--text-100)",
+          "200": "var(--text-200)",
+          "300": "var(--text-300)",
+          "400": "var(--text-400)",
+          "500": "var(--text-500)",
         },
       },
       fontFamily: {
         sans: [
           "Inter",
+          "Onest",
           "-apple-system",
           "BlinkMacSystemFont",
           "Segoe UI",
@@ -64,6 +70,11 @@ const config: Config = {
           "Helvetica Neue",
           "Arial",
           "sans-serif",
+        ],
+        serif: [
+          "Source Serif 4",
+          "Georgia",
+          "serif",
         ],
       },
       fontSize: {
@@ -73,74 +84,90 @@ const config: Config = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "1rem",
+        "2xl": "1.5rem",
       },
       boxShadow: {
-        "zen-sm": "0 1px 3px -1px hsl(30 10% 12% / 0.04)",
-        zen: "0 2px 8px -2px hsl(30 10% 12% / 0.06)",
-        "zen-md": "0 4px 16px -4px hsl(30 10% 12% / 0.08)",
-        "zen-lg": "0 8px 30px -8px hsl(30 10% 12% / 0.12)",
-        "zen-xl": "0 16px 50px -12px hsl(30 10% 12% / 0.16)",
+        "claude-sm": "0 1px 2px -1px rgba(0, 0, 0, 0.08), 0 2px 8px -2px rgba(0, 0, 0, 0.04)",
+        "claude": "0 0 15px rgba(0, 0, 0, 0.08)",
+        "claude-md": "0 0 20px rgba(0, 0, 0, 0.12)",
+        "claude-lg": "0 0 25px rgba(0, 0, 0, 0.15)",
+        "claude-focus": "0 0 0 2px rgba(217, 119, 87, 0.1), 0 4px 12px -2px rgba(0, 0, 0, 0.08)",
+        // Legacy zen shadows for compatibility
+        "zen-sm": "0 1px 3px -1px rgba(31, 30, 29, 0.04)",
+        zen: "0 2px 8px -2px rgba(31, 30, 29, 0.06)",
+        "zen-md": "0 4px 16px -4px rgba(31, 30, 29, 0.08)",
+        "zen-lg": "0 8px 30px -8px rgba(31, 30, 29, 0.12)",
+        "zen-xl": "0 16px 50px -12px rgba(31, 30, 29, 0.16)",
       },
       animation: {
-        // Zen animations - smooth, deliberate, calming
-        "zen-fade-in": "zenFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
-        "zen-slide-up": "zenSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards",
-        "zen-slide-down": "zenSlideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards",
-        "zen-scale-in": "zenScaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-        "zen-spin": "zenSpin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite",
-        "zen-pulse": "zenPulse 2s ease-in-out infinite",
-        "zen-progress": "zenProgress 1s cubic-bezier(0.16, 1, 0.3, 1) forwards",
-        "zen-float": "zenFloat 4s ease-in-out infinite",
-        "zen-breathe": "zenBreathe 3s ease-in-out infinite",
-        "zen-ripple": "zenRipple 0.6s ease-out forwards",
-        // Legacy support
-        "fade-in": "zenFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
-        "slide-up": "zenSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards",
-        "scale-in": "zenScaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-        "spin-slow": "zenSpin 2s linear infinite",
-        progress: "zenProgress 1s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        // Claude-style animations - smooth, deliberate
+        "fade-in": "fadeIn 0.4s cubic-bezier(0.2, 0, 0, 1) forwards",
+        "slide-up": "slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards",
+        "slide-down": "slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards",
+        "scale-in": "scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+        "spin-slow": "spin 2s linear infinite",
+        "pulse-soft": "pulseSoft 2s ease-in-out infinite",
+        "float": "float 4s ease-in-out infinite",
+        "breathe": "breathe 3s ease-in-out infinite",
+        "blink": "blink 1.5s infinite",
+        // Legacy zen animations
+        "zen-fade-in": "fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
+        "zen-slide-up": "slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards",
+        "zen-slide-down": "slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards",
+        "zen-scale-in": "scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+        "zen-spin": "spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite",
+        "zen-pulse": "pulseSoft 2s ease-in-out infinite",
+        "zen-progress": "progress 1s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "zen-float": "float 4s ease-in-out infinite",
+        "zen-breathe": "breathe 3s ease-in-out infinite",
+        "zen-ripple": "ripple 0.6s ease-out forwards",
+        progress: "progress 1s cubic-bezier(0.16, 1, 0.3, 1) forwards",
       },
       keyframes: {
-        zenFadeIn: {
-          from: { opacity: "0", transform: "translateY(8px)" },
-          to: { opacity: "1", transform: "translateY(0)" },
+        fadeIn: {
+          from: { opacity: "0", transform: "translateY(8px) scale(0.98)", filter: "blur(4px)" },
+          to: { opacity: "1", transform: "translateY(0) scale(1)", filter: "blur(0)" },
         },
-        zenSlideUp: {
+        slideUp: {
           from: { opacity: "0", transform: "translateY(16px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
-        zenSlideDown: {
+        slideDown: {
           from: { opacity: "0", transform: "translateY(-16px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
-        zenScaleIn: {
+        scaleIn: {
           from: { opacity: "0", transform: "scale(0.97)" },
           to: { opacity: "1", transform: "scale(1)" },
         },
-        zenSpin: {
-          to: { transform: "rotate(360deg)" },
-        },
-        zenPulse: {
+        pulseSoft: {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.5" },
         },
-        zenProgress: {
+        progress: {
           from: { width: "0%" },
         },
-        zenFloat: {
+        float: {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-4px)" },
         },
-        zenBreathe: {
+        breathe: {
           "0%, 100%": { opacity: "0.4" },
           "50%": { opacity: "0.7" },
         },
-        zenRipple: {
+        ripple: {
           "0%": { transform: "scale(0)", opacity: "0.5" },
           "100%": { transform: "scale(2.5)", opacity: "0" },
         },
+        blink: {
+          "0%, 100%": { opacity: "0.2" },
+          "50%": { opacity: "0.8" },
+        },
       },
       transitionTimingFunction: {
+        "silk": "cubic-bezier(0.2, 0, 0, 1)",
+        "bounce-soft": "cubic-bezier(0.34, 1.56, 0.64, 1)",
         "zen-ease": "cubic-bezier(0.16, 1, 0.3, 1)",
         "zen-bounce": "cubic-bezier(0.34, 1.56, 0.64, 1)",
       },

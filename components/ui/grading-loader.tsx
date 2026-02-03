@@ -31,7 +31,7 @@ export function GradingLoader({
   gridSize = 12,
   cellShape = "circle",
   cellGap = 4,
-  cellColor = "#d6d3d1",
+  cellColor = "#D97757", // Using Claude terracotta accent
   blinkSpeed = 1500,
 }: GradingLoaderProps) {
   const [gridCells, setGridCells] = useState<GridCell[]>([]);
@@ -108,10 +108,10 @@ export function GradingLoader({
               @keyframes blink {
                 0%,
                 100% {
-                  opacity: 0.2;
+                  opacity: 0.15;
                 }
                 50% {
-                  opacity: 0.8;
+                  opacity: 0.6;
                 }
               }
             `}</style>
@@ -134,15 +134,18 @@ export function GradingLoader({
               />
             ))}
 
-            {/* Overlay gradient for depth */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/20 pointer-events-none" />
+            {/* Overlay gradient for depth - warm tone */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[var(--bg-0)]/20 pointer-events-none" />
           </div>
 
           {/* Progress indicator */}
           {progress !== undefined && (
-            <div className="w-48 h-1.5 bg-stone-100 rounded-full overflow-hidden mb-4">
+            <div className="w-48 h-1.5 bg-[var(--bg-200)] rounded-full overflow-hidden mb-4">
               <motion.div
-                className="h-full bg-gradient-to-r from-stone-400 to-stone-500 rounded-full"
+                className="h-full rounded-full"
+                style={{
+                  background: "linear-gradient(90deg, var(--accent), var(--accent-hover))"
+                }}
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.3 }}
@@ -158,18 +161,19 @@ export function GradingLoader({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
-              className="text-sm text-stone-500 text-center"
+              className="text-sm text-[var(--text-400)] text-center font-medium"
             >
               {currentMessage}
             </motion.p>
           </AnimatePresence>
 
-          {/* Subtle pulsing ring */}
+          {/* Subtle pulsing ring - accent color */}
           <motion.div
-            className="absolute w-64 h-64 rounded-full border border-stone-200"
+            className="absolute w-64 h-64 rounded-full border"
+            style={{ borderColor: "var(--accent)" }}
             animate={{
               scale: [1, 1.1, 1],
-              opacity: [0.3, 0.1, 0.3],
+              opacity: [0.2, 0.08, 0.2],
             }}
             transition={{
               duration: 3,
