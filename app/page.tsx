@@ -1,6 +1,16 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  CheckCircle2,
+  FileText,
+  Upload,
+  Trash2,
+  Check,
+  ArrowRight,
+  Sparkles
+} from "lucide-react";
 import {
   QUESTION_TYPE_OPTIONS,
   MARK_SCHEMES,
@@ -11,126 +21,53 @@ import {
   PlanResult,
   QuestionType,
 } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { AnimatedButton } from "@/components/ui/button";
+import { AnimatedPillTabs } from "@/components/ui/tabs";
+import { AnimatedCard, Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Select } from "@/components/ui/select";
+import { CircularProgress, LinearProgress } from "@/components/ui/progress";
+import { LoadingOverlay, Spinner } from "@/components/ui/spinner";
 
 // ============================================================================
-// ICONS - Refined, minimal line icons with Zen aesthetic
+// SCORE COLOR HELPER
 // ============================================================================
 
-const GraderIcon = () => (
-  <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const PlannerIcon = () => (
-  <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-  </svg>
-);
-
-const UploadIcon = () => (
-  <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-  </svg>
-);
-
-const ArrowIcon = () => (
-  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-  </svg>
-);
-
-const SpinnerIcon = () => (
-  <svg className="w-4 h-4 animate-zen-spin" fill="none" viewBox="0 0 24 24">
-    <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-    <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-  </svg>
-);
-
-const TrashIcon = () => (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-  </svg>
-);
-
-const EmptyStateIcon = () => (
-  <svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={0.75}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-  </svg>
-);
-
-// ============================================================================
-// LOADING OVERLAY COMPONENT - Minimal, meditative
-// ============================================================================
-
-function LoadingOverlay({ message }: { message: string }) {
-  return (
-    <div className="loading-overlay">
-      <div className="flex flex-col items-center">
-        <div className="loading-spinner" />
-        <p className="loading-text">{message}</p>
-      </div>
-    </div>
-  );
+function getScoreColor(percentage: number): string {
+  if (percentage >= 80) return "hsl(142 40% 40%)"; // emerald
+  if (percentage >= 60) return "hsl(200 50% 50%)"; // sky
+  if (percentage >= 45) return "hsl(38 70% 50%)";  // amber
+  return "hsl(0 60% 50%)";                          // rose
 }
 
 // ============================================================================
-// CIRCULAR SCORE COMPONENT - Elegant, refined
+// LEVEL BADGE COMPONENT
 // ============================================================================
 
-function CircularScore({ percentage, size = 120 }: { percentage: number; size?: number }) {
-  const strokeWidth = 5;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const offset = circumference - (percentage / 100) * circumference;
-
-  // Muted color palette for scores - keeping color coding functional
-  const getColor = () => {
-    if (percentage >= 80) return "hsl(95 20% 42%)";   // Moss green
-    if (percentage >= 60) return "hsl(200 25% 50%)";  // Calm water
-    if (percentage >= 45) return "hsl(30 40% 55%)";   // Clay/amber
-    return "hsl(10 45% 50%)";                          // Muted terracotta
+function LevelBadge({ level }: { level: number }) {
+  const labels: Record<number, string> = {
+    5: "Excellent",
+    4: "Good",
+    3: "Sound",
+    2: "Basic",
+    1: "Limited",
   };
 
+  const badgeClass = `badge-level-${level}`;
+
   return (
-    <div className="score-circle" style={{ width: size, height: size }}>
-      <svg width={size} height={size}>
-        <circle
-          className="score-circle-bg"
-          fill="transparent"
-          r={radius}
-          cx={size / 2}
-          cy={size / 2}
-        />
-        <circle
-          className="score-circle-fill"
-          stroke={getColor()}
-          fill="transparent"
-          r={radius}
-          cx={size / 2}
-          cy={size / 2}
-          style={{
-            strokeDasharray: circumference,
-            strokeDashoffset: offset,
-          }}
-        />
-      </svg>
-      <div className="score-circle-text">
-        <span className="score-percentage">{percentage}%</span>
-        <span className="score-label">Overall</span>
-      </div>
-    </div>
+    <span className={cn(
+      "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border",
+      badgeClass
+    )}>
+      Level {level} · {labels[level] || "Unknown"}
+    </span>
   );
 }
 
 // ============================================================================
-// AO SCORE BAR COMPONENT - Clean, minimal
+// AO SCORE BAR COMPONENT
 // ============================================================================
 
 function AOScoreBar({
@@ -149,70 +86,68 @@ function AOScoreBar({
   const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
 
   return (
-    <div className="ao-score-item" style={{ animationDelay: `${delay}ms` }}>
-      <span className="ao-label">{label}</span>
-      <div className="ao-bar-container">
-        <div
-          className={`ao-bar-fill ${aoKey} animate-progress`}
-          style={{ width: `${percentage}%`, animationDelay: `${delay}ms` }}
+    <motion.div
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay, duration: 0.4 }}
+      className="flex items-center gap-4 py-3"
+    >
+      <span className="w-10 text-xs font-semibold text-stone-500">{label}</span>
+      <div className="flex-1 h-2 rounded-full bg-stone-100 overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${percentage}%` }}
+          transition={{ delay: delay + 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className={cn("h-full rounded-full", `ao-bar-${aoKey}`)}
         />
       </div>
-      <span className="ao-score-text">
+      <span className="w-12 text-right text-xs font-semibold text-stone-700">
         {score}/{maxScore}
       </span>
-    </div>
+    </motion.div>
   );
 }
 
 // ============================================================================
-// LEVEL BADGE COMPONENT - Subtle, informative
+// FEEDBACK ITEM COMPONENT
 // ============================================================================
 
-function LevelBadge({ level }: { level: number }) {
-  const labels: Record<number, string> = {
-    5: "Excellent",
-    4: "Good",
-    3: "Sound",
-    2: "Basic",
-    1: "Limited",
-  };
-
-  return (
-    <span className={`level-badge level-${level}`}>
-      Level {level} · {labels[level] || "Unknown"}
-    </span>
-  );
-}
-
-// ============================================================================
-// SECTION HEADER COMPONENT - Consistent styling
-// ============================================================================
-
-function SectionHeader({
-  title,
-  icon,
-  variant = "default"
+function FeedbackItem({
+  text,
+  type,
+  delay = 0,
 }: {
-  title: string;
-  icon?: React.ReactNode;
-  variant?: "default" | "strength" | "improvement";
+  text: string;
+  type: "strength" | "improvement";
+  delay?: number;
 }) {
-  const variantStyles = {
-    default: "text-[hsl(var(--foreground))]",
-    strength: "text-[hsl(95,30%,35%)]",
-    improvement: "text-[hsl(30,45%,40%)]",
-  };
-
   return (
-    <h4 className={`text-sm font-medium mb-5 flex items-center gap-2.5 ${variantStyles[variant]}`}>
-      {icon && <span className="opacity-80">{icon}</span>}
-      {title}
-    </h4>
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.4 }}
+      className={cn(
+        "flex gap-3 p-4 rounded-xl",
+        type === "strength" ? "feedback-strength" : "feedback-improvement"
+      )}
+    >
+      <span className={cn(
+        "flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center",
+        type === "strength" ? "bg-emerald-500 text-white" : "bg-amber-500 text-white"
+      )}>
+        {type === "strength" ? (
+          <Check className="w-3 h-3" />
+        ) : (
+          <ArrowRight className="w-3 h-3" />
+        )}
+      </span>
+      <span className="text-sm text-stone-700 leading-relaxed">{text}</span>
+    </motion.div>
   );
 }
 
 // ============================================================================
-// GRADING RESULT DISPLAY - Refined, elegant
+// GRADING RESULT DISPLAY
 // ============================================================================
 
 function GradingResultDisplay({
@@ -225,246 +160,238 @@ function GradingResultDisplay({
   const markScheme = MARK_SCHEMES[questionType];
 
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div className="space-y-5">
       {/* Overall Score Card */}
-      <div className="result-card">
-        <div className="flex flex-col md:flex-row items-center gap-8">
-          <CircularScore percentage={result.overallPercentage} />
-          <div className="flex-1 text-center md:text-left">
-            <h3 className="text-2xl font-light text-[hsl(var(--zen-ink))] mb-3">
-              {result.totalMarks} <span className="text-[hsl(var(--muted-foreground))] text-lg">/ {markScheme.total}</span>
-            </h3>
-            <LevelBadge level={result.levelAchieved} />
-            <p className="text-xs text-[hsl(var(--muted-foreground))] mt-3 leading-relaxed max-w-sm">
-              {LEVEL_DESCRIPTORS[result.levelAchieved]}
-            </p>
+      <AnimatedCard delay={0}>
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <CircularProgress
+              value={result.overallPercentage}
+              size={120}
+              strokeWidth={6}
+              color={getScoreColor(result.overallPercentage)}
+            >
+              <span className="text-2xl font-light text-stone-800">
+                {result.overallPercentage}%
+              </span>
+              <span className="text-[10px] font-medium tracking-wider uppercase text-stone-400">
+                Overall
+              </span>
+            </CircularProgress>
+            <div className="flex-1 text-center md:text-left">
+              <h3 className="text-2xl font-light text-stone-800 mb-3">
+                {result.totalMarks} <span className="text-stone-400 text-lg">/ {markScheme.total}</span>
+              </h3>
+              <LevelBadge level={result.levelAchieved} />
+              <p className="text-xs text-stone-500 mt-3 leading-relaxed max-w-sm">
+                {LEVEL_DESCRIPTORS[result.levelAchieved]}
+              </p>
+            </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </AnimatedCard>
 
       {/* AO Breakdown */}
-      <div className="result-card">
-        <SectionHeader title="Assessment Objectives" />
-        <div className="space-y-0">
-          {markScheme.ao1 > 0 && (
-            <AOScoreBar
-              label="AO1"
-              aoKey="ao1"
-              score={result.aoScores.ao1}
-              maxScore={markScheme.ao1}
-              delay={100}
-            />
-          )}
-          {markScheme.ao2 > 0 && (
-            <AOScoreBar
-              label="AO2"
-              aoKey="ao2"
-              score={result.aoScores.ao2}
-              maxScore={markScheme.ao2}
-              delay={200}
-            />
-          )}
-          {markScheme.ao3 > 0 && (
-            <AOScoreBar
-              label="AO3"
-              aoKey="ao3"
-              score={result.aoScores.ao3}
-              maxScore={markScheme.ao3}
-              delay={300}
-            />
-          )}
-          {markScheme.ao4 > 0 && (
-            <AOScoreBar
-              label="AO4"
-              aoKey="ao4"
-              score={result.aoScores.ao4}
-              maxScore={markScheme.ao4}
-              delay={400}
-            />
-          )}
-        </div>
-        <div className="mt-6 pt-5 border-t border-[hsl(var(--border))] grid grid-cols-2 md:grid-cols-4 gap-2">
-          <div className="ao-info-card ao1">
-            <div className="ao-info-label">AO1</div>
-            <div className="ao-info-desc">Knowledge</div>
+      <AnimatedCard delay={0.1}>
+        <CardContent className="p-6">
+          <h4 className="text-sm font-medium text-stone-700 mb-4">Assessment Objectives</h4>
+          <div className="space-y-1">
+            {markScheme.ao1 > 0 && (
+              <AOScoreBar label="AO1" aoKey="ao1" score={result.aoScores.ao1} maxScore={markScheme.ao1} delay={0.1} />
+            )}
+            {markScheme.ao2 > 0 && (
+              <AOScoreBar label="AO2" aoKey="ao2" score={result.aoScores.ao2} maxScore={markScheme.ao2} delay={0.15} />
+            )}
+            {markScheme.ao3 > 0 && (
+              <AOScoreBar label="AO3" aoKey="ao3" score={result.aoScores.ao3} maxScore={markScheme.ao3} delay={0.2} />
+            )}
+            {markScheme.ao4 > 0 && (
+              <AOScoreBar label="AO4" aoKey="ao4" score={result.aoScores.ao4} maxScore={markScheme.ao4} delay={0.25} />
+            )}
           </div>
-          <div className="ao-info-card ao2">
-            <div className="ao-info-label">AO2</div>
-            <div className="ao-info-desc">Application</div>
+          <div className="mt-5 pt-4 border-t border-stone-100 grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
+            <div className="p-2 rounded-lg bg-sky-50">
+              <div className="text-xs font-semibold text-sky-700">AO1</div>
+              <div className="text-[10px] text-sky-600">Knowledge</div>
+            </div>
+            <div className="p-2 rounded-lg bg-emerald-50">
+              <div className="text-xs font-semibold text-emerald-700">AO2</div>
+              <div className="text-[10px] text-emerald-600">Application</div>
+            </div>
+            <div className="p-2 rounded-lg bg-violet-50">
+              <div className="text-xs font-semibold text-violet-700">AO3</div>
+              <div className="text-[10px] text-violet-600">Analysis</div>
+            </div>
+            <div className="p-2 rounded-lg bg-amber-50">
+              <div className="text-xs font-semibold text-amber-700">AO4</div>
+              <div className="text-[10px] text-amber-600">Evaluation</div>
+            </div>
           </div>
-          <div className="ao-info-card ao3">
-            <div className="ao-info-label">AO3</div>
-            <div className="ao-info-desc">Analysis</div>
-          </div>
-          <div className="ao-info-card ao4">
-            <div className="ao-info-label">AO4</div>
-            <div className="ao-info-desc">Evaluation</div>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </AnimatedCard>
 
       {/* Examiner Comment */}
-      <div className="result-card">
-        <SectionHeader title="Examiner's Comment" />
-        <div className="examiner-comment">
-          {result.examinerComment}
-        </div>
-      </div>
+      <AnimatedCard delay={0.2}>
+        <CardContent className="p-6">
+          <h4 className="text-sm font-medium text-stone-700 mb-4">Examiner&apos;s Comment</h4>
+          <div className="relative p-5 rounded-xl bg-stone-50 border-l-2 border-stone-300">
+            <p className="text-sm text-stone-700 leading-relaxed italic">
+              &ldquo;{result.examinerComment}&rdquo;
+            </p>
+          </div>
+        </CardContent>
+      </AnimatedCard>
 
       {/* Strengths */}
-      <div className="result-card">
-        <SectionHeader
-          title="Strengths"
-          variant="strength"
-          icon={
-            <span className="w-5 h-5 rounded-full bg-[hsl(var(--zen-moss))] flex items-center justify-center">
-              <CheckIcon />
+      <AnimatedCard delay={0.3}>
+        <CardContent className="p-6">
+          <h4 className="text-sm font-medium text-emerald-700 mb-4 flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
+              <Check className="w-3 h-3 text-white" />
             </span>
-          }
-        />
-        <div className="feedback-list">
-          {result.strengths.map((strength, index) => (
-            <div
-              key={index}
-              className="feedback-item strength"
-              style={{ animationDelay: `${index * 80}ms` }}
-            >
-              <span className="feedback-icon strength">
-                <CheckIcon />
-              </span>
-              <span className="feedback-text">{strength}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+            Strengths
+          </h4>
+          <div className="space-y-3">
+            {result.strengths.map((strength, index) => (
+              <FeedbackItem
+                key={index}
+                text={strength}
+                type="strength"
+                delay={index * 0.05}
+              />
+            ))}
+          </div>
+        </CardContent>
+      </AnimatedCard>
 
       {/* Areas for Improvement */}
-      <div className="result-card">
-        <SectionHeader
-          title="Areas for Improvement"
-          variant="improvement"
-          icon={
-            <span className="w-5 h-5 rounded-full bg-[hsl(var(--zen-clay))] flex items-center justify-center text-white">
-              <ArrowIcon />
+      <AnimatedCard delay={0.4}>
+        <CardContent className="p-6">
+          <h4 className="text-sm font-medium text-amber-700 mb-4 flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center">
+              <ArrowRight className="w-3 h-3 text-white" />
             </span>
-          }
-        />
-        <div className="feedback-list">
-          {result.improvements.map((improvement, index) => (
-            <div
-              key={index}
-              className="feedback-item improvement"
-              style={{ animationDelay: `${index * 80}ms` }}
-            >
-              <span className="feedback-icon improvement">
-                <ArrowIcon />
-              </span>
-              <span className="feedback-text">{improvement}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+            Areas for Improvement
+          </h4>
+          <div className="space-y-3">
+            {result.improvements.map((improvement, index) => (
+              <FeedbackItem
+                key={index}
+                text={improvement}
+                type="improvement"
+                delay={index * 0.05}
+              />
+            ))}
+          </div>
+        </CardContent>
+      </AnimatedCard>
     </div>
   );
 }
 
 // ============================================================================
-// PLAN RESULT DISPLAY - Structured, clear
+// PLAN RESULT DISPLAY
 // ============================================================================
 
 function PlanResultDisplay({ result }: { result: PlanResult }) {
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div className="space-y-5">
       {/* Thesis */}
-      <div className="result-card">
-        <SectionHeader title="Thesis Statement" />
-        <div className="plan-thesis">
-          <p className="text-sm leading-relaxed text-[hsl(var(--foreground))]">{result.thesis}</p>
-        </div>
-      </div>
+      <AnimatedCard delay={0}>
+        <CardContent className="p-6">
+          <h4 className="text-sm font-medium text-stone-700 mb-4">Thesis Statement</h4>
+          <div className="p-5 rounded-xl plan-thesis">
+            <p className="text-sm text-stone-700 leading-relaxed">{result.thesis}</p>
+          </div>
+        </CardContent>
+      </AnimatedCard>
 
       {/* Main Arguments */}
-      <div className="result-card">
-        <SectionHeader title="Main Arguments" />
-        <div className="space-y-4">
-          {result.arguments.map((arg, index) => (
-            <div
-              key={index}
-              className="plan-argument animate-slide-up"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <div className="flex items-start gap-4 mb-4">
-                <span className="plan-argument-number">
-                  {index + 1}
-                </span>
-                <h5 className="font-medium text-sm text-[hsl(var(--foreground))] pt-1">
-                  {arg.point}
-                </h5>
-              </div>
-              <div className="space-y-3 pl-11">
-                <div>
-                  <span className="plan-label theory">Theory</span>
-                  <p className="text-sm text-[hsl(var(--foreground))] leading-relaxed">
-                    {arg.explanation}
-                  </p>
+      <AnimatedCard delay={0.1}>
+        <CardContent className="p-6">
+          <h4 className="text-sm font-medium text-stone-700 mb-4">Main Arguments</h4>
+          <div className="space-y-4">
+            {result.arguments.map((arg, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="p-5 rounded-xl plan-argument"
+              >
+                <div className="flex items-start gap-3 mb-3">
+                  <span className="w-7 h-7 rounded-full bg-stone-800 text-white flex items-center justify-center text-xs font-semibold">
+                    {index + 1}
+                  </span>
+                  <h5 className="font-medium text-sm text-stone-800 pt-1">{arg.point}</h5>
                 </div>
-                <div>
-                  <span className="plan-label example">Example</span>
-                  <p className="text-sm text-[hsl(var(--foreground))] leading-relaxed">
-                    {arg.example}
-                  </p>
+                <div className="space-y-3 pl-10">
+                  <div>
+                    <span className="text-[10px] font-semibold tracking-wider uppercase text-sky-600 block mb-1">Theory</span>
+                    <p className="text-sm text-stone-600 leading-relaxed">{arg.explanation}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-semibold tracking-wider uppercase text-emerald-600 block mb-1">Example</span>
+                    <p className="text-sm text-stone-600 leading-relaxed">{arg.example}</p>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+              </motion.div>
+            ))}
+          </div>
+        </CardContent>
+      </AnimatedCard>
 
       {/* Evaluations */}
-      <div className="result-card">
-        <SectionHeader title="Evaluation Points" />
-        <div className="space-y-3">
-          {result.evaluations.map((evaluation, index) => (
-            <div
-              key={index}
-              className="plan-evaluation animate-slide-up"
-              style={{ animationDelay: `${index * 80}ms` }}
-            >
-              <h5 className="font-medium text-sm text-[hsl(30,45%,35%)] mb-2">
-                {evaluation.point}
-              </h5>
-              <p className="text-sm text-[hsl(30,30%,45%)] leading-relaxed">{evaluation.development}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+      <AnimatedCard delay={0.2}>
+        <CardContent className="p-6">
+          <h4 className="text-sm font-medium text-stone-700 mb-4">Evaluation Points</h4>
+          <div className="space-y-3">
+            {result.evaluations.map((evaluation, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.08 }}
+                className="p-4 rounded-xl plan-evaluation"
+              >
+                <h5 className="font-medium text-sm text-amber-800 mb-1">{evaluation.point}</h5>
+                <p className="text-sm text-amber-700/80 leading-relaxed">{evaluation.development}</p>
+              </motion.div>
+            ))}
+          </div>
+        </CardContent>
+      </AnimatedCard>
 
       {/* Diagram Recommendation */}
       {result.diagram && result.diagram !== "none" && (
-        <div className="result-card">
-          <SectionHeader title="Recommended Diagram" />
-          <div className="plan-diagram">
-            <p className="font-medium text-sm text-[hsl(270,25%,40%)] mb-2 capitalize">
-              {result.diagram.replace("-", " ")} Diagram
-            </p>
-            <p className="text-sm text-[hsl(270,15%,50%)] leading-relaxed">{result.diagramExplanation}</p>
-          </div>
-        </div>
+        <AnimatedCard delay={0.3}>
+          <CardContent className="p-6">
+            <h4 className="text-sm font-medium text-stone-700 mb-4">Recommended Diagram</h4>
+            <div className="p-4 rounded-xl plan-diagram">
+              <p className="font-medium text-sm text-violet-800 mb-2 capitalize">
+                {result.diagram.replace("-", " ")} Diagram
+              </p>
+              <p className="text-sm text-violet-700/80 leading-relaxed">{result.diagramExplanation}</p>
+            </div>
+          </CardContent>
+        </AnimatedCard>
       )}
 
       {/* Conclusion */}
-      <div className="result-card">
-        <SectionHeader title="Conclusion" />
-        <div className="plan-conclusion">
-          <p className="text-sm text-[hsl(var(--foreground))] leading-relaxed">{result.conclusion}</p>
-        </div>
-      </div>
+      <AnimatedCard delay={0.4}>
+        <CardContent className="p-6">
+          <h4 className="text-sm font-medium text-stone-700 mb-4">Conclusion</h4>
+          <div className="p-5 rounded-xl plan-conclusion">
+            <p className="text-sm text-stone-700 leading-relaxed">{result.conclusion}</p>
+          </div>
+        </CardContent>
+      </AnimatedCard>
     </div>
   );
 }
 
 // ============================================================================
-// DIAGRAM UPLOAD COMPONENT - Elegant drop zone
+// DIAGRAM UPLOAD COMPONENT
 // ============================================================================
 
 function DiagramUpload({
@@ -506,69 +433,105 @@ function DiagramUpload({
     [handleFile]
   );
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-
   if (image) {
     return (
-      <div className="diagram-upload-section">
-        <div className="diagram-upload-header">
-          <span className="diagram-upload-title">Diagram Uploaded</span>
-          <button
-            onClick={onRemove}
-            className="text-[hsl(var(--destructive))] hover:text-[hsl(10,65%,45%)] transition-colors duration-300 flex items-center gap-1.5 text-xs font-medium"
-          >
-            <TrashIcon />
-            Remove
-          </button>
-        </div>
-        <div className="relative rounded-lg overflow-hidden border border-[hsl(var(--border))]">
-          <img
-            src={image}
-            alt="Uploaded diagram"
-            className="w-full max-h-56 object-contain bg-white"
-          />
-        </div>
-      </div>
+      <Card className="mt-6">
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-medium text-stone-700">Diagram Uploaded</span>
+            <button
+              onClick={onRemove}
+              className="text-rose-500 hover:text-rose-600 transition-colors flex items-center gap-1.5 text-xs font-medium"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Remove
+            </button>
+          </div>
+          <div className="rounded-xl overflow-hidden border border-stone-200">
+            <img
+              src={image}
+              alt="Uploaded diagram"
+              className="w-full max-h-48 object-contain bg-white"
+            />
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="diagram-upload-section">
-      <div className="diagram-upload-header">
-        <span className="diagram-upload-title">Diagram Upload</span>
-        <span className="diagram-upload-optional">Optional</span>
-      </div>
-      <div
-        className={`diagram-upload-zone ${isDragging ? "dragging" : ""}`}
-        onClick={() => fileInputRef.current?.click()}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-      >
-        <div className="upload-icon">
-          <UploadIcon />
+    <Card className="mt-6">
+      <CardContent className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-sm font-medium text-stone-700">Diagram Upload</span>
+          <span className="text-[10px] font-medium tracking-wider uppercase text-stone-400 px-2 py-1 rounded-full bg-stone-100">
+            Optional
+          </span>
         </div>
-        <div className="upload-text">Click or drag to upload</div>
-        <div className="upload-hint">PNG, JPG up to 10MB</div>
+        <motion.div
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
+          className={cn(
+            "flex flex-col items-center justify-center p-8 rounded-xl cursor-pointer transition-colors",
+            "border-2 border-dashed",
+            isDragging
+              ? "border-stone-400 bg-stone-50"
+              : "border-stone-200 bg-stone-50/50 hover:border-stone-300"
+          )}
+          onClick={() => fileInputRef.current?.click()}
+          onDrop={handleDrop}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragLeave={() => setIsDragging(false)}
+        >
+          <Upload className="w-8 h-8 text-stone-300 mb-3" />
+          <span className="text-sm font-medium text-stone-600 mb-1">Click or drag to upload</span>
+          <span className="text-xs text-stone-400">PNG, JPG up to 10MB</span>
+        </motion.div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleFile(file);
+          }}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============================================================================
+// EMPTY STATE COMPONENT
+// ============================================================================
+
+function EmptyState({ type }: { type: "grader" | "planner" }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex flex-col items-center justify-center py-16 text-center"
+    >
+      <div className="w-16 h-16 rounded-2xl bg-stone-100 flex items-center justify-center mb-5">
+        {type === "grader" ? (
+          <CheckCircle2 className="w-8 h-8 text-stone-300" />
+        ) : (
+          <FileText className="w-8 h-8 text-stone-300" />
+        )}
       </div>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) handleFile(file);
-        }}
-      />
-    </div>
+      <h3 className="text-base font-medium text-stone-500 mb-2">
+        {type === "grader" ? "Results will appear here" : "Plan will appear here"}
+      </h3>
+      <p className="text-sm text-stone-400 max-w-xs leading-relaxed">
+        {type === "grader"
+          ? "Submit an answer to receive detailed AI-powered feedback with Assessment Objective breakdowns."
+          : "Enter a question to generate a comprehensive A*-grade essay plan."}
+      </p>
+    </motion.div>
   );
 }
 
@@ -591,7 +554,6 @@ export default function HomePage() {
   // Planner state
   const [plannerQuestion, setPlannerQuestion] = useState("");
   const [plannerQuestionType, setPlannerQuestionType] = useState<QuestionType>("evaluate-20");
-  const [plannerOutputType, setPlannerOutputType] = useState<"skeleton" | "full">("full");
   const [plannerResult, setPlannerResult] = useState<PlanResult | null>(null);
   const [plannerLoading, setPlannerLoading] = useState(false);
   const [plannerError, setPlannerError] = useState("");
@@ -688,48 +650,79 @@ export default function HomePage() {
     setPlannerError("");
   };
 
+  const tabItems = [
+    {
+      value: "grader",
+      label: "Exam Grader",
+      icon: <CheckCircle2 className="w-4 h-4" />,
+    },
+    {
+      value: "planner",
+      label: "Essay Planner",
+      icon: <FileText className="w-4 h-4" />,
+    },
+  ];
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[hsl(var(--background))]">
       {/* Loading Overlays */}
-      {graderLoading && <LoadingOverlay message="Grading your answer..." />}
-      {plannerLoading && <LoadingOverlay message="Generating essay plan..." />}
+      <AnimatePresence>
+        {graderLoading && <LoadingOverlay message="Grading your answer..." />}
+        {plannerLoading && <LoadingOverlay message="Generating essay plan..." />}
+      </AnimatePresence>
 
       {/* Header */}
-      <header className="app-header">
-        <div className="header-eyebrow">Pearson Edexcel IAL</div>
-        <h1 className="header-title">Economics</h1>
-        <div className="header-subtitle">AS & A Level · Units 1–4</div>
+      <header className="text-center py-10 px-6 border-b border-stone-100">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-[11px] font-medium tracking-[0.2em] uppercase text-stone-400 mb-2"
+        >
+          Pearson Edexcel IAL
+        </motion.div>
+        <motion.h1
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="text-3xl md:text-4xl font-light text-stone-800 mb-2"
+        >
+          Economics
+        </motion.h1>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="text-sm text-stone-400"
+        >
+          AS & A Level · Units 1–4
+        </motion.div>
       </header>
 
       {/* Mode Navigation */}
-      <nav className="mode-nav">
-        <button
-          className={`mode-btn ${activeMode === "grader" ? "active" : ""}`}
-          onClick={() => setActiveMode("grader")}
-        >
-          <span className="mode-icon"><GraderIcon /></span>
-          Exam Grader
-        </button>
-        <button
-          className={`mode-btn ${activeMode === "planner" ? "active" : ""}`}
-          onClick={() => setActiveMode("planner")}
-        >
-          <span className="mode-icon"><PlannerIcon /></span>
-          Essay Planner
-        </button>
+      <nav className="flex justify-center py-6 px-4 border-b border-stone-100">
+        <AnimatedPillTabs
+          items={tabItems}
+          value={activeMode}
+          onValueChange={(v) => setActiveMode(v as "grader" | "planner")}
+        />
       </nav>
 
-      {/* Grader Panel */}
-      <div className={`panel ${activeMode === "grader" ? "active" : ""}`}>
-        <div className="grid lg:grid-cols-2 gap-10">
-          {/* Input Section */}
-          <div className="space-y-6">
-            {/* Question Config */}
-            <div className="question-config">
-              <div className="config-group">
-                <span className="config-label">Question Type</span>
-                <select
-                  className="config-select"
+      {/* Content */}
+      <main className="max-w-5xl mx-auto py-10 px-6">
+        <AnimatePresence mode="wait">
+          {activeMode === "grader" ? (
+            <motion.div
+              key="grader"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="grid lg:grid-cols-2 gap-10"
+            >
+              {/* Input Section */}
+              <div className="space-y-6">
+                <Select
+                  label="Question Type"
                   value={graderQuestionType}
                   onChange={(e) => setGraderQuestionType(e.target.value as QuestionType)}
                 >
@@ -738,95 +731,85 @@ export default function HomePage() {
                       {option.label}
                     </option>
                   ))}
-                </select>
-              </div>
-            </div>
+                </Select>
 
-            {/* Question Input */}
-            <div>
-              <label className="config-label mb-3 block">Exam Question</label>
-              <textarea
-                className="input-area"
-                style={{ minHeight: "100px" }}
-                placeholder="Paste the exam question here..."
-                value={graderQuestion}
-                onChange={(e) => setGraderQuestion(e.target.value)}
-              />
-            </div>
+                <Textarea
+                  label="Exam Question"
+                  placeholder="Paste the exam question here..."
+                  value={graderQuestion}
+                  onChange={(e) => setGraderQuestion(e.target.value)}
+                  className="min-h-[100px]"
+                />
 
-            {/* Answer Input */}
-            <div>
-              <label className="config-label mb-3 block">Student Answer</label>
-              <textarea
-                className="input-area"
-                placeholder="Paste the student's answer here for grading..."
-                value={graderAnswer}
-                onChange={(e) => setGraderAnswer(e.target.value)}
-              />
-            </div>
+                <Textarea
+                  label="Student Answer"
+                  placeholder="Paste the student's answer here for grading..."
+                  value={graderAnswer}
+                  onChange={(e) => setGraderAnswer(e.target.value)}
+                />
 
-            {/* Diagram Upload */}
-            <DiagramUpload
-              image={graderDiagram}
-              onUpload={setGraderDiagram}
-              onRemove={() => setGraderDiagram(null)}
-            />
+                <DiagramUpload
+                  image={graderDiagram}
+                  onUpload={setGraderDiagram}
+                  onRemove={() => setGraderDiagram(null)}
+                />
 
-            {/* Error Display */}
-            {graderError && (
-              <div className="p-4 rounded-lg text-sm bg-[hsl(10,50%,96%)] border border-[hsl(10,40%,88%)] text-[hsl(10,50%,40%)]">
-                {graderError}
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="action-row">
-              <button className="btn-primary flex-1" onClick={handleGrade} disabled={graderLoading}>
-                {graderLoading ? (
-                  <>
-                    <SpinnerIcon />
-                    <span className="ml-2">Grading...</span>
-                  </>
-                ) : (
-                  "Grade Answer"
+                {graderError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 rounded-xl bg-rose-50 border border-rose-100 text-sm text-rose-600"
+                  >
+                    {graderError}
+                  </motion.div>
                 )}
-              </button>
-              <button className="btn-secondary" onClick={clearGrader}>
-                Clear
-              </button>
-            </div>
-          </div>
 
-          {/* Results Section */}
-          <div>
-            {graderResult ? (
-              <GradingResultDisplay result={graderResult} questionType={graderQuestionType} />
-            ) : (
-              <div className="empty-state">
-                <div className="empty-state-icon">
-                  <EmptyStateIcon />
+                <div className="flex gap-3 pt-2">
+                  <AnimatedButton
+                    className="flex-1"
+                    onClick={handleGrade}
+                    disabled={graderLoading}
+                  >
+                    {graderLoading ? (
+                      <>
+                        <Spinner size={16} className="mr-2" />
+                        Grading...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Grade Answer
+                      </>
+                    )}
+                  </AnimatedButton>
+                  <AnimatedButton variant="secondary" onClick={clearGrader}>
+                    Clear
+                  </AnimatedButton>
                 </div>
-                <h3 className="empty-state-title">Results will appear here</h3>
-                <p className="empty-state-text">
-                  Submit an answer to receive detailed AI-powered feedback with Assessment Objective breakdowns.
-                </p>
               </div>
-            )}
-          </div>
-        </div>
-      </div>
 
-      {/* Planner Panel */}
-      <div className={`panel ${activeMode === "planner" ? "active" : ""}`}>
-        <div className="grid lg:grid-cols-2 gap-10">
-          {/* Input Section */}
-          <div className="space-y-6">
-            {/* Question Config */}
-            <div className="question-config">
-              <div className="config-group">
-                <span className="config-label">Question Type</span>
-                <select
-                  className="config-select"
+              {/* Results Section */}
+              <div>
+                {graderResult ? (
+                  <GradingResultDisplay result={graderResult} questionType={graderQuestionType} />
+                ) : (
+                  <EmptyState type="grader" />
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="planner"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="grid lg:grid-cols-2 gap-10"
+            >
+              {/* Input Section */}
+              <div className="space-y-6">
+                <Select
+                  label="Question Type"
                   value={plannerQuestionType}
                   onChange={(e) => setPlannerQuestionType(e.target.value as QuestionType)}
                 >
@@ -835,82 +818,68 @@ export default function HomePage() {
                       {option.label}
                     </option>
                   ))}
-                </select>
-              </div>
-              <div className="config-group">
-                <span className="config-label">Output Mode</span>
-                <select
-                  className="config-select"
-                  value={plannerOutputType}
-                  onChange={(e) => setPlannerOutputType(e.target.value as "skeleton" | "full")}
-                >
-                  <option value="skeleton">Essay Skeleton</option>
-                  <option value="full">Full Model Plan</option>
-                </select>
-              </div>
-            </div>
+                </Select>
 
-            {/* Question Input */}
-            <div>
-              <label className="config-label mb-3 block">Essay Question</label>
-              <textarea
-                className="input-area"
-                placeholder="Type or paste the essay question here..."
-                value={plannerQuestion}
-                onChange={(e) => setPlannerQuestion(e.target.value)}
-              />
-            </div>
+                <Textarea
+                  label="Essay Question"
+                  placeholder="Type or paste the essay question here..."
+                  value={plannerQuestion}
+                  onChange={(e) => setPlannerQuestion(e.target.value)}
+                />
 
-            {/* Error Display */}
-            {plannerError && (
-              <div className="p-4 rounded-lg text-sm bg-[hsl(10,50%,96%)] border border-[hsl(10,40%,88%)] text-[hsl(10,50%,40%)]">
-                {plannerError}
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="action-row">
-              <button className="btn-primary flex-1" onClick={handlePlan} disabled={plannerLoading}>
-                {plannerLoading ? (
-                  <>
-                    <SpinnerIcon />
-                    <span className="ml-2">Generating...</span>
-                  </>
-                ) : (
-                  "Generate Plan"
+                {plannerError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 rounded-xl bg-rose-50 border border-rose-100 text-sm text-rose-600"
+                  >
+                    {plannerError}
+                  </motion.div>
                 )}
-              </button>
-              <button className="btn-secondary" onClick={clearPlanner}>
-                Clear
-              </button>
-            </div>
-          </div>
 
-          {/* Results Section */}
-          <div>
-            {plannerResult ? (
-              <PlanResultDisplay result={plannerResult} />
-            ) : (
-              <div className="empty-state">
-                <div className="empty-state-icon">
-                  <EmptyStateIcon />
+                <div className="flex gap-3 pt-2">
+                  <AnimatedButton
+                    className="flex-1"
+                    onClick={handlePlan}
+                    disabled={plannerLoading}
+                  >
+                    {plannerLoading ? (
+                      <>
+                        <Spinner size={16} className="mr-2" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Generate Plan
+                      </>
+                    )}
+                  </AnimatedButton>
+                  <AnimatedButton variant="secondary" onClick={clearPlanner}>
+                    Clear
+                  </AnimatedButton>
                 </div>
-                <h3 className="empty-state-title">Plan will appear here</h3>
-                <p className="empty-state-text">
-                  Enter a question to generate a comprehensive A*-grade essay plan with thesis, arguments, and evaluations.
-                </p>
               </div>
-            )}
-          </div>
-        </div>
-      </div>
+
+              {/* Results Section */}
+              <div>
+                {plannerResult ? (
+                  <PlanResultDisplay result={plannerResult} />
+                ) : (
+                  <EmptyState type="planner" />
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
 
       {/* Footer */}
-      <footer className="text-center py-10 text-xs border-t border-[hsl(var(--border))] mt-10">
-        <p className="text-[hsl(var(--muted-foreground))]">
+      <footer className="text-center py-10 text-xs border-t border-stone-100 mt-10">
+        <p className="text-stone-400">
           AI-powered grading aligned with Edexcel IAL Economics mark schemes
         </p>
-        <p className="text-[hsl(var(--muted-foreground))] mt-1 opacity-70">
+        <p className="text-stone-300 mt-1">
           Always verify with your teacher or official mark schemes
         </p>
       </footer>

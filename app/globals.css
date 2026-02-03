@@ -4,51 +4,44 @@
 
 @layer base {
   :root {
-    /* Zen Japanese Color Palette - Tranquil, Natural, Minimal */
-    --background: 40 20% 98%;      /* Warm off-white like washi paper */
-    --foreground: 30 10% 15%;      /* Deep charcoal ink */
-    --card: 40 25% 99%;            /* Slightly warmer card background */
-    --card-foreground: 30 10% 15%;
-    --popover: 40 25% 99%;
-    --popover-foreground: 30 10% 15%;
+    /* Zen Japanese Color Palette */
+    --background: 30 20% 99%;
+    --foreground: 30 10% 10%;
 
-    /* Primary - Sumi ink inspired deep charcoal */
-    --primary: 30 8% 25%;
-    --primary-foreground: 40 20% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 30 10% 10%;
 
-    /* Secondary - Warm stone gray */
-    --secondary: 35 15% 93%;
-    --secondary-foreground: 30 10% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 30 10% 10%;
 
-    /* Muted - Soft bamboo */
-    --muted: 38 18% 95%;
-    --muted-foreground: 30 8% 45%;
+    --primary: 30 6% 20%;
+    --primary-foreground: 30 20% 98%;
 
-    /* Accent - Subtle warm tone */
-    --accent: 35 20% 92%;
+    --secondary: 30 10% 96%;
+    --secondary-foreground: 30 10% 25%;
+
+    --muted: 30 10% 96%;
+    --muted-foreground: 30 6% 45%;
+
+    --accent: 30 10% 94%;
     --accent-foreground: 30 10% 20%;
 
-    /* Destructive - Muted terracotta */
-    --destructive: 10 60% 50%;
-    --destructive-foreground: 40 20% 98%;
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Border - Soft like ink wash */
-    --border: 35 12% 88%;
-    --input: 35 15% 92%;
-    --ring: 30 8% 35%;
+    --border: 30 10% 90%;
+    --input: 30 10% 90%;
+    --ring: 30 6% 30%;
 
-    /* Radius - Softer, more organic */
-    --radius: 0.625rem;
+    --radius: 0.75rem;
 
-    /* Zen-specific design tokens */
-    --zen-stone: 30 6% 50%;        /* Natural stone gray */
-    --zen-bamboo: 80 25% 45%;      /* Muted bamboo green */
-    --zen-sand: 40 30% 90%;        /* Warm sand */
-    --zen-ink: 30 10% 12%;         /* Deep sumi ink */
-    --zen-paper: 40 25% 97%;       /* Washi paper */
-    --zen-moss: 95 20% 35%;        /* Moss green */
-    --zen-clay: 20 35% 55%;        /* Terracotta clay */
-    --zen-water: 200 25% 55%;      /* Calm water blue */
+    /* Functional colors - muted but distinguishable */
+    --success: 142 40% 40%;
+    --success-light: 142 30% 95%;
+    --warning: 38 70% 50%;
+    --warning-light: 38 50% 95%;
+    --info: 200 50% 50%;
+    --info-light: 200 40% 95%;
   }
 
   * {
@@ -60,880 +53,87 @@
   }
 
   body {
-    @apply bg-[hsl(var(--background))] text-foreground antialiased min-h-screen;
-    font-feature-settings: "rlig" 1, "calt" 1, "kern" 1;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-medium tracking-tight;
-    letter-spacing: -0.02em;
-  }
-
-  /* Custom selection color - soft ink */
   ::selection {
-    @apply bg-[hsl(30,15%,85%)] text-[hsl(30,10%,15%)];
+    @apply bg-stone-200 text-stone-900;
   }
 }
 
 @layer components {
-  /* ================================================================
-     HEADER - Minimal, breathing space
-     ================================================================ */
-  .app-header {
-    @apply text-center py-12 px-6 bg-[hsl(var(--background))] sticky top-0 z-50;
-    border-bottom: 1px solid hsl(var(--border));
+  /* Badge styles for levels - functional color coding */
+  .badge-level-5 {
+    @apply bg-emerald-50 text-emerald-700 border-emerald-200;
   }
 
-  .header-eyebrow {
-    @apply text-[11px] font-medium tracking-[0.25em] uppercase mb-3;
-    color: hsl(var(--zen-stone));
+  .badge-level-4 {
+    @apply bg-sky-50 text-sky-700 border-sky-200;
   }
 
-  .header-title {
-    @apply text-3xl md:text-4xl font-light mb-2;
-    color: hsl(var(--zen-ink));
-    letter-spacing: -0.03em;
+  .badge-level-3 {
+    @apply bg-amber-50 text-amber-700 border-amber-200;
   }
 
-  .header-subtitle {
-    @apply text-sm font-normal;
-    color: hsl(var(--muted-foreground));
-    letter-spacing: 0.02em;
+  .badge-level-2 {
+    @apply bg-orange-50 text-orange-700 border-orange-200;
   }
 
-  /* ================================================================
-     MODE NAVIGATION - Clean pill buttons
-     ================================================================ */
-  .mode-nav {
-    @apply flex justify-center gap-3 py-6 px-4;
-    background: hsl(var(--background));
-    border-bottom: 1px solid hsl(var(--border));
+  .badge-level-1 {
+    @apply bg-rose-50 text-rose-700 border-rose-200;
   }
 
-  .mode-btn {
-    @apply flex items-center gap-2.5 px-6 py-3 rounded-full font-medium text-sm
-           transition-all duration-500 ease-out;
-    color: hsl(var(--muted-foreground));
-    background: transparent;
-    border: 1px solid transparent;
+  /* AO Progress bar colors */
+  .ao-bar-ao1 {
+    @apply bg-gradient-to-r from-sky-400 to-sky-500;
   }
 
-  .mode-btn:hover:not(.active) {
-    color: hsl(var(--foreground));
-    background: hsl(var(--secondary));
+  .ao-bar-ao2 {
+    @apply bg-gradient-to-r from-emerald-400 to-emerald-500;
   }
 
-  .mode-btn.active {
-    color: hsl(var(--primary-foreground));
-    background: hsl(var(--zen-ink));
-    box-shadow: 0 2px 12px -3px hsl(30 10% 12% / 0.2);
+  .ao-bar-ao3 {
+    @apply bg-gradient-to-r from-violet-400 to-violet-500;
   }
 
-  .mode-btn .mode-icon {
-    @apply opacity-70;
+  .ao-bar-ao4 {
+    @apply bg-gradient-to-r from-amber-400 to-amber-500;
   }
 
-  .mode-btn.active .mode-icon {
-    @apply opacity-100;
+  /* Feedback item styles */
+  .feedback-strength {
+    @apply bg-emerald-50/80 border border-emerald-100;
   }
 
-  /* ================================================================
-     PANEL - Content container with breathing room
-     ================================================================ */
-  .panel {
-    @apply hidden py-10 px-6 max-w-5xl mx-auto;
+  .feedback-improvement {
+    @apply bg-amber-50/80 border border-amber-100;
   }
 
-  .panel.active {
-    @apply block;
-    animation: zenFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  /* ================================================================
-     QUESTION CONFIG - Refined form controls
-     ================================================================ */
-  .question-config {
-    @apply flex flex-wrap gap-5 mb-8;
-  }
-
-  .config-group {
-    @apply flex flex-col gap-2.5 flex-1 min-w-[200px];
-  }
-
-  .config-label {
-    @apply text-[11px] font-medium tracking-[0.15em] uppercase;
-    color: hsl(var(--zen-stone));
-  }
-
-  .config-select {
-    @apply w-full px-4 py-3.5 rounded-lg text-sm font-medium cursor-pointer
-           transition-all duration-300 ease-out;
-    background: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
-    color: hsl(var(--foreground));
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23757575' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 0.875rem center;
-    background-repeat: no-repeat;
-    background-size: 1.25em 1.25em;
-    padding-right: 2.75rem;
-    -webkit-appearance: none;
-    appearance: none;
-  }
-
-  .config-select:hover {
-    border-color: hsl(var(--zen-stone));
-  }
-
-  .config-select:focus {
-    @apply outline-none ring-2 ring-offset-2;
-    border-color: hsl(var(--zen-ink));
-    ring-color: hsl(30 8% 25% / 0.15);
-    ring-offset-color: hsl(var(--background));
-  }
-
-  /* ================================================================
-     INPUT AREAS - Spacious, calm text fields
-     ================================================================ */
-  .input-area {
-    @apply w-full px-5 py-4 rounded-lg text-sm resize-y
-           transition-all duration-300 ease-out min-h-[180px];
-    background: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
-    color: hsl(var(--foreground));
-    line-height: 1.8;
-  }
-
-  .input-area::placeholder {
-    color: hsl(var(--muted-foreground));
-    opacity: 0.6;
-  }
-
-  .input-area:hover {
-    border-color: hsl(var(--zen-stone));
-  }
-
-  .input-area:focus {
-    @apply outline-none ring-2 ring-offset-2;
-    border-color: hsl(var(--zen-ink));
-    ring-color: hsl(30 8% 25% / 0.12);
-    ring-offset-color: hsl(var(--background));
-    box-shadow: 0 4px 20px -4px hsl(30 10% 12% / 0.08);
-  }
-
-  /* ================================================================
-     DIAGRAM UPLOAD - Elegant drop zone
-     ================================================================ */
-  .diagram-upload-section {
-    @apply mt-8 p-6 rounded-xl;
-    background: hsl(var(--zen-sand));
-    border: 1px solid hsl(var(--border));
-  }
-
-  .diagram-upload-header {
-    @apply flex items-center justify-between mb-5;
-  }
-
-  .diagram-upload-title {
-    @apply font-medium text-sm;
-    color: hsl(var(--foreground));
-  }
-
-  .diagram-upload-optional {
-    @apply text-[10px] font-medium tracking-wider uppercase px-2.5 py-1 rounded-full;
-    background: hsl(var(--card));
-    color: hsl(var(--muted-foreground));
-    border: 1px solid hsl(var(--border));
-  }
-
-  .diagram-upload-zone {
-    @apply flex flex-col items-center justify-center p-10 rounded-lg cursor-pointer
-           transition-all duration-500 ease-out;
-    background: hsl(var(--card));
-    border: 2px dashed hsl(var(--border));
-  }
-
-  .diagram-upload-zone:hover {
-    border-color: hsl(var(--zen-stone));
-    background: hsl(var(--zen-paper));
-  }
-
-  .diagram-upload-zone.dragging {
-    border-color: hsl(var(--zen-ink));
-    background: hsl(var(--zen-paper));
-    transform: scale(1.01);
-  }
-
-  .upload-icon {
-    @apply mb-4 opacity-40;
-  }
-
-  .upload-text {
-    @apply font-medium text-sm mb-1;
-    color: hsl(var(--foreground));
-  }
-
-  .upload-hint {
-    @apply text-xs;
-    color: hsl(var(--muted-foreground));
-  }
-
-  /* ================================================================
-     ACTION ROW - Button container
-     ================================================================ */
-  .action-row {
-    @apply flex gap-3 mt-8;
-  }
-
-  /* ================================================================
-     BUTTONS - Minimal, refined
-     ================================================================ */
-  .btn-primary {
-    @apply inline-flex items-center justify-center px-8 py-4 rounded-lg
-           font-medium text-sm transition-all duration-500 ease-out
-           disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none;
-    background: hsl(var(--zen-ink));
-    color: hsl(var(--primary-foreground));
-    box-shadow: 0 2px 12px -3px hsl(30 10% 12% / 0.25);
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background: hsl(30 10% 18%);
-    box-shadow: 0 4px 20px -4px hsl(30 10% 12% / 0.35);
-    transform: translateY(-1px);
-  }
-
-  .btn-primary:active:not(:disabled) {
-    transform: translateY(0);
-  }
-
-  .btn-primary:focus-visible {
-    @apply outline-none ring-2 ring-offset-2;
-    ring-color: hsl(30 8% 25% / 0.4);
-    ring-offset-color: hsl(var(--background));
-  }
-
-  .btn-secondary {
-    @apply inline-flex items-center justify-center px-6 py-4 rounded-lg
-           font-medium text-sm transition-all duration-300 ease-out
-           disabled:opacity-40 disabled:cursor-not-allowed;
-    background: hsl(var(--secondary));
-    color: hsl(var(--secondary-foreground));
-    border: 1px solid hsl(var(--border));
-  }
-
-  .btn-secondary:hover:not(:disabled) {
-    background: hsl(35 15% 90%);
-    border-color: hsl(var(--zen-stone));
-  }
-
-  .btn-secondary:focus-visible {
-    @apply outline-none ring-2 ring-offset-2;
-    ring-color: hsl(30 8% 25% / 0.15);
-    ring-offset-color: hsl(var(--background));
-  }
-
-  /* ================================================================
-     RESULT CARDS - Paper-like, subtle depth
-     ================================================================ */
-  .result-card {
-    @apply p-7 rounded-xl transition-all duration-500 ease-out;
-    background: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
-    box-shadow: 0 2px 8px -2px hsl(30 10% 12% / 0.04);
-  }
-
-  .result-card:hover {
-    box-shadow: 0 4px 16px -4px hsl(30 10% 12% / 0.08);
-  }
-
-  .result-card-header {
-    @apply flex items-center justify-between pb-5 mb-5;
-    border-bottom: 1px solid hsl(var(--border));
-  }
-
-  /* ================================================================
-     SCORE DISPLAY - Elegant circular progress
-     ================================================================ */
-  .score-circle {
-    @apply relative;
-  }
-
-  .score-circle svg {
-    @apply transform -rotate-90;
-  }
-
-  .score-circle-bg {
-    stroke: hsl(var(--border));
-    stroke-width: 6;
-  }
-
-  .score-circle-fill {
-    stroke-width: 6;
-    stroke-linecap: round;
-    transition: stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .score-circle-text {
-    @apply absolute inset-0 flex flex-col items-center justify-center;
-  }
-
-  .score-percentage {
-    @apply text-3xl font-light;
-    color: hsl(var(--zen-ink));
-    letter-spacing: -0.02em;
-  }
-
-  .score-label {
-    @apply text-[10px] font-medium tracking-[0.15em] uppercase mt-1;
-    color: hsl(var(--muted-foreground));
-  }
-
-  /* ================================================================
-     AO SCORE BARS - Refined progress indicators
-     ================================================================ */
-  .ao-score-item {
-    @apply flex items-center gap-4 py-4;
-    border-bottom: 1px solid hsl(var(--border));
-  }
-
-  .ao-score-item:last-child {
-    border-bottom: none;
-  }
-
-  .ao-label {
-    @apply w-14 text-xs font-semibold tracking-wide;
-    color: hsl(var(--muted-foreground));
-  }
-
-  .ao-bar-container {
-    @apply flex-1 h-2 rounded-full overflow-hidden;
-    background: hsl(var(--secondary));
-  }
-
-  .ao-bar-fill {
-    @apply h-full rounded-full;
-    transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  /* AO Colors - Muted, harmonious palette for marks/feedback */
-  .ao-bar-fill.ao1 {
-    background: linear-gradient(90deg, hsl(200 25% 50%) 0%, hsl(200 30% 45%) 100%);
-  }
-
-  .ao-bar-fill.ao2 {
-    background: linear-gradient(90deg, hsl(95 20% 42%) 0%, hsl(95 25% 38%) 100%);
-  }
-
-  .ao-bar-fill.ao3 {
-    background: linear-gradient(90deg, hsl(270 20% 55%) 0%, hsl(270 25% 50%) 100%);
-  }
-
-  .ao-bar-fill.ao4 {
-    background: linear-gradient(90deg, hsl(30 40% 55%) 0%, hsl(30 45% 50%) 100%);
-  }
-
-  .ao-score-text {
-    @apply w-14 text-right text-xs font-semibold;
-    color: hsl(var(--foreground));
-  }
-
-  /* ================================================================
-     FEEDBACK LISTS - Clean, scannable
-     ================================================================ */
-  .feedback-list {
-    @apply space-y-3;
-  }
-
-  .feedback-item {
-    @apply flex gap-4 p-4 rounded-lg;
-    animation: zenSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  }
-
-  .feedback-item.strength {
-    background: hsl(95 30% 95%);
-    border: 1px solid hsl(95 20% 85%);
-  }
-
-  .feedback-item.improvement {
-    background: hsl(35 40% 95%);
-    border: 1px solid hsl(35 30% 85%);
-  }
-
-  .feedback-icon {
-    @apply flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center;
-  }
-
-  .feedback-icon.strength {
-    background: hsl(var(--zen-moss));
-    color: white;
-  }
-
-  .feedback-icon.improvement {
-    background: hsl(var(--zen-clay));
-    color: white;
-  }
-
-  .feedback-text {
-    @apply text-sm leading-relaxed;
-    color: hsl(var(--foreground));
-  }
-
-  /* ================================================================
-     LEVEL BADGE - Subtle, informative
-     ================================================================ */
-  .level-badge {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full font-medium text-xs tracking-wide;
-  }
-
-  .level-badge.level-5 {
-    background: hsl(95 25% 92%);
-    color: hsl(95 35% 30%);
-  }
-
-  .level-badge.level-4 {
-    background: hsl(200 25% 92%);
-    color: hsl(200 35% 35%);
-  }
-
-  .level-badge.level-3 {
-    background: hsl(45 35% 92%);
-    color: hsl(45 45% 30%);
-  }
-
-  .level-badge.level-2 {
-    background: hsl(25 40% 92%);
-    color: hsl(25 50% 35%);
-  }
-
-  .level-badge.level-1 {
-    background: hsl(10 45% 92%);
-    color: hsl(10 55% 35%);
-  }
-
-  /* ================================================================
-     LOADING STATES - Calm, meditative
-     ================================================================ */
-  .loading-overlay {
-    @apply fixed inset-0 flex items-center justify-center z-50;
-    background: hsl(var(--background) / 0.92);
-    backdrop-filter: blur(8px);
-  }
-
-  .loading-spinner {
-    @apply w-12 h-12 relative;
-  }
-
-  .loading-spinner::before {
-    content: '';
-    @apply absolute inset-0 rounded-full;
-    border: 2px solid hsl(var(--border));
-    border-top-color: hsl(var(--zen-ink));
-    animation: zenSpin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-  }
-
-  .loading-text {
-    @apply mt-6 text-sm font-medium;
-    color: hsl(var(--muted-foreground));
-    animation: zenPulse 2s ease-in-out infinite;
-  }
-
-  /* ================================================================
-     EXAMINER COMMENT - Elegant quotation
-     ================================================================ */
-  .examiner-comment {
-    @apply relative p-6 rounded-lg leading-relaxed;
-    background: hsl(var(--zen-sand));
-    border-left: 3px solid hsl(var(--zen-stone));
-    color: hsl(var(--foreground));
-    font-style: italic;
-  }
-
-  .examiner-comment::before {
-    content: '"';
-    @apply absolute -top-2 left-4 text-5xl font-serif;
-    color: hsl(var(--border));
-    line-height: 1;
-  }
-
-  /* ================================================================
-     EMPTY STATE - Inviting, clear
-     ================================================================ */
-  .empty-state {
-    @apply flex flex-col items-center justify-center py-20 text-center;
-  }
-
-  .empty-state-icon {
-    @apply w-16 h-16 mb-6;
-    color: hsl(var(--border));
-  }
-
-  .empty-state-title {
-    @apply text-lg font-medium mb-2;
-    color: hsl(var(--muted-foreground));
-  }
-
-  .empty-state-text {
-    @apply text-sm max-w-sm leading-relaxed;
-    color: hsl(var(--muted-foreground));
-    opacity: 0.8;
-  }
-
-  /* ================================================================
-     SECTION DIVIDER - Elegant separation
-     ================================================================ */
-  .section-divider {
-    @apply my-8 flex items-center gap-4;
-  }
-
-  .section-divider::before,
-  .section-divider::after {
-    content: '';
-    @apply flex-1 h-px;
-    background: hsl(var(--border));
-  }
-
-  .section-divider-text {
-    @apply text-[10px] font-medium tracking-[0.2em] uppercase;
-    color: hsl(var(--muted-foreground));
-  }
-
-  /* ================================================================
-     AO INFO CARDS - Subtle educational elements
-     ================================================================ */
-  .ao-info-card {
-    @apply p-3 rounded-lg text-center text-xs;
-  }
-
-  .ao-info-card.ao1 {
-    background: hsl(200 25% 95%);
-  }
-
-  .ao-info-card.ao1 .ao-info-label {
-    color: hsl(200 35% 40%);
-  }
-
-  .ao-info-card.ao1 .ao-info-desc {
-    color: hsl(200 25% 50%);
-  }
-
-  .ao-info-card.ao2 {
-    background: hsl(95 20% 95%);
-  }
-
-  .ao-info-card.ao2 .ao-info-label {
-    color: hsl(95 30% 35%);
-  }
-
-  .ao-info-card.ao2 .ao-info-desc {
-    color: hsl(95 20% 45%);
-  }
-
-  .ao-info-card.ao3 {
-    background: hsl(270 20% 95%);
-  }
-
-  .ao-info-card.ao3 .ao-info-label {
-    color: hsl(270 25% 45%);
-  }
-
-  .ao-info-card.ao3 .ao-info-desc {
-    color: hsl(270 15% 55%);
-  }
-
-  .ao-info-card.ao4 {
-    background: hsl(30 35% 95%);
-  }
-
-  .ao-info-card.ao4 .ao-info-label {
-    color: hsl(30 45% 40%);
-  }
-
-  .ao-info-card.ao4 .ao-info-desc {
-    color: hsl(30 30% 50%);
-  }
-
-  .ao-info-label {
-    @apply font-semibold;
-  }
-
-  .ao-info-desc {
-    @apply mt-0.5;
-  }
-
-  /* ================================================================
-     PLAN CONTENT STYLES - Structured essay planning
-     ================================================================ */
+  /* Plan section styles */
   .plan-thesis {
-    @apply p-5 rounded-lg;
-    background: hsl(200 25% 96%);
-    border-left: 3px solid hsl(var(--zen-water));
+    @apply bg-sky-50/50 border-l-2 border-sky-400;
   }
 
   .plan-argument {
-    @apply p-5 rounded-lg;
-    background: hsl(var(--zen-sand));
-    border: 1px solid hsl(var(--border));
-  }
-
-  .plan-argument-number {
-    @apply w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold;
-    background: hsl(var(--zen-ink));
-    color: hsl(var(--primary-foreground));
+    @apply bg-stone-50/50 border border-stone-100;
   }
 
   .plan-evaluation {
-    @apply p-5 rounded-lg;
-    background: hsl(30 35% 96%);
-    border: 1px solid hsl(30 25% 90%);
+    @apply bg-amber-50/50 border border-amber-100;
   }
 
   .plan-diagram {
-    @apply p-5 rounded-lg;
-    background: hsl(270 20% 96%);
-    border: 1px solid hsl(270 15% 90%);
+    @apply bg-violet-50/50 border border-violet-100;
   }
 
   .plan-conclusion {
-    @apply p-5 rounded-lg;
-    background: hsl(95 25% 96%);
-    border-left: 3px solid hsl(var(--zen-moss));
-  }
-
-  .plan-label {
-    @apply text-[10px] font-semibold tracking-[0.15em] uppercase mb-2 block;
-  }
-
-  .plan-label.theory {
-    color: hsl(var(--zen-water));
-  }
-
-  .plan-label.example {
-    color: hsl(var(--zen-moss));
+    @apply bg-emerald-50/50 border-l-2 border-emerald-400;
   }
 }
 
 @layer utilities {
-  /* ================================================================
-     ZEN ANIMATIONS - Smooth, deliberate, calming
-     ================================================================ */
-  @keyframes zenFadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes zenSlideUp {
-    from {
-      opacity: 0;
-      transform: translateY(16px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes zenScaleIn {
-    from {
-      opacity: 0;
-      transform: scale(0.97);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  @keyframes zenSpin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  @keyframes zenPulse {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.5;
-    }
-  }
-
-  @keyframes zenProgress {
-    from {
-      width: 0%;
-    }
-  }
-
-  @keyframes zenFloat {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-4px);
-    }
-  }
-
-  @keyframes zenBreathe {
-    0%, 100% {
-      opacity: 0.4;
-    }
-    50% {
-      opacity: 0.7;
-    }
-  }
-
-  .animate-zen-fade-in {
-    animation: zenFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .animate-zen-slide-up {
-    animation: zenSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  }
-
-  .animate-zen-scale-in {
-    animation: zenScaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .animate-zen-spin {
-    animation: zenSpin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-  }
-
-  .animate-zen-pulse {
-    animation: zenPulse 2s ease-in-out infinite;
-  }
-
-  .animate-zen-progress {
-    animation: zenProgress 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-
-  .animate-zen-float {
-    animation: zenFloat 4s ease-in-out infinite;
-  }
-
-  .animate-zen-breathe {
-    animation: zenBreathe 3s ease-in-out infinite;
-  }
-
-  /* Animation delays */
-  .delay-100 { animation-delay: 100ms; }
-  .delay-200 { animation-delay: 200ms; }
-  .delay-300 { animation-delay: 300ms; }
-  .delay-400 { animation-delay: 400ms; }
-  .delay-500 { animation-delay: 500ms; }
-  .delay-600 { animation-delay: 600ms; }
-  .delay-700 { animation-delay: 700ms; }
-  .delay-800 { animation-delay: 800ms; }
-
-  /* Stagger animation delays */
-  .stagger-1 { animation-delay: 0.08s; }
-  .stagger-2 { animation-delay: 0.16s; }
-  .stagger-3 { animation-delay: 0.24s; }
-  .stagger-4 { animation-delay: 0.32s; }
-  .stagger-5 { animation-delay: 0.40s; }
-  .stagger-6 { animation-delay: 0.48s; }
-
-  /* Legacy animation classes for compatibility */
-  .animate-fade-in {
-    animation: zenFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .animate-slide-up {
-    animation: zenSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  }
-
-  .animate-scale-in {
-    animation: zenScaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .animate-progress {
-    animation: zenProgress 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-
-  .animate-spin-slow {
-    animation: zenSpin 2s linear infinite;
-  }
-}
-
-/* ================================================================
-   SCROLLBAR - Minimal, unobtrusive
-   ================================================================ */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--zen-stone));
-}
-
-/* Firefox scrollbar */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: hsl(var(--border)) transparent;
-}
-
-/* ================================================================
-   FOCUS VISIBLE - Accessible, subtle
-   ================================================================ */
-:focus-visible {
-  outline: 2px solid hsl(var(--zen-ink));
-  outline-offset: 2px;
-}
-
-/* ================================================================
-   PRINT STYLES - Clean output
-   ================================================================ */
-@media print {
-  .mode-nav,
-  .action-row,
-  .btn-primary,
-  .btn-secondary,
-  .diagram-upload-section {
-    display: none !important;
-  }
-
-  .app-header {
-    position: relative;
-    border: none;
-  }
-
-  .result-card {
-    break-inside: avoid;
-    box-shadow: none;
-    border: 1px solid hsl(var(--border));
-  }
-
-  body {
-    background: white;
-  }
-}
-
-/* ================================================================
-   REDUCED MOTION - Respect user preferences
-   ================================================================ */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  .text-balance {
+    text-wrap: balance;
   }
 }

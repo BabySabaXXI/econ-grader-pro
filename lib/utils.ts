@@ -1,7 +1,8 @@
-type ClassValue = string | number | boolean | undefined | null;
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
-export function cn(...inputs: ClassValue[]): string {
-  return inputs.filter(Boolean).join(" ");
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
 }
 
 export function getGradeColor(percentage: number): string {
