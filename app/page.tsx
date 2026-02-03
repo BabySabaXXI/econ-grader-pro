@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2,
@@ -447,11 +448,13 @@ function DiagramUpload({
               Remove
             </button>
           </div>
-          <div className="rounded-xl overflow-hidden border border-stone-200">
-            <img
+          <div className="relative rounded-xl overflow-hidden border border-stone-200 h-48 bg-white">
+            <Image
               src={image}
               alt="Uploaded diagram"
-              className="w-full max-h-48 object-contain bg-white"
+              fill
+              className="object-contain"
+              unoptimized
             />
           </div>
         </CardContent>
