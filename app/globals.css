@@ -4,209 +4,360 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.75rem;
+    /* Zen Japanese Color Palette - Tranquil, Natural, Minimal */
+    --background: 40 20% 98%;      /* Warm off-white like washi paper */
+    --foreground: 30 10% 15%;      /* Deep charcoal ink */
+    --card: 40 25% 99%;            /* Slightly warmer card background */
+    --card-foreground: 30 10% 15%;
+    --popover: 40 25% 99%;
+    --popover-foreground: 30 10% 15%;
 
-    /* Custom economics theme colors */
-    --econ-primary: 217 91% 60%;
-    --econ-secondary: 142 76% 36%;
-    --econ-accent: 38 92% 50%;
-    --econ-muted: 220 14% 96%;
+    /* Primary - Sumi ink inspired deep charcoal */
+    --primary: 30 8% 25%;
+    --primary-foreground: 40 20% 98%;
+
+    /* Secondary - Warm stone gray */
+    --secondary: 35 15% 93%;
+    --secondary-foreground: 30 10% 20%;
+
+    /* Muted - Soft bamboo */
+    --muted: 38 18% 95%;
+    --muted-foreground: 30 8% 45%;
+
+    /* Accent - Subtle warm tone */
+    --accent: 35 20% 92%;
+    --accent-foreground: 30 10% 20%;
+
+    /* Destructive - Muted terracotta */
+    --destructive: 10 60% 50%;
+    --destructive-foreground: 40 20% 98%;
+
+    /* Border - Soft like ink wash */
+    --border: 35 12% 88%;
+    --input: 35 15% 92%;
+    --ring: 30 8% 35%;
+
+    /* Radius - Softer, more organic */
+    --radius: 0.625rem;
+
+    /* Zen-specific design tokens */
+    --zen-stone: 30 6% 50%;        /* Natural stone gray */
+    --zen-bamboo: 80 25% 45%;      /* Muted bamboo green */
+    --zen-sand: 40 30% 90%;        /* Warm sand */
+    --zen-ink: 30 10% 12%;         /* Deep sumi ink */
+    --zen-paper: 40 25% 97%;       /* Washi paper */
+    --zen-moss: 95 20% 35%;        /* Moss green */
+    --zen-clay: 20 35% 55%;        /* Terracotta clay */
+    --zen-water: 200 25% 55%;      /* Calm water blue */
   }
 
   * {
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-gradient-to-br from-slate-50 via-white to-blue-50 text-foreground antialiased min-h-screen;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    @apply bg-[hsl(var(--background))] text-foreground antialiased min-h-screen;
+    font-feature-settings: "rlig" 1, "calt" 1, "kern" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
+    @apply font-medium tracking-tight;
+    letter-spacing: -0.02em;
+  }
+
+  /* Custom selection color - soft ink */
+  ::selection {
+    @apply bg-[hsl(30,15%,85%)] text-[hsl(30,10%,15%)];
   }
 }
 
 @layer components {
-  /* Header Styles */
+  /* ================================================================
+     HEADER - Minimal, breathing space
+     ================================================================ */
   .app-header {
-    @apply text-center py-8 px-4 border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50;
+    @apply text-center py-12 px-6 bg-[hsl(var(--background))] sticky top-0 z-50;
+    border-bottom: 1px solid hsl(var(--border));
   }
 
   .header-eyebrow {
-    @apply text-xs font-medium tracking-[0.2em] uppercase text-blue-600 mb-2;
+    @apply text-[11px] font-medium tracking-[0.25em] uppercase mb-3;
+    color: hsl(var(--zen-stone));
   }
 
   .header-title {
-    @apply text-3xl md:text-4xl font-bold text-slate-900 mb-1;
+    @apply text-3xl md:text-4xl font-light mb-2;
+    color: hsl(var(--zen-ink));
+    letter-spacing: -0.03em;
   }
 
   .header-subtitle {
-    @apply text-sm text-slate-500 font-medium;
+    @apply text-sm font-normal;
+    color: hsl(var(--muted-foreground));
+    letter-spacing: 0.02em;
   }
 
-  /* Mode Navigation */
+  /* ================================================================
+     MODE NAVIGATION - Clean pill buttons
+     ================================================================ */
   .mode-nav {
-    @apply flex justify-center gap-2 p-4 bg-slate-50 border-b border-slate-200;
+    @apply flex justify-center gap-3 py-6 px-4;
+    background: hsl(var(--background));
+    border-bottom: 1px solid hsl(var(--border));
   }
 
   .mode-btn {
-    @apply flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-slate-600
-           bg-white border border-slate-200 transition-all duration-300 ease-out
-           hover:border-blue-300 hover:text-blue-600 hover:shadow-md hover:-translate-y-0.5;
+    @apply flex items-center gap-2.5 px-6 py-3 rounded-full font-medium text-sm
+           transition-all duration-500 ease-out;
+    color: hsl(var(--muted-foreground));
+    background: transparent;
+    border: 1px solid transparent;
+  }
+
+  .mode-btn:hover:not(.active) {
+    color: hsl(var(--foreground));
+    background: hsl(var(--secondary));
   }
 
   .mode-btn.active {
-    @apply bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200;
+    color: hsl(var(--primary-foreground));
+    background: hsl(var(--zen-ink));
+    box-shadow: 0 2px 12px -3px hsl(30 10% 12% / 0.2);
   }
 
   .mode-btn .mode-icon {
-    @apply text-lg;
+    @apply opacity-70;
   }
 
-  /* Panel Styles */
+  .mode-btn.active .mode-icon {
+    @apply opacity-100;
+  }
+
+  /* ================================================================
+     PANEL - Content container with breathing room
+     ================================================================ */
   .panel {
-    @apply hidden p-6 max-w-5xl mx-auto;
+    @apply hidden py-10 px-6 max-w-5xl mx-auto;
   }
 
   .panel.active {
-    @apply block animate-fade-in;
+    @apply block;
+    animation: zenFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  /* Question Config */
+  /* ================================================================
+     QUESTION CONFIG - Refined form controls
+     ================================================================ */
   .question-config {
-    @apply flex flex-wrap gap-4 mb-6;
+    @apply flex flex-wrap gap-5 mb-8;
   }
 
   .config-group {
-    @apply flex flex-col gap-2 flex-1 min-w-[200px];
+    @apply flex flex-col gap-2.5 flex-1 min-w-[200px];
   }
 
   .config-label {
-    @apply text-xs font-semibold tracking-wide uppercase text-slate-500;
+    @apply text-[11px] font-medium tracking-[0.15em] uppercase;
+    color: hsl(var(--zen-stone));
   }
 
   .config-select {
-    @apply w-full px-4 py-3 bg-white border border-slate-200 rounded-xl
-           text-slate-800 font-medium cursor-pointer
-           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-           transition-all duration-200;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236366f1' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 0.75rem center;
+    @apply w-full px-4 py-3.5 rounded-lg text-sm font-medium cursor-pointer
+           transition-all duration-300 ease-out;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--foreground));
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23757575' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.875rem center;
     background-repeat: no-repeat;
-    background-size: 1.5em 1.5em;
-    padding-right: 2.5rem;
+    background-size: 1.25em 1.25em;
+    padding-right: 2.75rem;
+    -webkit-appearance: none;
+    appearance: none;
   }
 
-  /* Input Areas */
+  .config-select:hover {
+    border-color: hsl(var(--zen-stone));
+  }
+
+  .config-select:focus {
+    @apply outline-none ring-2 ring-offset-2;
+    border-color: hsl(var(--zen-ink));
+    ring-color: hsl(30 8% 25% / 0.15);
+    ring-offset-color: hsl(var(--background));
+  }
+
+  /* ================================================================
+     INPUT AREAS - Spacious, calm text fields
+     ================================================================ */
   .input-area {
-    @apply w-full px-4 py-4 bg-white border border-slate-200 rounded-xl
-           text-slate-800 placeholder-slate-400 resize-y
-           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-           transition-all duration-200 min-h-[200px];
-    line-height: 1.7;
+    @apply w-full px-5 py-4 rounded-lg text-sm resize-y
+           transition-all duration-300 ease-out min-h-[180px];
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--foreground));
+    line-height: 1.8;
+  }
+
+  .input-area::placeholder {
+    color: hsl(var(--muted-foreground));
+    opacity: 0.6;
+  }
+
+  .input-area:hover {
+    border-color: hsl(var(--zen-stone));
   }
 
   .input-area:focus {
-    @apply shadow-lg shadow-blue-100;
+    @apply outline-none ring-2 ring-offset-2;
+    border-color: hsl(var(--zen-ink));
+    ring-color: hsl(30 8% 25% / 0.12);
+    ring-offset-color: hsl(var(--background));
+    box-shadow: 0 4px 20px -4px hsl(30 10% 12% / 0.08);
   }
 
-  /* Diagram Upload */
+  /* ================================================================
+     DIAGRAM UPLOAD - Elegant drop zone
+     ================================================================ */
   .diagram-upload-section {
-    @apply mt-6 p-5 bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl border border-slate-200;
+    @apply mt-8 p-6 rounded-xl;
+    background: hsl(var(--zen-sand));
+    border: 1px solid hsl(var(--border));
   }
 
   .diagram-upload-header {
-    @apply flex items-center justify-between mb-4;
+    @apply flex items-center justify-between mb-5;
   }
 
   .diagram-upload-title {
-    @apply font-semibold text-slate-800;
+    @apply font-medium text-sm;
+    color: hsl(var(--foreground));
   }
 
   .diagram-upload-optional {
-    @apply text-xs text-slate-500 bg-slate-200 px-2 py-1 rounded-full;
+    @apply text-[10px] font-medium tracking-wider uppercase px-2.5 py-1 rounded-full;
+    background: hsl(var(--card));
+    color: hsl(var(--muted-foreground));
+    border: 1px solid hsl(var(--border));
   }
 
   .diagram-upload-zone {
-    @apply flex flex-col items-center justify-center p-8 border-2 border-dashed
-           border-slate-300 rounded-xl bg-white cursor-pointer
-           hover:border-blue-400 hover:bg-blue-50 transition-all duration-300;
+    @apply flex flex-col items-center justify-center p-10 rounded-lg cursor-pointer
+           transition-all duration-500 ease-out;
+    background: hsl(var(--card));
+    border: 2px dashed hsl(var(--border));
+  }
+
+  .diagram-upload-zone:hover {
+    border-color: hsl(var(--zen-stone));
+    background: hsl(var(--zen-paper));
   }
 
   .diagram-upload-zone.dragging {
-    @apply border-blue-500 bg-blue-100 scale-[1.02];
+    border-color: hsl(var(--zen-ink));
+    background: hsl(var(--zen-paper));
+    transform: scale(1.01);
   }
 
   .upload-icon {
-    @apply text-4xl mb-3;
+    @apply mb-4 opacity-40;
   }
 
   .upload-text {
-    @apply font-medium text-slate-700;
+    @apply font-medium text-sm mb-1;
+    color: hsl(var(--foreground));
   }
 
   .upload-hint {
-    @apply text-xs text-slate-500 mt-1;
+    @apply text-xs;
+    color: hsl(var(--muted-foreground));
   }
 
-  /* Action Row */
+  /* ================================================================
+     ACTION ROW - Button container
+     ================================================================ */
   .action-row {
-    @apply flex gap-3 mt-6;
+    @apply flex gap-3 mt-8;
   }
 
-  /* Button Styles */
+  /* ================================================================
+     BUTTONS - Minimal, refined
+     ================================================================ */
   .btn-primary {
-    @apply inline-flex items-center justify-center px-8 py-4
-           bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl
-           hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2
-           focus:ring-blue-500 focus:ring-offset-2
-           disabled:opacity-50 disabled:cursor-not-allowed
-           transition-all duration-300 ease-out shadow-lg shadow-blue-200
-           hover:shadow-xl hover:shadow-blue-300 hover:-translate-y-0.5;
+    @apply inline-flex items-center justify-center px-8 py-4 rounded-lg
+           font-medium text-sm transition-all duration-500 ease-out
+           disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none;
+    background: hsl(var(--zen-ink));
+    color: hsl(var(--primary-foreground));
+    box-shadow: 0 2px 12px -3px hsl(30 10% 12% / 0.25);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: hsl(30 10% 18%);
+    box-shadow: 0 4px 20px -4px hsl(30 10% 12% / 0.35);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .btn-primary:focus-visible {
+    @apply outline-none ring-2 ring-offset-2;
+    ring-color: hsl(30 8% 25% / 0.4);
+    ring-offset-color: hsl(var(--background));
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-6 py-4
-           bg-slate-100 text-slate-700 font-semibold rounded-xl
-           hover:bg-slate-200 focus:outline-none focus:ring-2
-           focus:ring-slate-300 focus:ring-offset-2
-           disabled:opacity-50 disabled:cursor-not-allowed
-           transition-all duration-200;
+    @apply inline-flex items-center justify-center px-6 py-4 rounded-lg
+           font-medium text-sm transition-all duration-300 ease-out
+           disabled:opacity-40 disabled:cursor-not-allowed;
+    background: hsl(var(--secondary));
+    color: hsl(var(--secondary-foreground));
+    border: 1px solid hsl(var(--border));
   }
 
-  /* Card Styles */
+  .btn-secondary:hover:not(:disabled) {
+    background: hsl(35 15% 90%);
+    border-color: hsl(var(--zen-stone));
+  }
+
+  .btn-secondary:focus-visible {
+    @apply outline-none ring-2 ring-offset-2;
+    ring-color: hsl(30 8% 25% / 0.15);
+    ring-offset-color: hsl(var(--background));
+  }
+
+  /* ================================================================
+     RESULT CARDS - Paper-like, subtle depth
+     ================================================================ */
   .result-card {
-    @apply bg-white rounded-2xl border border-slate-200 p-6 shadow-sm
-           transition-all duration-300 hover:shadow-md;
+    @apply p-7 rounded-xl transition-all duration-500 ease-out;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 2px 8px -2px hsl(30 10% 12% / 0.04);
+  }
+
+  .result-card:hover {
+    box-shadow: 0 4px 16px -4px hsl(30 10% 12% / 0.08);
   }
 
   .result-card-header {
-    @apply flex items-center justify-between pb-4 border-b border-slate-100 mb-4;
+    @apply flex items-center justify-between pb-5 mb-5;
+    border-bottom: 1px solid hsl(var(--border));
   }
 
-  /* Score Display */
+  /* ================================================================
+     SCORE DISPLAY - Elegant circular progress
+     ================================================================ */
   .score-circle {
-    @apply relative w-32 h-32 mx-auto;
+    @apply relative;
   }
 
   .score-circle svg {
@@ -214,11 +365,14 @@
   }
 
   .score-circle-bg {
-    @apply stroke-slate-200;
+    stroke: hsl(var(--border));
+    stroke-width: 6;
   }
 
   .score-circle-fill {
-    @apply transition-all duration-1000 ease-out;
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .score-circle-text {
@@ -226,173 +380,348 @@
   }
 
   .score-percentage {
-    @apply text-3xl font-bold text-slate-900;
+    @apply text-3xl font-light;
+    color: hsl(var(--zen-ink));
+    letter-spacing: -0.02em;
   }
 
   .score-label {
-    @apply text-xs text-slate-500 font-medium;
+    @apply text-[10px] font-medium tracking-[0.15em] uppercase mt-1;
+    color: hsl(var(--muted-foreground));
   }
 
-  /* AO Score Bar */
+  /* ================================================================
+     AO SCORE BARS - Refined progress indicators
+     ================================================================ */
   .ao-score-item {
-    @apply flex items-center gap-4 py-4 border-b border-slate-100 last:border-0;
+    @apply flex items-center gap-4 py-4;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .ao-score-item:last-child {
+    border-bottom: none;
   }
 
   .ao-label {
-    @apply w-20 text-sm font-semibold text-slate-600;
+    @apply w-14 text-xs font-semibold tracking-wide;
+    color: hsl(var(--muted-foreground));
   }
 
   .ao-bar-container {
-    @apply flex-1 h-3 bg-slate-100 rounded-full overflow-hidden;
+    @apply flex-1 h-2 rounded-full overflow-hidden;
+    background: hsl(var(--secondary));
   }
 
   .ao-bar-fill {
-    @apply h-full rounded-full transition-all duration-700 ease-out;
+    @apply h-full rounded-full;
+    transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
+  /* AO Colors - Muted, harmonious palette for marks/feedback */
   .ao-bar-fill.ao1 {
-    @apply bg-gradient-to-r from-blue-400 to-blue-600;
+    background: linear-gradient(90deg, hsl(200 25% 50%) 0%, hsl(200 30% 45%) 100%);
   }
 
   .ao-bar-fill.ao2 {
-    @apply bg-gradient-to-r from-emerald-400 to-emerald-600;
+    background: linear-gradient(90deg, hsl(95 20% 42%) 0%, hsl(95 25% 38%) 100%);
   }
 
   .ao-bar-fill.ao3 {
-    @apply bg-gradient-to-r from-purple-400 to-purple-600;
+    background: linear-gradient(90deg, hsl(270 20% 55%) 0%, hsl(270 25% 50%) 100%);
   }
 
   .ao-bar-fill.ao4 {
-    @apply bg-gradient-to-r from-amber-400 to-amber-600;
+    background: linear-gradient(90deg, hsl(30 40% 55%) 0%, hsl(30 45% 50%) 100%);
   }
 
   .ao-score-text {
-    @apply w-16 text-right text-sm font-bold text-slate-700;
+    @apply w-14 text-right text-xs font-semibold;
+    color: hsl(var(--foreground));
   }
 
-  /* Feedback List */
+  /* ================================================================
+     FEEDBACK LISTS - Clean, scannable
+     ================================================================ */
   .feedback-list {
     @apply space-y-3;
   }
 
   .feedback-item {
-    @apply flex gap-3 p-4 rounded-xl animate-slide-up;
+    @apply flex gap-4 p-4 rounded-lg;
+    animation: zenSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 
   .feedback-item.strength {
-    @apply bg-emerald-50 border border-emerald-200;
+    background: hsl(95 30% 95%);
+    border: 1px solid hsl(95 20% 85%);
   }
 
   .feedback-item.improvement {
-    @apply bg-amber-50 border border-amber-200;
+    background: hsl(35 40% 95%);
+    border: 1px solid hsl(35 30% 85%);
   }
 
   .feedback-icon {
-    @apply flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-sm;
+    @apply flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center;
   }
 
   .feedback-icon.strength {
-    @apply bg-emerald-500 text-white;
+    background: hsl(var(--zen-moss));
+    color: white;
   }
 
   .feedback-icon.improvement {
-    @apply bg-amber-500 text-white;
+    background: hsl(var(--zen-clay));
+    color: white;
   }
 
   .feedback-text {
-    @apply text-sm text-slate-700 leading-relaxed;
+    @apply text-sm leading-relaxed;
+    color: hsl(var(--foreground));
   }
 
-  /* Level Badge */
+  /* ================================================================
+     LEVEL BADGE - Subtle, informative
+     ================================================================ */
   .level-badge {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm;
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full font-medium text-xs tracking-wide;
   }
 
   .level-badge.level-5 {
-    @apply bg-emerald-100 text-emerald-800;
+    background: hsl(95 25% 92%);
+    color: hsl(95 35% 30%);
   }
 
   .level-badge.level-4 {
-    @apply bg-blue-100 text-blue-800;
+    background: hsl(200 25% 92%);
+    color: hsl(200 35% 35%);
   }
 
   .level-badge.level-3 {
-    @apply bg-yellow-100 text-yellow-800;
+    background: hsl(45 35% 92%);
+    color: hsl(45 45% 30%);
   }
 
   .level-badge.level-2 {
-    @apply bg-orange-100 text-orange-800;
+    background: hsl(25 40% 92%);
+    color: hsl(25 50% 35%);
   }
 
   .level-badge.level-1 {
-    @apply bg-red-100 text-red-800;
+    background: hsl(10 45% 92%);
+    color: hsl(10 55% 35%);
   }
 
-  /* Loading States */
+  /* ================================================================
+     LOADING STATES - Calm, meditative
+     ================================================================ */
   .loading-overlay {
-    @apply fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50;
+    @apply fixed inset-0 flex items-center justify-center z-50;
+    background: hsl(var(--background) / 0.92);
+    backdrop-filter: blur(8px);
   }
 
   .loading-spinner {
-    @apply w-16 h-16 relative;
-  }
-
-  .loading-spinner::before,
-  .loading-spinner::after {
-    content: '';
-    @apply absolute inset-0 rounded-full border-4 border-transparent;
+    @apply w-12 h-12 relative;
   }
 
   .loading-spinner::before {
-    @apply border-t-blue-600 animate-spin;
-  }
-
-  .loading-spinner::after {
-    @apply border-b-blue-300 animate-spin-slow;
+    content: '';
+    @apply absolute inset-0 rounded-full;
+    border: 2px solid hsl(var(--border));
+    border-top-color: hsl(var(--zen-ink));
+    animation: zenSpin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
   }
 
   .loading-text {
-    @apply mt-6 text-slate-600 font-medium animate-pulse;
+    @apply mt-6 text-sm font-medium;
+    color: hsl(var(--muted-foreground));
+    animation: zenPulse 2s ease-in-out infinite;
   }
 
-  /* Examiner Comment */
+  /* ================================================================
+     EXAMINER COMMENT - Elegant quotation
+     ================================================================ */
   .examiner-comment {
-    @apply relative p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl
-           border border-slate-200 italic text-slate-700 leading-relaxed;
+    @apply relative p-6 rounded-lg leading-relaxed;
+    background: hsl(var(--zen-sand));
+    border-left: 3px solid hsl(var(--zen-stone));
+    color: hsl(var(--foreground));
+    font-style: italic;
   }
 
   .examiner-comment::before {
     content: '"';
-    @apply absolute -top-2 left-4 text-6xl text-blue-200 font-serif;
+    @apply absolute -top-2 left-4 text-5xl font-serif;
+    color: hsl(var(--border));
+    line-height: 1;
   }
 
-  /* Empty State */
+  /* ================================================================
+     EMPTY STATE - Inviting, clear
+     ================================================================ */
   .empty-state {
-    @apply flex flex-col items-center justify-center py-16 text-center;
+    @apply flex flex-col items-center justify-center py-20 text-center;
   }
 
   .empty-state-icon {
-    @apply w-24 h-24 mb-6 text-slate-300;
+    @apply w-16 h-16 mb-6;
+    color: hsl(var(--border));
   }
 
   .empty-state-title {
-    @apply text-xl font-semibold text-slate-600 mb-2;
+    @apply text-lg font-medium mb-2;
+    color: hsl(var(--muted-foreground));
   }
 
   .empty-state-text {
-    @apply text-slate-500 max-w-md;
+    @apply text-sm max-w-sm leading-relaxed;
+    color: hsl(var(--muted-foreground));
+    opacity: 0.8;
+  }
+
+  /* ================================================================
+     SECTION DIVIDER - Elegant separation
+     ================================================================ */
+  .section-divider {
+    @apply my-8 flex items-center gap-4;
+  }
+
+  .section-divider::before,
+  .section-divider::after {
+    content: '';
+    @apply flex-1 h-px;
+    background: hsl(var(--border));
+  }
+
+  .section-divider-text {
+    @apply text-[10px] font-medium tracking-[0.2em] uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* ================================================================
+     AO INFO CARDS - Subtle educational elements
+     ================================================================ */
+  .ao-info-card {
+    @apply p-3 rounded-lg text-center text-xs;
+  }
+
+  .ao-info-card.ao1 {
+    background: hsl(200 25% 95%);
+  }
+
+  .ao-info-card.ao1 .ao-info-label {
+    color: hsl(200 35% 40%);
+  }
+
+  .ao-info-card.ao1 .ao-info-desc {
+    color: hsl(200 25% 50%);
+  }
+
+  .ao-info-card.ao2 {
+    background: hsl(95 20% 95%);
+  }
+
+  .ao-info-card.ao2 .ao-info-label {
+    color: hsl(95 30% 35%);
+  }
+
+  .ao-info-card.ao2 .ao-info-desc {
+    color: hsl(95 20% 45%);
+  }
+
+  .ao-info-card.ao3 {
+    background: hsl(270 20% 95%);
+  }
+
+  .ao-info-card.ao3 .ao-info-label {
+    color: hsl(270 25% 45%);
+  }
+
+  .ao-info-card.ao3 .ao-info-desc {
+    color: hsl(270 15% 55%);
+  }
+
+  .ao-info-card.ao4 {
+    background: hsl(30 35% 95%);
+  }
+
+  .ao-info-card.ao4 .ao-info-label {
+    color: hsl(30 45% 40%);
+  }
+
+  .ao-info-card.ao4 .ao-info-desc {
+    color: hsl(30 30% 50%);
+  }
+
+  .ao-info-label {
+    @apply font-semibold;
+  }
+
+  .ao-info-desc {
+    @apply mt-0.5;
+  }
+
+  /* ================================================================
+     PLAN CONTENT STYLES - Structured essay planning
+     ================================================================ */
+  .plan-thesis {
+    @apply p-5 rounded-lg;
+    background: hsl(200 25% 96%);
+    border-left: 3px solid hsl(var(--zen-water));
+  }
+
+  .plan-argument {
+    @apply p-5 rounded-lg;
+    background: hsl(var(--zen-sand));
+    border: 1px solid hsl(var(--border));
+  }
+
+  .plan-argument-number {
+    @apply w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold;
+    background: hsl(var(--zen-ink));
+    color: hsl(var(--primary-foreground));
+  }
+
+  .plan-evaluation {
+    @apply p-5 rounded-lg;
+    background: hsl(30 35% 96%);
+    border: 1px solid hsl(30 25% 90%);
+  }
+
+  .plan-diagram {
+    @apply p-5 rounded-lg;
+    background: hsl(270 20% 96%);
+    border: 1px solid hsl(270 15% 90%);
+  }
+
+  .plan-conclusion {
+    @apply p-5 rounded-lg;
+    background: hsl(95 25% 96%);
+    border-left: 3px solid hsl(var(--zen-moss));
+  }
+
+  .plan-label {
+    @apply text-[10px] font-semibold tracking-[0.15em] uppercase mb-2 block;
+  }
+
+  .plan-label.theory {
+    color: hsl(var(--zen-water));
+  }
+
+  .plan-label.example {
+    color: hsl(var(--zen-moss));
   }
 }
 
 @layer utilities {
-  .animate-fade-in {
-    animation: fadeIn 0.4s ease-out;
-  }
-
-  @keyframes fadeIn {
+  /* ================================================================
+     ZEN ANIMATIONS - Smooth, deliberate, calming
+     ================================================================ */
+  @keyframes zenFadeIn {
     from {
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(8px);
     }
     to {
       opacity: 1;
@@ -400,14 +729,10 @@
     }
   }
 
-  .animate-slide-up {
-    animation: slideUp 0.5s ease-out forwards;
-  }
-
-  @keyframes slideUp {
+  @keyframes zenSlideUp {
     from {
       opacity: 0;
-      transform: translateY(20px);
+      transform: translateY(16px);
     }
     to {
       opacity: 1;
@@ -415,14 +740,10 @@
     }
   }
 
-  .animate-scale-in {
-    animation: scaleIn 0.3s ease-out;
-  }
-
-  @keyframes scaleIn {
+  @keyframes zenScaleIn {
     from {
       opacity: 0;
-      transform: scale(0.95);
+      transform: scale(0.97);
     }
     to {
       opacity: 1;
@@ -430,65 +751,189 @@
     }
   }
 
-  .animate-spin-slow {
-    animation: spin 1.5s linear infinite reverse;
-  }
-
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
+  @keyframes zenSpin {
     to {
       transform: rotate(360deg);
     }
   }
 
-  .animate-progress {
-    animation: progress 1s ease-out forwards;
+  @keyframes zenPulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
   }
 
-  @keyframes progress {
+  @keyframes zenProgress {
     from {
       width: 0%;
     }
   }
 
-  .stagger-1 { animation-delay: 0.1s; }
-  .stagger-2 { animation-delay: 0.2s; }
-  .stagger-3 { animation-delay: 0.3s; }
-  .stagger-4 { animation-delay: 0.4s; }
-  .stagger-5 { animation-delay: 0.5s; }
+  @keyframes zenFloat {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-4px);
+    }
+  }
+
+  @keyframes zenBreathe {
+    0%, 100% {
+      opacity: 0.4;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+
+  .animate-zen-fade-in {
+    animation: zenFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .animate-zen-slide-up {
+    animation: zenSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .animate-zen-scale-in {
+    animation: zenScaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .animate-zen-spin {
+    animation: zenSpin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  }
+
+  .animate-zen-pulse {
+    animation: zenPulse 2s ease-in-out infinite;
+  }
+
+  .animate-zen-progress {
+    animation: zenProgress 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animate-zen-float {
+    animation: zenFloat 4s ease-in-out infinite;
+  }
+
+  .animate-zen-breathe {
+    animation: zenBreathe 3s ease-in-out infinite;
+  }
+
+  /* Animation delays */
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
+  .delay-500 { animation-delay: 500ms; }
+  .delay-600 { animation-delay: 600ms; }
+  .delay-700 { animation-delay: 700ms; }
+  .delay-800 { animation-delay: 800ms; }
+
+  /* Stagger animation delays */
+  .stagger-1 { animation-delay: 0.08s; }
+  .stagger-2 { animation-delay: 0.16s; }
+  .stagger-3 { animation-delay: 0.24s; }
+  .stagger-4 { animation-delay: 0.32s; }
+  .stagger-5 { animation-delay: 0.40s; }
+  .stagger-6 { animation-delay: 0.48s; }
+
+  /* Legacy animation classes for compatibility */
+  .animate-fade-in {
+    animation: zenFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .animate-slide-up {
+    animation: zenSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .animate-scale-in {
+    animation: zenScaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .animate-progress {
+    animation: zenProgress 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animate-spin-slow {
+    animation: zenSpin 2s linear infinite;
+  }
 }
 
-/* Scrollbar styling */
+/* ================================================================
+   SCROLLBAR - Minimal, unobtrusive
+   ================================================================ */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-slate-100 rounded-full;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 rounded-full hover:bg-slate-400;
+  background: hsl(var(--border));
+  border-radius: 3px;
 }
 
-/* Selection styling */
-::selection {
-  @apply bg-blue-200 text-blue-900;
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--zen-stone));
 }
 
-/* Print styles */
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+/* ================================================================
+   FOCUS VISIBLE - Accessible, subtle
+   ================================================================ */
+:focus-visible {
+  outline: 2px solid hsl(var(--zen-ink));
+  outline-offset: 2px;
+}
+
+/* ================================================================
+   PRINT STYLES - Clean output
+   ================================================================ */
 @media print {
   .mode-nav,
   .action-row,
   .btn-primary,
-  .btn-secondary {
-    @apply hidden;
+  .btn-secondary,
+  .diagram-upload-section {
+    display: none !important;
+  }
+
+  .app-header {
+    position: relative;
+    border: none;
   }
 
   .result-card {
-    @apply shadow-none border-slate-300;
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid hsl(var(--border));
+  }
+
+  body {
+    background: white;
+  }
+}
+
+/* ================================================================
+   REDUCED MOTION - Respect user preferences
+   ================================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

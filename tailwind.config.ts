@@ -42,38 +42,116 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Zen-specific colors
+        zen: {
+          stone: "hsl(var(--zen-stone))",
+          bamboo: "hsl(var(--zen-bamboo))",
+          sand: "hsl(var(--zen-sand))",
+          ink: "hsl(var(--zen-ink))",
+          paper: "hsl(var(--zen-paper))",
+          moss: "hsl(var(--zen-moss))",
+          clay: "hsl(var(--zen-clay))",
+          water: "hsl(var(--zen-water))",
+        },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: [
+          "Inter",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "Helvetica Neue",
+          "Arial",
+          "sans-serif",
+        ],
+      },
+      fontSize: {
+        "2xs": ["0.625rem", { lineHeight: "0.875rem" }],
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      boxShadow: {
+        "zen-sm": "0 1px 3px -1px hsl(30 10% 12% / 0.04)",
+        zen: "0 2px 8px -2px hsl(30 10% 12% / 0.06)",
+        "zen-md": "0 4px 16px -4px hsl(30 10% 12% / 0.08)",
+        "zen-lg": "0 8px 30px -8px hsl(30 10% 12% / 0.12)",
+        "zen-xl": "0 16px 50px -12px hsl(30 10% 12% / 0.16)",
+      },
       animation: {
-        "fade-in": "fadeIn 0.4s ease-out",
-        "slide-up": "slideUp 0.5s ease-out forwards",
-        "scale-in": "scaleIn 0.3s ease-out",
-        "spin-slow": "spin 1.5s linear infinite reverse",
-        progress: "progress 1s ease-out forwards",
+        // Zen animations - smooth, deliberate, calming
+        "zen-fade-in": "zenFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
+        "zen-slide-up": "zenSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards",
+        "zen-slide-down": "zenSlideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards",
+        "zen-scale-in": "zenScaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+        "zen-spin": "zenSpin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite",
+        "zen-pulse": "zenPulse 2s ease-in-out infinite",
+        "zen-progress": "zenProgress 1s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "zen-float": "zenFloat 4s ease-in-out infinite",
+        "zen-breathe": "zenBreathe 3s ease-in-out infinite",
+        "zen-ripple": "zenRipple 0.6s ease-out forwards",
+        // Legacy support
+        "fade-in": "zenFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
+        "slide-up": "zenSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards",
+        "scale-in": "zenScaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+        "spin-slow": "zenSpin 2s linear infinite",
+        progress: "zenProgress 1s cubic-bezier(0.16, 1, 0.3, 1) forwards",
       },
       keyframes: {
-        fadeIn: {
-          from: { opacity: "0", transform: "translateY(10px)" },
+        zenFadeIn: {
+          from: { opacity: "0", transform: "translateY(8px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
-        slideUp: {
-          from: { opacity: "0", transform: "translateY(20px)" },
+        zenSlideUp: {
+          from: { opacity: "0", transform: "translateY(16px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
-        scaleIn: {
-          from: { opacity: "0", transform: "scale(0.95)" },
+        zenSlideDown: {
+          from: { opacity: "0", transform: "translateY(-16px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        zenScaleIn: {
+          from: { opacity: "0", transform: "scale(0.97)" },
           to: { opacity: "1", transform: "scale(1)" },
         },
-        progress: {
+        zenSpin: {
+          to: { transform: "rotate(360deg)" },
+        },
+        zenPulse: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.5" },
+        },
+        zenProgress: {
           from: { width: "0%" },
         },
+        zenFloat: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-4px)" },
+        },
+        zenBreathe: {
+          "0%, 100%": { opacity: "0.4" },
+          "50%": { opacity: "0.7" },
+        },
+        zenRipple: {
+          "0%": { transform: "scale(0)", opacity: "0.5" },
+          "100%": { transform: "scale(2.5)", opacity: "0" },
+        },
+      },
+      transitionTimingFunction: {
+        "zen-ease": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "zen-bounce": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      },
+      transitionDuration: {
+        "400": "400ms",
+        "600": "600ms",
+        "800": "800ms",
+      },
+      spacing: {
+        "18": "4.5rem",
+        "22": "5.5rem",
       },
     },
   },
