@@ -235,7 +235,7 @@ export function createEmptyGradingResult(
     examinerComment: 'No diagram was submitted for grading.'
   };
 }
-
+// eslint-disable-next-line import/no-anonymous-default-export
 export default {
   buildGradingCriteriaText,
   getDiagramMarks,
