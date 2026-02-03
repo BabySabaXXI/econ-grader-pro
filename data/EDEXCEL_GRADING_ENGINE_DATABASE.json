@@ -1,0 +1,391 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "examBoard": "Edexcel IAL (Pearson International)",
+    "qualification": "AS and A Level Economics",
+    "specificationCodes": {
+      "IAS": "XEC11",
+      "IAL": "YEC11"
+    },
+    "units": {
+      "WEC11": "Markets in Action",
+      "WEC12": "Macroeconomic Performance and Policy",
+      "WEC13": "Business Behaviour",
+      "WEC14": "Developments in the Global Economy"
+    },
+    "lastUpdated": "2025-02",
+    "sources": [
+      "Edexcel IAL Economics Specification 2018",
+      "IAL Command Word Expected Response Document",
+      "IAL Economics Getting Started Guide",
+      "Official Pearson Examiner Reports 2019-2024"
+    ]
+  },
+
+  "assessmentObjectives": {
+    "AO1": {
+      "name": "Knowledge and Understanding",
+      "description": "Demonstrate knowledge and understanding of economic concepts, theories and models",
+      "weighting": "20-25%",
+      "keywords": ["define", "state", "identify", "describe", "outline", "what is meant by"],
+      "howToScore": {
+        "fullMarks": "Precise definition using correct economic terminology",
+        "partialMarks": "Basic understanding shown but lacks precision",
+        "noMarks": "Incorrect or irrelevant definition"
+      }
+    },
+    "AO2": {
+      "name": "Application",
+      "description": "Apply knowledge and understanding to various economic contexts",
+      "weighting": "20-25%",
+      "keywords": ["apply", "use", "calculate", "illustrate", "with reference to"],
+      "howToScore": {
+        "fullMarks": "Clear application to the specific context/extract provided",
+        "partialMarks": "Some reference to context but lacks depth",
+        "noMarks": "Generic answer with no contextual application"
+      }
+    },
+    "AO3": {
+      "name": "Analysis",
+      "description": "Analyse economic issues and arguments using appropriate methods",
+      "weighting": "25-30%",
+      "keywords": ["analyse", "explain", "examine", "why", "how"],
+      "howToScore": {
+        "fullMarks": "Developed chains of reasoning with cause-effect relationships",
+        "partialMarks": "Some analysis but chains of reasoning incomplete",
+        "noMarks": "Descriptive only, no analytical reasoning"
+      }
+    },
+    "AO4": {
+      "name": "Evaluation",
+      "description": "Evaluate economic arguments and evidence, making reasoned judgements",
+      "weighting": "25-30%",
+      "keywords": ["evaluate", "assess", "discuss", "to what extent", "justify", "critically assess"],
+      "howToScore": {
+        "fullMarks": "Developed evaluation with chains of reasoning and informed judgement",
+        "partialMarks": "Evaluative points identified but not developed",
+        "noMarks": "No attempt at evaluation or purely descriptive"
+      }
+    }
+  },
+
+  "commandWords": {
+    "define": {
+      "marks": 2,
+      "aoSplit": {"AO1": 2, "AO2": 0, "AO3": 0, "AO4": 0},
+      "requirements": [
+        "Definition only required",
+        "No examples needed from context",
+        "No application marks available"
+      ],
+      "levelDescriptors": {
+        "2marks": "Comprehensive definition with excellent precision using correct terminology",
+        "1mark": "Basic definition showing limited understanding"
+      },
+      "examinerTips": [
+        "Use exact economic terminology",
+        "Be concise and precise",
+        "Do not waste time adding examples unless asked"
+      ]
+    },
+
+    "draw": {
+      "marks": 4,
+      "aoSplit": {"AO1": 1, "AO2": 3, "AO3": 0, "AO4": 0},
+      "requirements": [
+        "1 mark for original supply and demand curves",
+        "1 mark for drawing the correct shift",
+        "1 mark for labelling new price",
+        "1 mark for labelling new quantity"
+      ],
+      "examinerTips": [
+        "Label axes clearly (Price on Y, Quantity on X)",
+        "Label all curves at the END of the line (D, S, D1, S1)",
+        "Use directional arrows to show shift direction",
+        "Label new equilibrium clearly (E to E1)",
+        "No written explanation required - diagram alone can achieve full marks"
+      ]
+    },
+
+    "calculate": {
+      "marks": 4,
+      "aoSplit": {"AO1": 1, "AO2": 3, "AO3": 0, "AO4": 0},
+      "requirements": [
+        "1 mark for correct formula",
+        "3 marks for calculations and correct answer"
+      ],
+      "examinerTips": [
+        "Always show the formula first",
+        "Show all working out",
+        "Include units in final answer",
+        "PED is always negative - include negative sign",
+        "Elasticities are NOT percentages - do not add % sign",
+        "For change calculations, show if positive or negative"
+      ]
+    },
+
+    "explain_4": {
+      "marks": 4,
+      "type1": {
+        "aoSplit": {"AO1": 2, "AO2": 2, "AO3": 0, "AO4": 0},
+        "triggers": ["explain the difference", "explain what is meant by", "explain the term", "explain the likely change"],
+        "requirements": ["Knowledge and application only", "No analysis marks"]
+      },
+      "type2": {
+        "aoSplit": {"AO1": 1, "AO2": 1, "AO3": 2, "AO4": 0},
+        "triggers": ["explain one", "explain the likely impact", "illustrate your answer with a diagram"],
+        "requirements": ["Requires analysis", "If diagram asked, 2 marks for diagram"]
+      }
+    },
+
+    "analyse": {
+      "marks": 6,
+      "aoSplit": {"AO1": 2, "AO2": 2, "AO3": 2, "AO4": 0},
+      "requirements": [
+        "Diagram if instructed: 1 K for original curves, 1 Ap for shift, 1 An for new equilibrium",
+        "Developed chains of reasoning required",
+        "NO evaluation marks available"
+      ],
+      "examinerTips": [
+        "Do NOT provide evaluation - no marks available",
+        "Focus on cause-effect chains",
+        "Use economic terminology precisely"
+      ]
+    },
+
+    "examine": {
+      "marks": 8,
+      "aoSplit": {"AO1": 2, "AO2": 2, "AO3": 2, "AO4": 2},
+      "requirements": [
+        "Knowledge: definition + identifying factor from case study",
+        "Application and analysis: up to 2 marks per linked explanation (max 4)",
+        "Evaluation: 2 marks for 2 evaluative points OR 1 developed evaluation"
+      ],
+      "levelDescriptors": {
+        "level3": "7-8 marks: Strong knowledge, developed analysis, supported evaluation in context",
+        "level2": "4-6 marks: Sound knowledge, some analysis, limited evaluation",
+        "level1": "1-3 marks: Basic knowledge, weak analysis, no evaluation"
+      },
+      "examinerTips": [
+        "Consider 3 factors maximum - more is excessive",
+        "Evaluation is REQUIRED for full marks",
+        "Many students fail to attempt evaluation",
+        "Avoid overwriting - timing is crucial"
+      ]
+    },
+
+    "discuss": {
+      "marks": 14,
+      "aoSplit": {"AO1": 2, "AO2": 2, "AO3": 4, "AO4": 6},
+      "levelDescriptors": {
+        "KAA": {
+          "level3": "7-8 marks: Excellent knowledge, fully in context, developed chains of reasoning with accurate diagrams",
+          "level2": "4-6 marks: Sound knowledge, some context, basic analysis",
+          "level1": "1-3 marks: Generic answer with limited/no context"
+        },
+        "evaluation": {
+          "level3": "5-6 marks: Developed chains of reasoning, fully in context, informed judgement",
+          "level2": "3-4 marks: Some development of evaluative points",
+          "level1": "1-2 marks: Generic/undeveloped evaluation points"
+        }
+      },
+      "examinerTips": [
+        "Context is VERY important for KAA",
+        "Generic answer = Level 1 only",
+        "Use extract data as starting point for evaluation",
+        "Write longer chains of reasoning for 2 points rather than 3 undeveloped points",
+        "Accurate diagram with explanation can shift Level 2 to Level 3",
+        "Include informed judgement for top marks"
+      ]
+    },
+
+    "evaluate_20": {
+      "marks": 20,
+      "aoSplit": {"AO1": 4, "AO2": 4, "AO3": 4, "AO4": 8},
+      "levelDescriptors": {
+        "KAA": {
+          "level3": "9-12 marks: Excellent knowledge, precise concepts, developed chains, accurate diagrams, full context",
+          "level2": "5-8 marks: Sound knowledge, some analysis, partial context",
+          "level1": "1-4 marks: Basic knowledge, limited analysis, no context"
+        },
+        "evaluation": {
+          "level3": "7-8 marks: Developed chains of reasoning in context, informed judgement",
+          "level2": "4-6 marks: Partially developed evaluation, some context",
+          "level1": "1-3 marks: Undeveloped evaluative points"
+        }
+      },
+      "requirements": [
+        "Clear essay structure with distinct paragraphs",
+        "NOT bullet points or long blocks without distinction",
+        "3-4 analysis points with development",
+        "3-4 evaluation points for full marks",
+        "Informed judgement required for Level 3 evaluation"
+      ],
+      "examinerTips": [
+        "Structure: clear paragraphs covering one issue each",
+        "Define key terms relevant to question",
+        "Include diagram if relevant and explain it",
+        "Depth over breadth: develop 2-3 points well rather than many superficially",
+        "Context from stem AND own examples",
+        "Chains of reasoning not just separate points",
+        "End with informed judgement based on evidence"
+      ]
+    }
+  },
+
+  "markSchemes": {
+    "unit1": {
+      "sectionA": {"marks": 6, "type": "multiple-choice"},
+      "sectionB": {"marks": 20, "type": "short-answer", "questions": 5},
+      "sectionC": {"marks": 34, "type": "data-response", "parts": 5},
+      "sectionD": {"marks": 20, "type": "essay", "choice": "1 from 2"}
+    },
+    "unit2": {
+      "sectionA": {"marks": 6, "type": "multiple-choice"},
+      "sectionB": {"marks": 20, "type": "short-answer", "questions": 5},
+      "sectionC": {"marks": 34, "type": "data-response", "parts": 5},
+      "sectionD": {"marks": 20, "type": "essay", "choice": "1 from 2"}
+    },
+    "unit3": {
+      "sectionA": {"marks": 6, "type": "multiple-choice"},
+      "sectionB": {"marks": 34, "type": "data-response", "parts": 5},
+      "sectionC": {"marks": 40, "type": "essay", "choice": "2 from 3", "perEssay": 20}
+    },
+    "unit4": {
+      "sectionA": {"marks": 6, "type": "multiple-choice"},
+      "sectionB": {"marks": 34, "type": "data-response", "parts": 5},
+      "sectionC": {"marks": 40, "type": "essay", "choice": "2 from 3", "perEssay": 20}
+    }
+  },
+
+  "evaluationFrameworks": {
+    "CLASPP": {
+      "C": "Conclusion/Judgement",
+      "L": "Long run vs Short run impact",
+      "A": "Assumptions/Limitations of argument",
+      "S": "Stakeholder impact (who does it help/hurt)",
+      "P": "Priorities of the argument",
+      "P2": "Pros vs Cons of argument/policy"
+    },
+    "commonPoints": [
+      "Measurement problems/difficulty in measuring",
+      "Magnitude of effect (how big/small)",
+      "Time frame (short-term vs long-term)",
+      "Depends on type of good/market",
+      "Ceteris paribus assumption",
+      "Government failure risk",
+      "Information problems",
+      "Implementation difficulties"
+    ]
+  },
+
+  "chainsOfReasoning": {
+    "definition": "A logical sequence of cause-effect statements that shows economic understanding",
+    "example": "Factor X → Causes Y → Which leads to Z → Therefore outcome W",
+    "requirements": [
+      "Each step must follow logically from the previous",
+      "Use connective phrases: 'this leads to', 'as a result', 'consequently', 'therefore'",
+      "Include economic concepts at each step",
+      "Apply to the specific context given"
+    ],
+    "templates": {
+      "demand_increase": "Increase in [factor] → Increases demand → D curve shifts right → Creates shortage at original price → Price bid up → Movement along supply → New equilibrium at higher P and Q",
+      "externality": "[Activity] creates [external cost/benefit] → MSC ≠ MPC (or MSB ≠ MPB) → Market equilibrium ≠ Social optimum → Over/under production → Welfare loss → Market failure",
+      "monetary_policy": "Central bank [raises/lowers] interest rates → Cost of borrowing [increases/decreases] → Consumer spending and investment [falls/rises] → AD [decreases/increases] → Inflationary pressure [reduced/increased]"
+    }
+  },
+
+  "gradingBehavior": {
+    "examinerStyle": "slightly_strict",
+    "rationale": "Promotes better learning outcomes while remaining fair",
+    "guidelines": {
+      "definitions": {
+        "fullMarks": "Only for precise, technically correct definitions",
+        "deductions": "Missing key terms, imprecise language, unnecessary elaboration"
+      },
+      "analysis": {
+        "fullMarks": "Complete chains of reasoning with economic terminology",
+        "deductions": "Broken chains, missing steps, descriptive rather than analytical"
+      },
+      "evaluation": {
+        "fullMarks": "Developed points with context and judgement",
+        "deductions": "Listing points without development, generic statements, no judgement"
+      },
+      "diagrams": {
+        "fullMarks": "Correctly drawn, fully labelled, referenced in text",
+        "deductions": "Unlabelled axes, wrong direction shifts, not explained"
+      },
+      "context": {
+        "required": "For any marks above Level 1 in discuss/evaluate questions",
+        "penalty": "Generic answers capped at Level 1"
+      }
+    }
+  },
+
+  "commonMistakes": {
+    "general": [
+      "Not reading the question carefully",
+      "Providing evaluation when not asked (e.g., in 'analyse' questions)",
+      "Overwriting on shorter questions, leaving no time for essays",
+      "Writing in bullet points for essay questions",
+      "Not using economic terminology"
+    ],
+    "diagrams": [
+      "Unlabelled axes",
+      "Unlabelled curves",
+      "Missing equilibrium points",
+      "Wrong direction of shift",
+      "Not labelling new curves differently (S to S1)",
+      "Confusing movement along vs shift of curve"
+    ],
+    "calculations": [
+      "Not showing formula first",
+      "Missing units in answer",
+      "Missing negative sign for PED",
+      "Adding percentage sign to elasticities",
+      "Not showing whether change is positive/negative"
+    ],
+    "essays": [
+      "Not defining key terms",
+      "No diagram when one would help",
+      "Generic answer without context",
+      "Evaluation points not developed",
+      "No informed judgement/conclusion",
+      "Separate points without chains of reasoning"
+    ]
+  },
+
+  "feedbackTemplates": {
+    "excellent": "Excellent response demonstrating strong {AO} skills. {specific_praise}",
+    "good": "Good attempt showing understanding of key concepts. To improve: {improvement}",
+    "satisfactory": "Basic understanding shown but lacking {missing_element}. Focus on developing {skill}",
+    "weak": "Limited response. Key issues: {issues}. Review: {topics}"
+  },
+
+  "keyTerms": {
+    "unit1": [
+      "scarcity", "opportunity cost", "PPF", "positive statement", "normative statement",
+      "demand", "supply", "equilibrium", "price elasticity of demand", "price elasticity of supply",
+      "income elasticity", "cross elasticity", "consumer surplus", "producer surplus",
+      "market failure", "externality", "public good", "merit good", "demerit good",
+      "asymmetric information", "indirect tax", "subsidy", "maximum price", "minimum price"
+    ],
+    "unit2": [
+      "GDP", "real GDP", "nominal GDP", "economic growth", "inflation", "CPI", "RPI",
+      "unemployment", "claimant count", "labour force survey", "balance of payments",
+      "current account", "aggregate demand", "aggregate supply", "SRAS", "LRAS",
+      "multiplier", "output gap", "fiscal policy", "monetary policy", "supply-side policy"
+    ],
+    "unit3": [
+      "revenue", "costs", "profit", "marginal cost", "average cost", "economies of scale",
+      "diseconomies of scale", "perfect competition", "monopoly", "monopolistic competition",
+      "oligopoly", "concentration ratio", "barriers to entry", "price discrimination",
+      "labour market", "derived demand", "MRP", "wage determination", "monopsony"
+    ],
+    "unit4": [
+      "globalisation", "absolute advantage", "comparative advantage", "terms of trade",
+      "tariff", "quota", "exchange rate", "appreciation", "depreciation", "current account deficit",
+      "poverty", "inequality", "Gini coefficient", "HDI", "development", "FDI"
+    ]
+  }
+}
