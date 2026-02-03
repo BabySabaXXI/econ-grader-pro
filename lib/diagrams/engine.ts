@@ -82,7 +82,7 @@ export function identifyDiagrams(text: string, maxResults: number = 3): DiagramM
 
   // Convert to DiagramMatch array
   const matches: DiagramMatch[] = [];
-  for (const [diagramId, data] of scores.entries()) {
+  for (const [diagramId, data] of Array.from(scores.entries())) {
     const diagram = DIAGRAM_MAP.get(diagramId);
     if (diagram && data.score > 0) {
       // Normalize confidence to 0-100
