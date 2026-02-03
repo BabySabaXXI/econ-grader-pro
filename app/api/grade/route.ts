@@ -74,6 +74,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Ensure marksEarned and marksLost are arrays (default to empty if not present)
+    if (!Array.isArray(result.marksEarned)) {
+      result.marksEarned = [];
+    }
+    if (!Array.isArray(result.marksLost)) {
+      result.marksLost = [];
+    }
+
     // Ensure scores don't exceed maximums
     result.aoScores.ao1 = Math.min(result.aoScores.ao1 || 0, markScheme.ao1);
     result.aoScores.ao2 = Math.min(result.aoScores.ao2 || 0, markScheme.ao2);
