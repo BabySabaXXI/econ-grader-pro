@@ -38,6 +38,8 @@ import { CircularProgress, LinearProgress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { GradingLoader } from "@/components/ui/grading-loader";
 import { EssayViewer } from "@/components/ui/essay-viewer";
+import { TestimonialsSection } from "@/components/ui/testimonials";
+import { PlanBentoDisplay } from "@/components/ui/plan-bento";
 
 // ============================================================================
 // VIEW STATES TYPE
@@ -1592,7 +1594,7 @@ export default function HomePage() {
                   <LoadingView key="planner-loading" message="Generating essay plan..." />
                 )}
                 {plannerView === "results" && plannerResult && (
-                  <PlanResultDisplay
+                  <PlanBentoDisplay
                     key="planner-results"
                     result={plannerResult}
                     onBack={handlePlannerBack}
@@ -1603,6 +1605,21 @@ export default function HomePage() {
           )}
         </AnimatePresence>
       </main>
+
+      {/* Testimonials Section - Show only on input views */}
+      <AnimatePresence>
+        {((activeMode === "grader" && graderView === "input") ||
+          (activeMode === "planner" && plannerView === "input")) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <TestimonialsSection />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Footer */}
       <footer className="text-center py-10 text-xs border-t border-stone-100 mt-10">
