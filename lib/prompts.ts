@@ -172,18 +172,15 @@ export function buildGradingPrompt(
   questionType: string,
   markScheme: { ao1: number; ao2: number; ao3: number; ao4: number; total: number }
 ): string {
-  return GRADING_PROMPT.replace("{questionType}", questionType)
+  return GRADING_PROMPT
+    .replace("{questionType}", questionType)
     .replace("{totalMarks}", markScheme.total.toString())
-    .replace("{ao1Max}", markScheme.ao1.toString())
-    .replace("{ao2Max}", markScheme.ao2.toString())
-    .replace("{ao3Max}", markScheme.ao3.toString())
-    .replace("{ao4Max}", markScheme.ao4.toString())
+    .replaceAll("{ao1Max}", markScheme.ao1.toString())
+    .replaceAll("{ao2Max}", markScheme.ao2.toString())
+    .replaceAll("{ao3Max}", markScheme.ao3.toString())
+    .replaceAll("{ao4Max}", markScheme.ao4.toString())
     .replace("{question}", question)
-    .replace("{essay}", essay)
-    .replace("{ao1Max}", markScheme.ao1.toString())
-    .replace("{ao2Max}", markScheme.ao2.toString())
-    .replace("{ao3Max}", markScheme.ao3.toString())
-    .replace("{ao4Max}", markScheme.ao4.toString());
+    .replace("{essay}", essay);
 }
 
 export function buildPlannerPrompt(
