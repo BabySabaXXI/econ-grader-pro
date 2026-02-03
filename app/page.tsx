@@ -1,5 +1,6 @@
 "use client";
 
+// Last updated: 2026-02-03 - Full page loading transitions
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
