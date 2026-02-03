@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, CheckCircle, AlertCircle, ChevronRight } from "lucide-react";
+import { X, CheckCircle, AlertCircle, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MarkEarned, MarkLost } from "@/lib/types";
 
@@ -24,7 +24,7 @@ interface HighlightSegment {
 interface ActiveFeedback {
   type: "earned" | "lost";
   data: MarkEarned | MarkLost;
-  position: { x: number; y: number };
+  rect: DOMRect | null;
 }
 
 export function EssayViewer({
@@ -35,6 +35,8 @@ export function EssayViewer({
 }: EssayViewerProps) {
   const [activeFeedback, setActiveFeedback] = useState<ActiveFeedback | null>(null);
   const [viewMode, setViewMode] = useState<"all" | "earned" | "lost">("all");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
 
   // Find all highlight positions and create segments
   const highlightedSegments = useMemo(() => {
@@ -48,6 +50,7 @@ export function EssayViewer({
 
     // Find positions of earned marks
     marksEarned.forEach((mark) => {
+      if (!mark.quote) return;
       const quote = mark.quote.toLowerCase();
       const essayLower = essay.toLowerCase();
       let searchStart = 0;
@@ -67,6 +70,7 @@ export function EssayViewer({
 
     // Find positions of lost marks
     marksLost.forEach((mark) => {
+      if (!mark.quote) return;
       const quote = mark.quote.toLowerCase();
       const essayLower = essay.toLowerCase();
       let searchStart = 0;
@@ -156,75 +160,90 @@ export function EssayViewer({
       type: "earned" | "lost",
       data: MarkEarned | MarkLost
     ) => {
-      const rect = (e.target as HTMLElement).getBoundingClientRect();
+      e.stopPropagation();
+      const target = e.target as HTMLElement;
+      const rect = target.getBoundingClientRect();
+
       setActiveFeedback({
         type,
         data,
-        position: {
-          x: rect.left + rect.width / 2,
-          y: rect.top,
-        },
+        rect,
       });
     },
     []
   );
 
+  // Close popup when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        popupRef.current &&
+        !popupRef.current.contains(e.target as Node) &&
+        activeFeedback
+      ) {
+        setActiveFeedback(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [activeFeedback]);
+
   const earnedCount = marksEarned.length;
   const lostCount = marksLost.length;
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative", className)} ref={containerRef}>
       {/* View mode toggle */}
-      <div className="flex items-center gap-2 mb-4 p-2 bg-stone-50 rounded-lg">
-        <span className="text-xs font-medium text-stone-500 mr-2">Show:</span>
+      <div className="flex items-center gap-2 mb-6 p-3 bg-stone-50 rounded-xl">
+        <span className="text-xs font-medium text-stone-500 mr-2">Filter:</span>
         <button
           onClick={() => setViewMode("all")}
           className={cn(
-            "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+            "px-4 py-2 text-xs font-medium rounded-lg transition-all",
             viewMode === "all"
-              ? "bg-stone-800 text-white"
-              : "bg-white text-stone-600 hover:bg-stone-100"
+              ? "bg-stone-800 text-white shadow-sm"
+              : "bg-white text-stone-600 hover:bg-stone-100 border border-stone-200"
           )}
         >
-          All
+          All Marks
         </button>
         <button
           onClick={() => setViewMode("earned")}
           className={cn(
-            "px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5",
+            "px-4 py-2 text-xs font-medium rounded-lg transition-all flex items-center gap-2",
             viewMode === "earned"
-              ? "bg-emerald-600 text-white"
-              : "bg-white text-stone-600 hover:bg-emerald-50"
+              ? "bg-emerald-600 text-white shadow-sm"
+              : "bg-white text-stone-600 hover:bg-emerald-50 border border-stone-200"
           )}
         >
-          <CheckCircle className="w-3 h-3" />
+          <CheckCircle className="w-3.5 h-3.5" />
           Earned ({earnedCount})
         </button>
         <button
           onClick={() => setViewMode("lost")}
           className={cn(
-            "px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5",
+            "px-4 py-2 text-xs font-medium rounded-lg transition-all flex items-center gap-2",
             viewMode === "lost"
-              ? "bg-rose-600 text-white"
-              : "bg-white text-stone-600 hover:bg-rose-50"
+              ? "bg-rose-600 text-white shadow-sm"
+              : "bg-white text-stone-600 hover:bg-rose-50 border border-stone-200"
           )}
         >
-          <AlertCircle className="w-3 h-3" />
+          <AlertCircle className="w-3.5 h-3.5" />
           Lost ({lostCount})
         </button>
       </div>
 
       {/* Essay content with highlights */}
-      <div className="relative p-6 bg-white rounded-xl border border-stone-200 shadow-sm">
-        <p className="text-sm leading-relaxed text-stone-700 whitespace-pre-wrap">
+      <div className="relative p-8 bg-white rounded-2xl border border-stone-200 shadow-sm">
+        <p className="text-base leading-[2] text-stone-700 whitespace-pre-wrap font-[system-ui]">
           {visibleSegments.map((segment, index) => {
             if (segment.type === "normal") {
               return <span key={index}>{segment.text}</span>;
             }
 
             const isEarned = segment.type === "earned";
-            const isActive =
-              activeFeedback?.data === segment.data;
+            const isActive = activeFeedback?.data === segment.data;
 
             return (
               <motion.span
@@ -237,19 +256,23 @@ export function EssayViewer({
                     segment.data
                   )
                 }
-                whileHover={{ scale: 1.01 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 className={cn(
-                  "relative inline cursor-pointer rounded px-0.5 -mx-0.5 transition-all duration-200",
+                  "relative inline cursor-pointer rounded-md px-1 py-0.5 transition-all duration-200",
                   isEarned
-                    ? "bg-emerald-100 hover:bg-emerald-200"
-                    : "bg-rose-100 hover:bg-rose-200",
-                  isActive && (isEarned ? "bg-emerald-200 ring-2 ring-emerald-400" : "bg-rose-200 ring-2 ring-rose-400")
+                    ? "bg-emerald-100/80 hover:bg-emerald-200"
+                    : "bg-rose-100/80 hover:bg-rose-200",
+                  isActive &&
+                    (isEarned
+                      ? "bg-emerald-200 ring-2 ring-emerald-400 ring-offset-1"
+                      : "bg-rose-200 ring-2 ring-rose-400 ring-offset-1")
                 )}
               >
                 <span
                   className={cn(
-                    "absolute bottom-0 left-0 right-0 h-0.5",
-                    isEarned ? "bg-emerald-400" : "bg-rose-400"
+                    "absolute bottom-0 left-0 right-0 h-[2px] rounded-full",
+                    isEarned ? "bg-emerald-500" : "bg-rose-500"
                   )}
                 />
                 {segment.text}
@@ -259,7 +282,7 @@ export function EssayViewer({
         </p>
       </div>
 
-      {/* Feedback popup */}
+      {/* Feedback popup - positioned in center of screen */}
       <AnimatePresence>
         {activeFeedback && (
           <>
@@ -268,44 +291,38 @@ export function EssayViewer({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
               onClick={() => setActiveFeedback(null)}
-              className="fixed inset-0 z-40"
             />
 
-            {/* Popup card */}
+            {/* Popup card - centered modal */}
             <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              ref={popupRef}
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
               className={cn(
-                "fixed z-50 w-80 p-4 rounded-xl shadow-xl border",
+                "fixed z-50 w-[420px] max-w-[90vw] p-6 rounded-2xl shadow-2xl border-2",
+                "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
                 activeFeedback.type === "earned"
                   ? "bg-white border-emerald-200"
                   : "bg-white border-rose-200"
               )}
-              style={{
-                left: Math.min(
-                  Math.max(activeFeedback.position.x - 160, 16),
-                  window.innerWidth - 336
-                ),
-                top: activeFeedback.position.y - 8,
-                transform: "translateY(-100%)",
-              }}
             >
               {/* Close button */}
               <button
                 onClick={() => setActiveFeedback(null)}
-                className="absolute top-2 right-2 p-1 rounded-full hover:bg-stone-100 transition-colors"
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-stone-100 transition-colors"
               >
-                <X className="w-4 h-4 text-stone-400" />
+                <X className="w-5 h-5 text-stone-400" />
               </button>
 
-              {/* Header */}
-              <div className="flex items-center gap-2 mb-3">
+              {/* Header with badge and points */}
+              <div className="flex items-center gap-3 mb-4">
                 <span
                   className={cn(
-                    "px-2 py-1 rounded text-xs font-semibold uppercase",
+                    "px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider",
                     activeFeedback.type === "earned"
                       ? "bg-emerald-100 text-emerald-700"
                       : "bg-rose-100 text-rose-700"
@@ -314,68 +331,68 @@ export function EssayViewer({
                   {activeFeedback.data.ao.toUpperCase()}
                 </span>
                 {activeFeedback.type === "earned" && (
-                  <span className="text-sm font-semibold text-emerald-600">
+                  <span className="text-lg font-bold text-emerald-600">
                     +{(activeFeedback.data as MarkEarned).points} mark
                     {(activeFeedback.data as MarkEarned).points > 1 ? "s" : ""}
+                  </span>
+                )}
+                {activeFeedback.type === "lost" && (
+                  <span className="text-lg font-bold text-rose-600">
+                    Mark Lost
                   </span>
                 )}
               </div>
 
               {/* Quote */}
-              <p className="text-sm italic text-stone-600 mb-3 pb-3 border-b border-stone-100">
-                &ldquo;{activeFeedback.data.quote}&rdquo;
-              </p>
+              <div className="p-4 rounded-xl bg-stone-50 mb-4">
+                <p className="text-sm italic text-stone-600 leading-relaxed">
+                  &ldquo;{activeFeedback.data.quote}&rdquo;
+                </p>
+              </div>
 
               {/* Feedback content */}
               {activeFeedback.type === "earned" ? (
-                <div>
-                  <p className="text-sm text-stone-700">
+                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-100">
+                  <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wider mb-2">
+                    Why this earned marks
+                  </p>
+                  <p className="text-sm text-stone-700 leading-relaxed">
                     {(activeFeedback.data as MarkEarned).reason}
                   </p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-xs font-medium text-rose-600 mb-1">
-                      Issue:
+                <div className="space-y-4">
+                  <div className="p-4 rounded-xl bg-rose-50 border border-rose-100">
+                    <p className="text-xs font-semibold text-rose-700 uppercase tracking-wider mb-2">
+                      Issue
                     </p>
-                    <p className="text-sm text-stone-700">
+                    <p className="text-sm text-stone-700 leading-relaxed">
                       {(activeFeedback.data as MarkLost).issue}
                     </p>
                   </div>
-                  <div className="p-3 rounded-lg bg-stone-50 border-l-2 border-stone-300">
-                    <p className="text-xs font-medium text-stone-500 mb-1">
-                      How to fix:
+                  <div className="p-4 rounded-xl bg-amber-50 border border-amber-200">
+                    <p className="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-2">
+                      How to Fix
                     </p>
-                    <p className="text-sm text-stone-700">
+                    <p className="text-sm text-stone-700 leading-relaxed">
                       {(activeFeedback.data as MarkLost).howToFix}
                     </p>
                   </div>
                 </div>
               )}
-
-              {/* Arrow pointer */}
-              <div
-                className={cn(
-                  "absolute top-full left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 -mt-1.5 border-r border-b",
-                  activeFeedback.type === "earned"
-                    ? "bg-white border-emerald-200"
-                    : "bg-white border-rose-200"
-                )}
-              />
             </motion.div>
           </>
         )}
       </AnimatePresence>
 
       {/* Legend */}
-      <div className="mt-4 flex items-center justify-center gap-6 text-xs text-stone-500">
+      <div className="mt-6 flex items-center justify-center gap-8 text-xs text-stone-500">
         <div className="flex items-center gap-2">
-          <span className="w-4 h-2 rounded bg-emerald-200" />
+          <span className="w-5 h-3 rounded bg-emerald-200 border border-emerald-300" />
           <span>Click green highlights to see earned marks</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-4 h-2 rounded bg-rose-200" />
+          <span className="w-5 h-3 rounded bg-rose-200 border border-rose-300" />
           <span>Click red highlights to see improvement areas</span>
         </div>
       </div>
