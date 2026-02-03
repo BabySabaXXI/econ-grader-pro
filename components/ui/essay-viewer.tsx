@@ -1,12 +1,9 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef } from "react";
-import { X, CheckCircle2, AlertCircle, ChevronDown, ChevronRight, List, Lightbulb, Eye, EyeOff } from "lucide-react";
+import { CheckCircle2, AlertCircle, ChevronDown, ChevronRight, Lightbulb, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MarkEarned, MarkLost } from "@/lib/types";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
@@ -42,33 +39,15 @@ interface ActiveFeedback {
   data: MarkEarned | MarkLost;
 }
 
-// AO Config
-const AO_CONFIG = {
-  ao1: { label: "Knowledge", color: "bg-blue-500", bgLight: "bg-blue-50", text: "text-blue-600", border: "border-blue-200" },
-  ao2: { label: "Application", color: "bg-emerald-500", bgLight: "bg-emerald-50", text: "text-emerald-600", border: "border-emerald-200" },
-  ao3: { label: "Analysis", color: "bg-violet-500", bgLight: "bg-violet-50", text: "text-violet-600", border: "border-violet-200" },
-  ao4: { label: "Evaluation", color: "bg-amber-500", bgLight: "bg-amber-50", text: "text-amber-600", border: "border-amber-200" },
-};
-
 // AO Badge Component
-function AOBadge({ ao, className }: { ao: string; className?: string }) {
-  const config = AO_CONFIG[ao as keyof typeof AO_CONFIG];
-  if (!config) return null;
-
-  return (
-    <Badge
-      variant="outline"
-      className={cn(
-        "text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5",
-        config.text,
-        config.bgLight,
-        config.border,
-        className
-      )}
-    >
-      {ao.toUpperCase()}
-    </Badge>
-  );
+function AOBadge({ ao }: { ao: string }) {
+  const badges: Record<string, string> = {
+    ao1: "badge-ao1",
+    ao2: "badge-ao2",
+    ao3: "badge-ao3",
+    ao4: "badge-ao4",
+  };
+  return <span className={badges[ao] || "badge-info"}>{ao.toUpperCase()}</span>;
 }
 
 export function EssayViewer({
@@ -106,7 +85,6 @@ export function EssayViewer({
       data: MarkEarned | MarkLost;
     }> = [];
 
-    // Find positions of earned marks
     marksEarned.forEach((mark) => {
       if (!mark.quote) return;
       const quote = mark.quote.toLowerCase();
@@ -126,7 +104,6 @@ export function EssayViewer({
       }
     });
 
-    // Find positions of lost marks
     marksLost.forEach((mark) => {
       if (!mark.quote) return;
       const quote = mark.quote.toLowerCase();
@@ -146,10 +123,8 @@ export function EssayViewer({
       }
     });
 
-    // Sort by start position
     highlights.sort((a, b) => a.start - b.start);
 
-    // Remove overlapping highlights (keep first occurrence)
     const nonOverlapping: typeof highlights = [];
     let lastEnd = 0;
     for (const h of highlights) {
@@ -159,7 +134,6 @@ export function EssayViewer({
       }
     }
 
-    // Build segments
     let currentPos = 0;
     for (const highlight of nonOverlapping) {
       if (highlight.start > currentPos) {
@@ -194,7 +168,6 @@ export function EssayViewer({
     return segments;
   }, [essay, marksEarned, marksLost]);
 
-  // Filter segments based on view mode
   const visibleSegments = useMemo(() => {
     if (viewMode === "all") return highlightedSegments;
     return highlightedSegments.map((seg) => {
@@ -216,261 +189,253 @@ export function EssayViewer({
     []
   );
 
-  const earnedCount = marksEarned.length;
   const lostCount = marksLost.length;
   const totalEarnedPoints = marksEarned.reduce((sum, m) => sum + m.points, 0);
 
   return (
-    <div className={cn("relative space-y-5", className)} ref={containerRef}>
+    <div className={cn("relative space-y-6", className)} ref={containerRef}>
       {/* Filter Controls */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-neutral-50 rounded-2xl border border-neutral-100">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl card-inset">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider mr-2">View:</span>
-          <Button
-            variant={viewMode === "all" ? "default" : "outline"}
-            size="sm"
+          <span className="text-caption mr-2">View</span>
+          <button
             onClick={() => setViewMode("all")}
             className={cn(
-              "h-8 text-xs rounded-lg",
-              viewMode === "all" && "bg-neutral-900"
+              "px-4 py-2 text-xs font-medium rounded-xl transition-all duration-200",
+              viewMode === "all"
+                ? "bg-card text-foreground"
+                : "text-muted-foreground hover:text-foreground"
             )}
+            style={viewMode === "all" ? { boxShadow: "var(--shadow-sm)" } : {}}
           >
             All
-          </Button>
-          <Button
-            variant={viewMode === "earned" ? "default" : "outline"}
-            size="sm"
+          </button>
+          <button
             onClick={() => setViewMode("earned")}
             className={cn(
-              "h-8 text-xs gap-1.5 rounded-lg",
-              viewMode === "earned" && "bg-emerald-600 hover:bg-emerald-700"
+              "px-4 py-2 text-xs font-medium rounded-xl transition-all duration-200 flex items-center gap-1.5",
+              viewMode === "earned"
+                ? "bg-card"
+                : "text-muted-foreground hover:text-foreground"
             )}
+            style={viewMode === "earned" ? { boxShadow: "var(--shadow-sm)", color: "hsl(var(--success))" } : {}}
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span className={cn("font-semibold", viewMode !== "earned" && "text-emerald-600")}>+{totalEarnedPoints}</span>
-            <span className={cn("text-xs opacity-70")}>({earnedCount})</span>
-          </Button>
-          <Button
-            variant={viewMode === "lost" ? "default" : "outline"}
-            size="sm"
+            +{totalEarnedPoints}
+          </button>
+          <button
             onClick={() => setViewMode("lost")}
             className={cn(
-              "h-8 text-xs gap-1.5 rounded-lg",
-              viewMode === "lost" && "bg-red-600 hover:bg-red-700"
+              "px-4 py-2 text-xs font-medium rounded-xl transition-all duration-200 flex items-center gap-1.5",
+              viewMode === "lost"
+                ? "bg-card"
+                : "text-muted-foreground hover:text-foreground"
             )}
+            style={viewMode === "lost" ? { boxShadow: "var(--shadow-sm)", color: "hsl(var(--error))" } : {}}
           >
             <AlertCircle className="w-3.5 h-3.5" />
-            <span className={cn("font-semibold", viewMode !== "lost" && "text-red-600")}>Issues</span>
-            <span className={cn("text-xs opacity-70")}>({lostCount})</span>
-          </Button>
+            {lostCount} Issues
+          </button>
         </div>
 
         {onToggleDetailedFeedback && (
-          <div className="flex items-center gap-3 pl-4 border-l border-neutral-200">
+          <div className="flex items-center gap-3">
             {showDetailedFeedback ? (
-              <Eye className="w-4 h-4 text-neutral-600" />
+              <Eye className="w-4 h-4 text-foreground" />
             ) : (
-              <EyeOff className="w-4 h-4 text-neutral-400" />
+              <EyeOff className="w-4 h-4 text-muted-foreground" />
             )}
-            <span className="text-xs font-medium text-neutral-600">Details</span>
+            <span className="text-xs font-medium text-muted-foreground">Details</span>
             <Switch
               checked={showDetailedFeedback}
               onCheckedChange={onToggleDetailedFeedback}
-              className="data-[state=checked]:bg-neutral-900"
             />
           </div>
         )}
       </div>
 
       {/* Essay Content */}
-      <Card className="border-neutral-200/60 overflow-hidden">
-        <CardContent className="p-6">
-          <p className="text-[15px] leading-[1.9] text-neutral-700 whitespace-pre-wrap font-[system-ui]">
-            {visibleSegments.map((segment, index) => {
-              if (segment.type === "normal") {
-                return <span key={index}>{segment.text}</span>;
-              }
+      <div className="card-inset p-6 rounded-2xl">
+        <p className="text-[15px] leading-[1.9] text-foreground/90 whitespace-pre-wrap">
+          {visibleSegments.map((segment, index) => {
+            if (segment.type === "normal") {
+              return <span key={index}>{segment.text}</span>;
+            }
 
-              const isEarned = segment.type === "earned";
-              const isLost = segment.type === "lost";
-
-              return (
-                <span
-                  key={index}
-                  onClick={() =>
-                    segment.data &&
-                    handleHighlightClick(
-                      segment.type as "earned" | "lost",
-                      segment.data
-                    )
-                  }
-                  className={cn(
-                    "relative inline cursor-pointer rounded-sm px-1 py-0.5 transition-all duration-200",
-                    isEarned && "bg-emerald-100/80 hover:bg-emerald-200/80 text-emerald-900 border-b-2 border-emerald-500",
-                    isLost && "bg-red-100/80 hover:bg-red-200/80 text-red-900 border-b-2 border-red-500"
-                  )}
-                >
-                  {segment.text}
-                  {isLost && !showDetailedFeedback && (
-                    <span className="ml-0.5 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold bg-red-500 text-white rounded-full align-middle shadow-sm">
-                      !
-                    </span>
-                  )}
-                </span>
-              );
-            })}
-          </p>
-        </CardContent>
-      </Card>
+            return (
+              <span
+                key={index}
+                onClick={() =>
+                  segment.data &&
+                  handleHighlightClick(segment.type as "earned" | "lost", segment.data)
+                }
+                className={cn(
+                  "highlight-earned",
+                  segment.type === "lost" && "highlight-lost"
+                )}
+              >
+                {segment.text}
+                {segment.type === "lost" && !showDetailedFeedback && (
+                  <span
+                    className="ml-0.5 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold rounded-full align-middle"
+                    style={{
+                      backgroundColor: "hsl(var(--error))",
+                      color: "white",
+                      boxShadow: "var(--shadow-xs)"
+                    }}
+                  >
+                    !
+                  </span>
+                )}
+              </span>
+            );
+          })}
+        </p>
+      </div>
 
       {/* Detailed Feedback Panel */}
       {showDetailedFeedback && (
-        <div className="space-y-5">
+        <div className="space-y-6">
           {/* Lost Marks Section */}
           {marksLost.length > 0 && (
-            <Card className="border-red-200/60 bg-gradient-to-br from-red-50/50 to-white overflow-hidden">
-              <CardHeader className="pb-3 border-b border-red-100">
-                <CardTitle className="text-sm font-semibold text-red-700 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  Issues Found ({marksLost.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4 space-y-3">
+            <div className="card-premium rounded-2xl overflow-hidden" style={{ borderColor: "hsl(var(--error) / 0.2)" }}>
+              <div className="p-4 border-b border-border/50">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: "hsl(var(--error))", animation: "pulse-soft 2s infinite" }}
+                  />
+                  <span className="text-sm font-semibold" style={{ color: "hsl(var(--error))" }}>
+                    Issues Found ({marksLost.length})
+                  </span>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
                 {marksLost.map((item, idx) => {
                   const itemId = `lost-${idx}`;
                   const isExpanded = expandedItems.has(itemId);
                   return (
-                    <Collapsible
-                      key={idx}
-                      open={isExpanded}
-                      onOpenChange={() => toggleExpanded(itemId)}
-                    >
-                      <Card className="border-red-200/60 bg-white overflow-hidden">
+                    <Collapsible key={idx} open={isExpanded} onOpenChange={() => toggleExpanded(itemId)}>
+                      <div className="card-inset rounded-xl overflow-hidden">
                         <CollapsibleTrigger asChild>
-                          <button className="w-full p-4 text-left flex items-start gap-3 hover:bg-red-50/50 transition-colors">
+                          <button className="w-full p-4 text-left flex items-start gap-3 hover:bg-accent/50 transition-colors">
                             <span className="flex-shrink-0 mt-0.5">
                               {isExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-red-500" />
+                                <ChevronDown className="w-4 h-4" style={{ color: "hsl(var(--error))" }} />
                               ) : (
-                                <ChevronRight className="w-4 h-4 text-red-500" />
+                                <ChevronRight className="w-4 h-4" style={{ color: "hsl(var(--error))" }} />
                               )}
                             </span>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1.5">
                                 <AOBadge ao={item.ao} />
-                                <Badge variant="destructive" className="text-[10px] font-medium">
-                                  Issue
-                                </Badge>
+                                <span className="badge-error text-[10px]">Issue</span>
                               </div>
-                              <p className="text-sm text-neutral-600 italic line-clamp-2">
+                              <p className="text-sm text-muted-foreground italic line-clamp-2">
                                 &ldquo;{item.quote}&rdquo;
                               </p>
                             </div>
                           </button>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                          <div className="px-4 pb-4 pt-0 space-y-3 border-t border-red-100">
-                            <div className="pt-3 p-4 rounded-xl bg-gradient-to-br from-red-50 to-red-100/30 border border-red-100">
-                              <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-2">
-                                Issue
-                              </p>
-                              <p className="text-sm text-neutral-700 leading-relaxed">{item.issue}</p>
+                          <div className="px-4 pb-4 pt-0 space-y-3 border-t border-border/30">
+                            <div className="pt-3 p-4 rounded-xl" style={{ background: "hsl(var(--error-muted))" }}>
+                              <p className="text-caption mb-2" style={{ color: "hsl(var(--error))" }}>Issue</p>
+                              <p className="text-sm leading-relaxed">{item.issue}</p>
                             </div>
-                            <div className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100/30 border border-amber-200">
-                              <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                <Lightbulb className="w-3 h-3" />
-                                How to Fix
-                              </p>
-                              <p className="text-sm text-neutral-700 leading-relaxed">{item.howToFix}</p>
+                            <div className="p-4 rounded-xl" style={{ background: "hsl(var(--warning-muted))" }}>
+                              <div className="flex items-center gap-1.5 mb-2">
+                                <Lightbulb className="w-3 h-3" style={{ color: "hsl(var(--warning))" }} />
+                                <p className="text-caption" style={{ color: "hsl(var(--warning))" }}>How to Fix</p>
+                              </div>
+                              <p className="text-sm leading-relaxed">{item.howToFix}</p>
                             </div>
                           </div>
                         </CollapsibleContent>
-                      </Card>
+                      </div>
                     </Collapsible>
                   );
                 })}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
 
           {/* Earned Marks Section */}
           {marksEarned.length > 0 && (
-            <Card className="border-emerald-200/60 bg-gradient-to-br from-emerald-50/50 to-white overflow-hidden">
-              <CardHeader className="pb-3 border-b border-emerald-100">
-                <CardTitle className="text-sm font-semibold text-emerald-700 flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" />
-                  Marks Earned (+{totalEarnedPoints} from {marksEarned.length} items)
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4 space-y-3">
+            <div className="card-premium rounded-2xl overflow-hidden" style={{ borderColor: "hsl(var(--success) / 0.2)" }}>
+              <div className="p-4 border-b border-border/50">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" style={{ color: "hsl(var(--success))" }} />
+                  <span className="text-sm font-semibold" style={{ color: "hsl(var(--success))" }}>
+                    Marks Earned (+{totalEarnedPoints})
+                  </span>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
                 {marksEarned.map((item, idx) => {
                   const itemId = `earned-${idx}`;
                   const isExpanded = expandedItems.has(itemId);
                   return (
-                    <Collapsible
-                      key={idx}
-                      open={isExpanded}
-                      onOpenChange={() => toggleExpanded(itemId)}
-                    >
-                      <Card className="border-emerald-200/60 bg-white overflow-hidden">
+                    <Collapsible key={idx} open={isExpanded} onOpenChange={() => toggleExpanded(itemId)}>
+                      <div className="card-inset rounded-xl overflow-hidden">
                         <CollapsibleTrigger asChild>
-                          <button className="w-full p-4 text-left flex items-start gap-3 hover:bg-emerald-50/50 transition-colors">
+                          <button className="w-full p-4 text-left flex items-start gap-3 hover:bg-accent/50 transition-colors">
                             <span className="flex-shrink-0 mt-0.5">
                               {isExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-emerald-500" />
+                                <ChevronDown className="w-4 h-4" style={{ color: "hsl(var(--success))" }} />
                               ) : (
-                                <ChevronRight className="w-4 h-4 text-emerald-500" />
+                                <ChevronRight className="w-4 h-4" style={{ color: "hsl(var(--success))" }} />
                               )}
                             </span>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1.5">
                                 <AOBadge ao={item.ao} />
-                                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 text-[10px] font-semibold">
-                                  +{item.points}
-                                </Badge>
+                                <span className="badge-success text-[10px] font-semibold">+{item.points}</span>
                               </div>
-                              <p className="text-sm text-neutral-600 italic line-clamp-2">
+                              <p className="text-sm text-muted-foreground italic line-clamp-2">
                                 &ldquo;{item.quote}&rdquo;
                               </p>
                             </div>
                           </button>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                          <div className="px-4 pb-4 pt-0 border-t border-emerald-100">
-                            <div className="pt-3 p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/30 border border-emerald-100">
-                              <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-2">
-                                Why This Earned Marks
-                              </p>
-                              <p className="text-sm text-neutral-700 leading-relaxed">{item.reason}</p>
+                          <div className="px-4 pb-4 pt-0 border-t border-border/30">
+                            <div className="pt-3 p-4 rounded-xl" style={{ background: "hsl(var(--success-muted))" }}>
+                              <p className="text-caption mb-2" style={{ color: "hsl(var(--success))" }}>Why This Earned Marks</p>
+                              <p className="text-sm leading-relaxed">{item.reason}</p>
                             </div>
                           </div>
                         </CollapsibleContent>
-                      </Card>
+                      </div>
                     </Collapsible>
                   );
                 })}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
         </div>
       )}
 
       {/* Feedback Modal */}
       <Dialog open={!!activeFeedback} onOpenChange={() => setActiveFeedback(null)}>
-        <DialogContent className={cn(
-          "sm:max-w-md rounded-2xl",
-          activeFeedback?.type === "earned" ? "border-emerald-200" : "border-red-200"
-        )}>
+        <DialogContent
+          className="sm:max-w-md rounded-2xl"
+          style={{
+            borderColor: activeFeedback?.type === "earned"
+              ? "hsl(var(--success) / 0.3)"
+              : "hsl(var(--error) / 0.3)"
+          }}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <AOBadge ao={activeFeedback?.data.ao || ""} />
               {activeFeedback?.type === "earned" ? (
-                <span className="text-emerald-600 font-semibold flex items-center gap-1.5">
+                <span className="flex items-center gap-1.5" style={{ color: "hsl(var(--success))" }}>
                   <CheckCircle2 className="w-4 h-4" />
                   +{(activeFeedback?.data as MarkEarned)?.points} marks
                 </span>
               ) : (
-                <span className="text-red-600 font-semibold flex items-center gap-1.5">
+                <span className="flex items-center gap-1.5" style={{ color: "hsl(var(--error))" }}>
                   <AlertCircle className="w-4 h-4" />
                   Issue Found
                 </span>
@@ -479,39 +444,39 @@ export function EssayViewer({
           </DialogHeader>
 
           <div className="space-y-4 mt-2">
-            {/* Quote */}
-            <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200">
-              <p className="text-sm italic text-neutral-600 leading-relaxed">
+            <div className="card-inset p-4 rounded-xl">
+              <p className="text-sm italic text-muted-foreground leading-relaxed">
                 &ldquo;{activeFeedback?.data.quote}&rdquo;
               </p>
             </div>
 
-            {/* Feedback content */}
             {activeFeedback?.type === "earned" ? (
-              <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/30 border border-emerald-100">
-                <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-2">
+              <div className="p-4 rounded-xl" style={{ background: "hsl(var(--success-muted))" }}>
+                <p className="text-caption mb-2" style={{ color: "hsl(var(--success))" }}>
                   Why this earned marks
                 </p>
-                <p className="text-sm text-neutral-700 leading-relaxed">
+                <p className="text-sm leading-relaxed">
                   {(activeFeedback?.data as MarkEarned)?.reason}
                 </p>
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="p-4 rounded-xl bg-gradient-to-br from-red-50 to-red-100/30 border border-red-200">
-                  <p className="text-[10px] font-bold text-red-700 uppercase tracking-wider mb-2">
+                <div className="p-4 rounded-xl" style={{ background: "hsl(var(--error-muted))" }}>
+                  <p className="text-caption mb-2" style={{ color: "hsl(var(--error))" }}>
                     Issue
                   </p>
-                  <p className="text-sm text-neutral-700 leading-relaxed">
+                  <p className="text-sm leading-relaxed">
                     {(activeFeedback?.data as MarkLost)?.issue}
                   </p>
                 </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100/30 border border-amber-200">
-                  <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <Lightbulb className="w-3 h-3" />
-                    How to Fix
-                  </p>
-                  <p className="text-sm text-neutral-700 leading-relaxed">
+                <div className="p-4 rounded-xl" style={{ background: "hsl(var(--warning-muted))" }}>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Lightbulb className="w-3 h-3" style={{ color: "hsl(var(--warning))" }} />
+                    <p className="text-caption" style={{ color: "hsl(var(--warning))" }}>
+                      How to Fix
+                    </p>
+                  </div>
+                  <p className="text-sm leading-relaxed">
                     {(activeFeedback?.data as MarkLost)?.howToFix}
                   </p>
                 </div>
@@ -522,13 +487,13 @@ export function EssayViewer({
       </Dialog>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-neutral-400 pt-2">
+      <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-muted-foreground pt-2">
         <div className="flex items-center gap-2">
-          <span className="w-4 h-2 rounded bg-emerald-200 border border-emerald-400" />
+          <span className="w-4 h-2 rounded highlight-earned" />
           <span>Marks Earned</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-4 h-2 rounded bg-red-200 border border-red-400" />
+          <span className="w-4 h-2 rounded highlight-lost" />
           <span>Issues (click for details)</span>
         </div>
       </div>

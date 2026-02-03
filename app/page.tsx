@@ -2,24 +2,26 @@
 
 import { useState, useRef, useCallback } from "react";
 import {
-  CheckCircle2,
-  FileText,
-  Upload,
-  Trash2,
-  Check,
   ArrowLeft,
   Loader2,
   AlertCircle,
   ChevronRight,
-  BarChart3,
-  Target,
   Sparkles,
   Eye,
   EyeOff,
+  Upload,
+  Trash2,
+  CheckCircle2,
+  Target,
+  TrendingUp,
   BookOpen,
-  PenTool,
-  Lightbulb,
+  PenLine,
+  LayoutGrid,
+  ListTree,
+  FileText,
   GraduationCap,
+  Lightbulb,
+  BarChart3,
 } from "lucide-react";
 import {
   QUESTION_TYPE_OPTIONS,
@@ -32,634 +34,162 @@ import {
   QuestionType,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EssayViewer } from "@/components/ui/essay-viewer";
 
 // ============================================================================
-// VIEW STATES TYPE
+// TYPES
 // ============================================================================
 
 type ViewState = "input" | "loading" | "results";
+type ActiveMode = "grader" | "planner";
 
 // ============================================================================
-// SCORE COLOR HELPER
+// SCORE HELPERS
 // ============================================================================
 
 function getScoreColor(percentage: number): string {
-  if (percentage >= 80) return "text-emerald-600";
-  if (percentage >= 60) return "text-blue-600";
-  if (percentage >= 45) return "text-amber-600";
-  return "text-red-600";
+  if (percentage >= 80) return "hsl(var(--success))";
+  if (percentage >= 60) return "hsl(var(--ao1))";
+  if (percentage >= 45) return "hsl(var(--warning))";
+  return "hsl(var(--error))";
 }
 
-function getScoreBgColor(percentage: number): string {
-  if (percentage >= 80) return "bg-emerald-500";
-  if (percentage >= 60) return "bg-blue-500";
-  if (percentage >= 45) return "bg-amber-500";
-  return "bg-red-500";
-}
-
-function getScoreRingColor(percentage: number): string {
-  if (percentage >= 80) return "stroke-emerald-500";
-  if (percentage >= 60) return "stroke-blue-500";
-  if (percentage >= 45) return "stroke-amber-500";
-  return "stroke-red-500";
-}
-
-// ============================================================================
-// LEVEL BADGE COMPONENT
-// ============================================================================
-
-function LevelBadge({ level }: { level: number }) {
-  const config: Record<number, { label: string; className: string }> = {
-    5: { label: "Excellent", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-    4: { label: "Good", className: "bg-blue-50 text-blue-700 border-blue-200" },
-    3: { label: "Sound", className: "bg-amber-50 text-amber-700 border-amber-200" },
-    2: { label: "Basic", className: "bg-orange-50 text-orange-700 border-orange-200" },
-    1: { label: "Limited", className: "bg-red-50 text-red-700 border-red-200" },
+function getLevelClass(level: number): string {
+  const classes: Record<number, string> = {
+    5: "badge-level-5",
+    4: "badge-level-4",
+    3: "badge-level-3",
+    2: "badge-level-2",
+    1: "badge-level-1",
   };
+  return classes[level] || classes[1];
+}
 
-  const { label, className } = config[level] || config[1];
+// ============================================================================
+// HEADER COMPONENT
+// ============================================================================
 
+function Header() {
   return (
-    <Badge variant="outline" className={cn("text-xs font-medium px-3 py-1", className)}>
-      Level {level} · {label}
-    </Badge>
+    <header className="sticky top-0 z-50">
+      <div
+        className="border-b border-border/40"
+        style={{
+          background: "var(--glass-bg)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div
+              className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center"
+              style={{ boxShadow: "var(--shadow-md)" }}
+            >
+              <GraduationCap className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-sm font-semibold text-foreground tracking-tight">
+                Econ Grader
+              </h1>
+              <p className="text-[10px] text-muted-foreground font-medium">
+                Edexcel IAL
+              </p>
+            </div>
+          </div>
+
+          {/* Theme Toggle */}
+          <ThemeToggle />
+        </div>
+      </div>
+    </header>
   );
 }
 
 // ============================================================================
-// AO SCORE BAR COMPONENT
+// NAVIGATION COMPONENT
 // ============================================================================
 
-const AO_CONFIG = {
-  ao1: { label: "Knowledge", color: "bg-blue-500", bgLight: "bg-blue-50", text: "text-blue-600", border: "border-blue-200" },
-  ao2: { label: "Application", color: "bg-emerald-500", bgLight: "bg-emerald-50", text: "text-emerald-600", border: "border-emerald-200" },
-  ao3: { label: "Analysis", color: "bg-violet-500", bgLight: "bg-violet-50", text: "text-violet-600", border: "border-violet-200" },
-  ao4: { label: "Evaluation", color: "bg-amber-500", bgLight: "bg-amber-50", text: "text-amber-600", border: "border-amber-200" },
-};
-
-function AOScoreBar({
-  aoKey,
-  score,
-  maxScore,
+function Navigation({
+  activeMode,
+  setActiveMode,
 }: {
-  aoKey: "ao1" | "ao2" | "ao3" | "ao4";
-  score: number;
-  maxScore: number;
+  activeMode: ActiveMode;
+  setActiveMode: (mode: ActiveMode) => void;
 }) {
-  const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
-  const config = AO_CONFIG[aoKey];
-
   return (
-    <div className="group">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <div className={cn("w-2 h-2 rounded-full", config.color)} />
-          <span className={cn("text-xs font-semibold uppercase tracking-wider", config.text)}>
-            {aoKey.toUpperCase()}
-          </span>
-          <span className="text-[10px] text-neutral-400 font-medium">{config.label}</span>
-        </div>
-        <span className="text-sm font-semibold tabular-nums text-neutral-900">
-          {score}<span className="text-neutral-300 font-normal">/{maxScore}</span>
-        </span>
-      </div>
-      <div className={cn("h-1.5 rounded-full overflow-hidden bg-neutral-100")}>
+    <nav className="py-6">
+      <div className="max-w-7xl mx-auto px-6">
         <div
-          className={cn(
-            "h-full rounded-full transition-all duration-1000 ease-out",
-            config.color
-          )}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// AO BADGE COMPONENT
-// ============================================================================
-
-function AOBadge({ ao }: { ao: string }) {
-  const config = AO_CONFIG[ao as keyof typeof AO_CONFIG];
-  if (!config) return null;
-
-  return (
-    <Badge
-      variant="outline"
-      className={cn(
-        "text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5",
-        config.text,
-        config.bgLight,
-        config.border
-      )}
-    >
-      {ao.toUpperCase()}
-    </Badge>
-  );
-}
-
-// ============================================================================
-// GRADING RESULT DISPLAY
-// ============================================================================
-
-function GradingResultDisplay({
-  result,
-  questionType,
-  essayText,
-  onBack,
-}: {
-  result: GradingResult;
-  questionType: QuestionType;
-  essayText: string;
-  onBack: () => void;
-}) {
-  const [showDetailedFeedback, setShowDetailedFeedback] = useState(false);
-  const markScheme = MARK_SCHEMES[questionType];
-  const hasHighlights = (result.marksEarned?.length || 0) > 0 || (result.marksLost?.length || 0) > 0;
-
-  return (
-    <div className="max-w-7xl mx-auto">
-      {/* Back Button */}
-      <button
-        onClick={onBack}
-        className="group flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900 transition-colors mb-8"
-      >
-        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-        <span>Edit Answer</span>
-      </button>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column - Essay View */}
-        <div className="lg:col-span-7 xl:col-span-8">
-          <div className="sticky top-8">
-            <Card className="overflow-hidden border-neutral-200/60 shadow-sm">
-              <CardHeader className="border-b border-neutral-100 bg-neutral-50/50">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-base font-semibold text-neutral-900">
-                      Your Essay
-                    </CardTitle>
-                    <CardDescription className="text-xs mt-1">
-                      Click highlighted text to see detailed feedback
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                {hasHighlights ? (
-                  <EssayViewer
-                    essay={essayText}
-                    marksEarned={result.marksEarned || []}
-                    marksLost={result.marksLost || []}
-                    showDetailedFeedback={showDetailedFeedback}
-                    onToggleDetailedFeedback={() => setShowDetailedFeedback(!showDetailedFeedback)}
-                  />
-                ) : (
-                  <div className="p-6 bg-neutral-50 rounded-xl">
-                    <p className="text-[15px] leading-relaxed text-neutral-700 whitespace-pre-wrap">
-                      {essayText}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Right Column - Score Cards */}
-        <div className="lg:col-span-5 xl:col-span-4 space-y-5">
-          {/* Overall Score Card */}
-          <Card className="overflow-hidden border-neutral-200/60 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-6">
-                {/* Score Ring */}
-                <div className="relative flex-shrink-0">
-                  <svg className="w-28 h-28" viewBox="0 0 100 100">
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="none"
-                      className="text-neutral-100"
-                    />
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      strokeWidth="8"
-                      fill="none"
-                      strokeDasharray={`${2 * Math.PI * 40}`}
-                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - result.overallPercentage / 100)}`}
-                      strokeLinecap="round"
-                      className={cn(
-                        "transition-all duration-1000 ease-out origin-center -rotate-90",
-                        getScoreRingColor(result.overallPercentage)
-                      )}
-                      style={{ transformOrigin: "center" }}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className={cn("text-2xl font-bold", getScoreColor(result.overallPercentage))}>
-                      {result.overallPercentage}%
-                    </span>
-                  </div>
-                </div>
-
-                {/* Score Details */}
-                <div className="flex-1">
-                  <div className="text-4xl font-light text-neutral-900 mb-2 tracking-tight">
-                    {result.totalMarks}
-                    <span className="text-lg text-neutral-300 font-normal">/{markScheme.total}</span>
-                  </div>
-                  <LevelBadge level={result.levelAchieved} />
-                  <p className="text-xs text-neutral-500 mt-3 leading-relaxed">
-                    {LEVEL_DESCRIPTORS[result.levelAchieved]}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* AO Breakdown */}
-          <Card className="overflow-hidden border-neutral-200/60 shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
-                Assessment Objectives
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5 pt-0">
-              {markScheme.ao1 > 0 && (
-                <AOScoreBar aoKey="ao1" score={result.aoScores.ao1} maxScore={markScheme.ao1} />
-              )}
-              {markScheme.ao2 > 0 && (
-                <AOScoreBar aoKey="ao2" score={result.aoScores.ao2} maxScore={markScheme.ao2} />
-              )}
-              {markScheme.ao3 > 0 && (
-                <AOScoreBar aoKey="ao3" score={result.aoScores.ao3} maxScore={markScheme.ao3} />
-              )}
-              {markScheme.ao4 > 0 && (
-                <AOScoreBar aoKey="ao4" score={result.aoScores.ao4} maxScore={markScheme.ao4} />
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Examiner Comment */}
-          <Card className="overflow-hidden border-neutral-200/60 shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
-                Examiner Feedback
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="relative p-4 bg-gradient-to-br from-neutral-50 to-neutral-100/50 rounded-xl">
-                <div className="absolute top-3 left-4 text-4xl text-neutral-200 font-serif">&ldquo;</div>
-                <p className="text-sm text-neutral-600 leading-relaxed pt-4 pl-2 italic">
-                  {result.examinerComment}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Feedback Summary */}
-          {hasHighlights && (
-            <Card className="overflow-hidden border-neutral-200/60 shadow-sm">
-              <CardContent className="p-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/30 border border-emerald-100">
-                    <div className="text-2xl font-bold text-emerald-600 tracking-tight">
-                      +{result.marksEarned?.reduce((sum, m) => sum + m.points, 0) || 0}
-                    </div>
-                    <div className="text-xs text-emerald-600/80 font-medium mt-1">Marks Earned</div>
-                  </div>
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-red-50 to-red-100/30 border border-red-100">
-                    <div className="text-2xl font-bold text-red-600 tracking-tight">
-                      {result.marksLost?.length || 0}
-                    </div>
-                    <div className="text-xs text-red-600/80 font-medium mt-1">Issues Found</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Strengths */}
-          <Card className="overflow-hidden border-neutral-200/60 shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-xs font-semibold text-emerald-600 uppercase tracking-wider flex items-center gap-2">
-                <Check className="w-3.5 h-3.5" />
-                Strengths
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-0">
-              {result.strengths.slice(0, 3).map((strength, index) => (
-                <div
-                  key={index}
-                  className="flex gap-3 p-3 rounded-xl bg-emerald-50/50 border border-emerald-100/50"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
-                  <span className="text-xs text-neutral-600 leading-relaxed">{strength}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Improvements */}
-          <Card className="overflow-hidden border-neutral-200/60 shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-xs font-semibold text-amber-600 uppercase tracking-wider flex items-center gap-2">
-                <Target className="w-3.5 h-3.5" />
-                Areas to Improve
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-0">
-              {result.improvements.slice(0, 3).map((improvement, index) => (
-                <div
-                  key={index}
-                  className="flex gap-3 p-3 rounded-xl bg-amber-50/50 border border-amber-100/50"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                  <span className="text-xs text-neutral-600 leading-relaxed">{improvement}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// PLAN RESULT DISPLAY WITH TOGGLE
-// ============================================================================
-
-function PlanResultDisplay({ result, onBack }: { result: PlanResult; onBack: () => void }) {
-  const [showDetailedPlan, setShowDetailedPlan] = useState(true);
-
-  return (
-    <div className="max-w-4xl mx-auto">
-      {/* Back Button */}
-      <button
-        onClick={onBack}
-        className="group flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900 transition-colors mb-8"
-      >
-        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-        <span>Edit Question</span>
-      </button>
-
-      {/* Detail Toggle */}
-      <div className="flex items-center justify-between mb-8 p-4 bg-neutral-50 rounded-2xl border border-neutral-100">
-        <div className="flex items-center gap-3">
-          {showDetailedPlan ? (
-            <Eye className="w-5 h-5 text-neutral-600" />
-          ) : (
-            <EyeOff className="w-5 h-5 text-neutral-400" />
-          )}
-          <div>
-            <p className="text-sm font-medium text-neutral-900">Detailed View</p>
-            <p className="text-xs text-neutral-500">Show examples, chains of reasoning, and techniques</p>
-          </div>
-        </div>
-        <Switch
-          checked={showDetailedPlan}
-          onCheckedChange={setShowDetailedPlan}
-          className="data-[state=checked]:bg-neutral-900"
-        />
-      </div>
-
-      <div className="space-y-5">
-        {/* Introduction */}
-        <Card className="overflow-hidden border-neutral-200/60 shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="border-b border-neutral-100 bg-gradient-to-r from-neutral-50 to-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-neutral-900 text-white text-sm font-semibold shadow-sm">
-                  1
-                </span>
-                <div>
-                  <CardTitle className="text-lg font-semibold">Introduction</CardTitle>
-                  <CardDescription className="text-xs mt-0.5">Define key terms and state your thesis</CardDescription>
-                </div>
-              </div>
-              <AOBadge ao="ao1" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="p-5 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100/30 border border-amber-200/50">
-              <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <Lightbulb className="w-3 h-3" />
-                What to Write
-              </p>
-              <p className="text-sm text-neutral-700 leading-relaxed">
-                {result.introduction?.whatToWrite || result.thesis}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Arguments */}
-        {result.arguments.map((arg, index) => (
-          <Card key={index} className="overflow-hidden border-neutral-200/60 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="border-b border-neutral-100 bg-gradient-to-r from-neutral-50 to-white">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <span className={cn(
-                    "flex items-center justify-center w-10 h-10 rounded-xl text-white text-sm font-semibold shadow-sm",
-                    index === 0 ? "bg-emerald-600" : "bg-red-500"
-                  )}>
-                    {index + 2}
-                  </span>
-                  <div>
-                    <CardTitle className="text-lg font-semibold">
-                      Argument {index === 0 ? "FOR" : "AGAINST"}
-                    </CardTitle>
-                    <CardDescription className="text-xs mt-0.5 max-w-md truncate">{arg.point}</CardDescription>
-                  </div>
-                </div>
-                <div className="flex gap-1.5">
-                  <AOBadge ao="ao1" />
-                  <AOBadge ao="ao2" />
-                  <AOBadge ao="ao3" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6 space-y-4">
-              {/* Chain of Reasoning */}
-              {showDetailedPlan && arg.chainOfReasoning && arg.chainOfReasoning.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2 p-4 bg-neutral-50 rounded-xl border border-neutral-100">
-                  <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mr-2">Chain:</span>
-                  {arg.chainOfReasoning.slice(0, 5).map((step, i) => (
-                    <span key={i} className="flex items-center gap-2">
-                      <span className="px-3 py-1.5 bg-white rounded-lg text-xs text-neutral-600 font-medium shadow-sm border border-neutral-100">
-                        {step}
-                      </span>
-                      {arg.chainOfReasoning && i < Math.min(arg.chainOfReasoning.length - 1, 4) && (
-                        <ChevronRight className="w-3.5 h-3.5 text-neutral-300" />
-                      )}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Theory and Example */}
-              {showDetailedPlan ? (
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/30 border border-blue-100">
-                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                      <BookOpen className="w-3 h-3" />
-                      Theory / Explanation
-                    </p>
-                    <p className="text-sm text-neutral-600 leading-relaxed">{arg.explanation}</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/30 border border-emerald-100">
-                    <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                      <GraduationCap className="w-3 h-3" />
-                      Real-World Example
-                    </p>
-                    <p className="text-sm text-neutral-600 leading-relaxed">{arg.example}</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-100">
-                  <p className="text-sm font-medium text-neutral-800">{arg.point}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-
-        {/* Evaluation */}
-        <Card className="overflow-hidden border-neutral-200/60 shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="border-b border-neutral-100 bg-gradient-to-r from-violet-50/50 to-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-violet-600 text-white text-sm font-semibold shadow-sm">
-                  {result.arguments.length + 2}
-                </span>
-                <div>
-                  <CardTitle className="text-lg font-semibold">Deeper Evaluation</CardTitle>
-                  <CardDescription className="text-xs mt-0.5">Critical analysis and limitations</CardDescription>
-                </div>
-              </div>
-              <div className="flex gap-1.5">
-                <AOBadge ao="ao3" />
-                <AOBadge ao="ao4" />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-6 space-y-4">
-            {showDetailedPlan && (
-              <div className="p-5 rounded-xl bg-gradient-to-br from-violet-50 to-violet-100/30 border border-violet-100">
-                <p className="text-[10px] font-bold text-violet-600 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                  <Target className="w-3 h-3" />
-                  Evaluation Techniques
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {(result.deeperEvaluation?.techniques || [
-                    "Short run vs long run",
-                    "Elasticity conditions",
-                    "Magnitude/significance",
-                    "Challenging assumptions",
-                  ]).map((technique, i) => (
-                    <span key={i} className="px-3 py-1.5 bg-white rounded-lg text-xs text-violet-700 font-medium shadow-sm border border-violet-100">
-                      {technique}
-                    </span>
-                  ))}
-                </div>
-              </div>
+          className="inline-flex p-1.5 rounded-2xl bg-muted/50 border border-border/50"
+          style={{ boxShadow: "var(--shadow-inner)" }}
+        >
+          <button
+            onClick={() => setActiveMode("grader")}
+            className={cn(
+              "flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+              activeMode === "grader"
+                ? "bg-card text-foreground"
+                : "text-muted-foreground hover:text-foreground"
             )}
+            style={activeMode === "grader" ? { boxShadow: "var(--shadow-md)" } : {}}
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            Grade Essay
+          </button>
+          <button
+            onClick={() => setActiveMode("planner")}
+            className={cn(
+              "flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+              activeMode === "planner"
+                ? "bg-card text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+            style={activeMode === "planner" ? { boxShadow: "var(--shadow-md)" } : {}}
+          >
+            <ListTree className="w-4 h-4" />
+            Plan Essay
+          </button>
+        </div>
+      </div>
+    </nav>
+  );
+}
 
-            {result.evaluations.slice(0, showDetailedPlan ? 3 : 2).map((evaluation, index) => (
-              <div key={index} className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100/30 border border-amber-100">
-                <h5 className="text-sm font-semibold text-amber-800 mb-2">{evaluation.point}</h5>
-                {showDetailedPlan && (
-                  <p className="text-sm text-amber-700/80 leading-relaxed">{evaluation.development}</p>
-                )}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+// ============================================================================
+// SELECT COMPONENT
+// ============================================================================
 
-        {/* Diagram */}
-        {result.diagram && result.diagram !== "none" && (
-          <Card className="overflow-hidden border-neutral-200/60 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="border-b border-neutral-100 bg-gradient-to-r from-indigo-50/50 to-white">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-sm">
-                  <BarChart3 className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <CardTitle className="text-sm font-semibold uppercase tracking-wide">
-                    Required Diagram
-                  </CardTitle>
-                  <CardDescription className="text-xs mt-0.5">
-                    {result.diagramSection?.name || result.diagram.replace("-", " ")}
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              {showDetailedPlan && result.diagramSection?.keyLabels && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {result.diagramSection.keyLabels.map((label, i) => (
-                    <Badge key={i} variant="secondary" className="text-xs font-medium">
-                      {label}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-              {result.diagramExplanation && (
-                <p className="text-sm text-neutral-600 leading-relaxed">{result.diagramExplanation}</p>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Conclusion */}
-        <Card className="overflow-hidden border-neutral-200/60 shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="border-b border-neutral-100 bg-gradient-to-r from-emerald-50/50 to-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-600 text-white text-sm font-semibold shadow-sm">
-                  {result.arguments.length + 3}
-                </span>
-                <div>
-                  <CardTitle className="text-lg font-semibold">Conclusion</CardTitle>
-                  <CardDescription className="text-xs mt-0.5">Weigh evidence and give your judgement</CardDescription>
-                </div>
-              </div>
-              <AOBadge ao="ao4" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="p-5 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/30 border border-emerald-100">
-              <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <CheckCircle2 className="w-3 h-3" />
-                Your Conclusion
-              </p>
-              <p className="text-sm text-neutral-700 leading-relaxed">{result.conclusion}</p>
-            </div>
-          </CardContent>
-        </Card>
+function PremiumSelect({
+  value,
+  onChange,
+  options,
+  label,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  label: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <label className="text-caption">{label}</label>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="input-premium w-full appearance-none cursor-pointer pr-10"
+        >
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground rotate-90 pointer-events-none" />
       </div>
     </div>
   );
@@ -682,10 +212,7 @@ function DiagramUpload({
 
   const handleFile = useCallback(
     (file: File) => {
-      if (!file.type.startsWith("image/")) {
-        return;
-      }
-
+      if (!file.type.startsWith("image/")) return;
       const reader = new FileReader();
       reader.onload = (e) => {
         const base64 = e.target?.result as string;
@@ -700,44 +227,44 @@ function DiagramUpload({
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium text-neutral-700">Diagram Uploaded</Label>
-          <Button
-            variant="ghost"
-            size="sm"
+          <span className="text-caption">Diagram</span>
+          <button
             onClick={onRemove}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 px-3"
+            className="btn-ghost text-xs text-destructive hover:text-destructive"
           >
             <Trash2 className="w-3.5 h-3.5 mr-1.5" />
             Remove
-          </Button>
+          </button>
         </div>
-        <div className="rounded-xl overflow-hidden border border-neutral-200 bg-white">
-          <img
-            src={image}
-            alt="Uploaded diagram"
-            className="w-full max-h-48 object-contain"
-          />
+        <div
+          className="rounded-xl overflow-hidden border border-border/50"
+          style={{ boxShadow: "var(--shadow-inner)" }}
+        >
+          <img src={image} alt="Diagram" className="w-full max-h-48 object-contain bg-muted/30" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label className="text-sm font-medium text-neutral-700">Diagram Upload</Label>
-        <Badge variant="secondary" className="text-[10px] font-medium">Optional</Badge>
+        <span className="text-caption">Diagram (Optional)</span>
       </div>
-      <div
-        className="flex flex-col items-center justify-center p-8 rounded-xl cursor-pointer transition-all border-2 border-dashed border-neutral-200 hover:border-neutral-300 bg-neutral-50/50 hover:bg-neutral-50 group"
+      <button
         onClick={() => fileInputRef.current?.click()}
+        className="w-full p-6 rounded-xl border-2 border-dashed border-border/50 hover:border-border
+                   bg-muted/20 hover:bg-muted/30 transition-all duration-200
+                   flex flex-col items-center gap-2 group"
       >
-        <div className="w-12 h-12 rounded-full bg-neutral-100 group-hover:bg-neutral-200 flex items-center justify-center mb-3 transition-colors">
-          <Upload className="w-5 h-5 text-neutral-400 group-hover:text-neutral-500" />
+        <div
+          className="w-10 h-10 rounded-full bg-muted flex items-center justify-center
+                     group-hover:bg-accent transition-colors"
+        >
+          <Upload className="w-4 h-4 text-muted-foreground" />
         </div>
-        <span className="text-sm font-medium text-neutral-600 mb-1">Click to upload</span>
-        <span className="text-xs text-neutral-400">PNG, JPG up to 10MB</span>
-      </div>
+        <span className="text-sm text-muted-foreground">Click to upload</span>
+      </button>
       <input
         ref={fileInputRef}
         type="file"
@@ -753,7 +280,125 @@ function DiagramUpload({
 }
 
 // ============================================================================
-// GRADER INPUT FORM
+// AO BADGE COMPONENT
+// ============================================================================
+
+function AOBadge({ ao }: { ao: string }) {
+  const badges: Record<string, string> = {
+    ao1: "badge-ao1",
+    ao2: "badge-ao2",
+    ao3: "badge-ao3",
+    ao4: "badge-ao4",
+  };
+  return <span className={badges[ao] || "badge-info"}>{ao.toUpperCase()}</span>;
+}
+
+// ============================================================================
+// AO PROGRESS BAR COMPONENT
+// ============================================================================
+
+function AOProgressBar({
+  aoKey,
+  score,
+  maxScore,
+}: {
+  aoKey: string;
+  score: number;
+  maxScore: number;
+}) {
+  const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
+  const labels: Record<string, string> = {
+    ao1: "Knowledge",
+    ao2: "Application",
+    ao3: "Analysis",
+    ao4: "Evaluation",
+  };
+  const colors: Record<string, string> = {
+    ao1: "hsl(var(--ao1))",
+    ao2: "hsl(var(--ao2))",
+    ao3: "hsl(var(--ao3))",
+    ao4: "hsl(var(--ao4))",
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <AOBadge ao={aoKey} />
+          <span className="text-xs text-muted-foreground">{labels[aoKey]}</span>
+        </div>
+        <span className="text-sm font-semibold tabular-nums">
+          {score}
+          <span className="text-muted-foreground font-normal">/{maxScore}</span>
+        </span>
+      </div>
+      <div className="progress-track">
+        <div
+          className="progress-bar"
+          style={{
+            width: `${percentage}%`,
+            backgroundColor: colors[aoKey],
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// SCORE RING COMPONENT
+// ============================================================================
+
+function ScoreRing({
+  percentage,
+  size = 120,
+  strokeWidth = 10,
+}: {
+  percentage: number;
+  size?: number;
+  strokeWidth?: number;
+}) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg className="w-full h-full" viewBox={`0 0 ${size} ${size}`}>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          strokeWidth={strokeWidth}
+          fill="none"
+          className="stroke-muted"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          strokeWidth={strokeWidth}
+          fill="none"
+          stroke={getScoreColor(percentage)}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          className="score-ring-progress"
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span
+          className="text-2xl font-bold"
+          style={{ color: getScoreColor(percentage) }}
+        >
+          {percentage}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// GRADING INPUT FORM
 // ============================================================================
 
 function GraderInputForm({
@@ -768,7 +413,6 @@ function GraderInputForm({
   onSubmit,
   loading,
   error,
-  onClear,
 }: {
   question: string;
   setQuestion: (v: string) => void;
@@ -781,104 +425,243 @@ function GraderInputForm({
   onSubmit: () => void;
   loading: boolean;
   error: string;
-  onClear: () => void;
 }) {
   return (
-    <div className="max-w-2xl mx-auto">
-      {/* Header */}
+    <div className="max-w-3xl mx-auto animate-in">
+      {/* Hero Section */}
       <div className="text-center mb-12">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-neutral-100 to-neutral-200 flex items-center justify-center mx-auto mb-6 shadow-sm">
-          <PenTool className="w-7 h-7 text-neutral-600" />
+        <div
+          className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-card mb-6"
+          style={{ boxShadow: "var(--shadow-lg)" }}
+        >
+          <PenLine className="w-7 h-7 text-foreground" />
         </div>
-        <h2 className="text-2xl font-semibold text-neutral-900 tracking-tight mb-2">Grade Your Answer</h2>
-        <p className="text-sm text-neutral-500">Get AI-powered feedback aligned with Edexcel mark schemes</p>
+        <h2 className="text-headline mb-3">Grade Your Essay</h2>
+        <p className="text-muted-foreground max-w-md mx-auto">
+          Get AI-powered feedback aligned with Edexcel IAL mark schemes and assessment objectives.
+        </p>
       </div>
 
-      <Card className="overflow-hidden border-neutral-200/60 shadow-sm">
-        <CardContent className="p-8 space-y-7">
-          {/* Question Type */}
-          <div className="space-y-2.5">
-            <Label className="text-sm font-medium text-neutral-700">Question Type</Label>
-            <Select value={questionType} onValueChange={(v) => setQuestionType(v as QuestionType)}>
-              <SelectTrigger className="h-11 rounded-xl bg-neutral-50 border-neutral-200 hover:bg-neutral-100 transition-colors">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {QUESTION_TYPE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      {/* Form Card */}
+      <div className="card-elevated rounded-3xl p-8 space-y-6">
+        <PremiumSelect
+          value={questionType}
+          onChange={(v) => setQuestionType(v as QuestionType)}
+          options={QUESTION_TYPE_OPTIONS}
+          label="Question Type"
+        />
 
-          {/* Exam Question */}
-          <div className="space-y-2.5">
-            <Label className="text-sm font-medium text-neutral-700">Exam Question</Label>
-            <Textarea
-              placeholder="Paste the exam question here..."
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              className="min-h-[100px] resize-none rounded-xl bg-neutral-50 border-neutral-200 hover:bg-neutral-100/50 focus:bg-white transition-colors"
-            />
-          </div>
-
-          {/* Student Answer */}
-          <div className="space-y-2.5">
-            <Label className="text-sm font-medium text-neutral-700">Student Answer</Label>
-            <Textarea
-              placeholder="Paste the student's answer here for grading..."
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              className="min-h-[200px] resize-none rounded-xl bg-neutral-50 border-neutral-200 hover:bg-neutral-100/50 focus:bg-white transition-colors"
-            />
-          </div>
-
-          {/* Diagram Upload */}
-          <DiagramUpload
-            image={diagram}
-            onUpload={setDiagram}
-            onRemove={() => setDiagram(null)}
+        <div className="space-y-2">
+          <label className="text-caption">Exam Question</label>
+          <textarea
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="Enter the exam question..."
+            className="textarea-premium min-h-[100px]"
           />
+        </div>
 
-          {/* Error */}
-          {error && (
-            <Alert variant="destructive" className="rounded-xl">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+        <div className="space-y-2">
+          <label className="text-caption">Your Answer</label>
+          <textarea
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            placeholder="Enter your essay answer..."
+            className="textarea-premium min-h-[240px]"
+          />
+        </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              className="flex-1 h-12 rounded-xl text-sm font-semibold bg-neutral-900 hover:bg-neutral-800 transition-all shadow-sm hover:shadow-md"
-              onClick={onSubmit}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Grade Answer
-                </>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={onClear}
-              className="h-12 px-6 rounded-xl border-neutral-200 hover:bg-neutral-50"
-            >
-              Clear
-            </Button>
+        <DiagramUpload
+          image={diagram}
+          onUpload={setDiagram}
+          onRemove={() => setDiagram(null)}
+        />
+
+        {error && (
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-destructive/10 border border-destructive/20">
+            <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-destructive">{error}</p>
           </div>
-        </CardContent>
-      </Card>
+        )}
+
+        <button
+          onClick={onSubmit}
+          disabled={loading}
+          className="btn-primary w-full text-sm"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Analyzing...
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4 mr-2" />
+              Grade Essay
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// GRADING RESULTS DISPLAY
+// ============================================================================
+
+function GradingResultsDisplay({
+  result,
+  questionType,
+  essayText,
+  onBack,
+}: {
+  result: GradingResult;
+  questionType: QuestionType;
+  essayText: string;
+  onBack: () => void;
+}) {
+  const [showDetailedFeedback, setShowDetailedFeedback] = useState(false);
+  const markScheme = MARK_SCHEMES[questionType];
+  const hasHighlights = (result.marksEarned?.length || 0) > 0 || (result.marksLost?.length || 0) > 0;
+
+  return (
+    <div className="max-w-7xl mx-auto animate-in">
+      {/* Back Button */}
+      <button
+        onClick={onBack}
+        className="btn-ghost mb-8 -ml-2"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Edit Answer
+      </button>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Main Content */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* Essay Viewer Card */}
+          <div className="card-elevated rounded-3xl overflow-hidden">
+            <div className="p-6 border-b border-border/50">
+              <div className="flex items-center justify-between">
+                <h3 className="text-title">Your Essay</h3>
+                {hasHighlights && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-muted-foreground">Details</span>
+                    <Switch
+                      checked={showDetailedFeedback}
+                      onCheckedChange={setShowDetailedFeedback}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="p-6">
+              {hasHighlights ? (
+                <EssayViewer
+                  essay={essayText}
+                  marksEarned={result.marksEarned || []}
+                  marksLost={result.marksLost || []}
+                  showDetailedFeedback={showDetailedFeedback}
+                  onToggleDetailedFeedback={() => setShowDetailedFeedback(!showDetailedFeedback)}
+                />
+              ) : (
+                <div className="card-inset p-6 rounded-xl">
+                  <p className="text-body whitespace-pre-wrap">{essayText}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* Score Card */}
+          <div className="card-elevated rounded-3xl p-6">
+            <div className="flex items-center gap-6">
+              <ScoreRing percentage={result.overallPercentage} />
+              <div>
+                <div className="text-4xl font-bold tracking-tight mb-2">
+                  {result.totalMarks}
+                  <span className="text-lg text-muted-foreground font-normal">
+                    /{markScheme.total}
+                  </span>
+                </div>
+                <div className={getLevelClass(result.levelAchieved)}>
+                  Level {result.levelAchieved}
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-4 leading-relaxed">
+              {LEVEL_DESCRIPTORS[result.levelAchieved]}
+            </p>
+          </div>
+
+          {/* AO Breakdown */}
+          <div className="card-elevated rounded-3xl p-6 space-y-5">
+            <h4 className="text-caption">Assessment Objectives</h4>
+            {markScheme.ao1 > 0 && (
+              <AOProgressBar aoKey="ao1" score={result.aoScores.ao1} maxScore={markScheme.ao1} />
+            )}
+            {markScheme.ao2 > 0 && (
+              <AOProgressBar aoKey="ao2" score={result.aoScores.ao2} maxScore={markScheme.ao2} />
+            )}
+            {markScheme.ao3 > 0 && (
+              <AOProgressBar aoKey="ao3" score={result.aoScores.ao3} maxScore={markScheme.ao3} />
+            )}
+            {markScheme.ao4 > 0 && (
+              <AOProgressBar aoKey="ao4" score={result.aoScores.ao4} maxScore={markScheme.ao4} />
+            )}
+          </div>
+
+          {/* Examiner Comment */}
+          <div className="card-elevated rounded-3xl p-6">
+            <h4 className="text-caption mb-4">Examiner Feedback</h4>
+            <div className="card-inset p-4 rounded-xl">
+              <p className="text-sm text-foreground/80 leading-relaxed italic">
+                &ldquo;{result.examinerComment}&rdquo;
+              </p>
+            </div>
+          </div>
+
+          {/* Strengths */}
+          <div className="card-elevated rounded-3xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp className="w-4 h-4" style={{ color: "hsl(var(--success))" }} />
+              <h4 className="text-caption" style={{ color: "hsl(var(--success))" }}>Strengths</h4>
+            </div>
+            <div className="space-y-2">
+              {result.strengths.slice(0, 3).map((strength, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <span
+                    className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
+                    style={{ backgroundColor: "hsl(var(--success))" }}
+                  />
+                  <p className="text-sm text-foreground/80">{strength}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Improvements */}
+          <div className="card-elevated rounded-3xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Target className="w-4 h-4" style={{ color: "hsl(var(--warning))" }} />
+              <h4 className="text-caption" style={{ color: "hsl(var(--warning))" }}>To Improve</h4>
+            </div>
+            <div className="space-y-2">
+              {result.improvements.slice(0, 3).map((improvement, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <span
+                    className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
+                    style={{ backgroundColor: "hsl(var(--warning))" }}
+                  />
+                  <p className="text-sm text-foreground/80">{improvement}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -895,7 +678,6 @@ function PlannerInputForm({
   onSubmit,
   loading,
   error,
-  onClear,
 }: {
   question: string;
   setQuestion: (v: string) => void;
@@ -904,86 +686,319 @@ function PlannerInputForm({
   onSubmit: () => void;
   loading: boolean;
   error: string;
-  onClear: () => void;
 }) {
   return (
-    <div className="max-w-2xl mx-auto">
-      {/* Header */}
+    <div className="max-w-3xl mx-auto animate-in">
+      {/* Hero Section */}
       <div className="text-center mb-12">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-neutral-100 to-neutral-200 flex items-center justify-center mx-auto mb-6 shadow-sm">
-          <FileText className="w-7 h-7 text-neutral-600" />
+        <div
+          className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-card mb-6"
+          style={{ boxShadow: "var(--shadow-lg)" }}
+        >
+          <ListTree className="w-7 h-7 text-foreground" />
         </div>
-        <h2 className="text-2xl font-semibold text-neutral-900 tracking-tight mb-2">Plan Your Essay</h2>
-        <p className="text-sm text-neutral-500">Generate a comprehensive A*-grade essay structure</p>
+        <h2 className="text-headline mb-3">Plan Your Essay</h2>
+        <p className="text-muted-foreground max-w-md mx-auto">
+          Generate a comprehensive essay structure with arguments, evaluation points, and diagram suggestions.
+        </p>
       </div>
 
-      <Card className="overflow-hidden border-neutral-200/60 shadow-sm">
-        <CardContent className="p-8 space-y-7">
-          {/* Question Type */}
-          <div className="space-y-2.5">
-            <Label className="text-sm font-medium text-neutral-700">Question Type</Label>
-            <Select value={questionType} onValueChange={(v) => setQuestionType(v as QuestionType)}>
-              <SelectTrigger className="h-11 rounded-xl bg-neutral-50 border-neutral-200 hover:bg-neutral-100 transition-colors">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {QUESTION_TYPE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      {/* Form Card */}
+      <div className="card-elevated rounded-3xl p-8 space-y-6">
+        <PremiumSelect
+          value={questionType}
+          onChange={(v) => setQuestionType(v as QuestionType)}
+          options={QUESTION_TYPE_OPTIONS}
+          label="Question Type"
+        />
 
-          {/* Essay Question */}
-          <div className="space-y-2.5">
-            <Label className="text-sm font-medium text-neutral-700">Essay Question</Label>
-            <Textarea
-              placeholder="Type or paste the essay question here..."
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              className="min-h-[140px] resize-none rounded-xl bg-neutral-50 border-neutral-200 hover:bg-neutral-100/50 focus:bg-white transition-colors"
-            />
-          </div>
+        <div className="space-y-2">
+          <label className="text-caption">Essay Question</label>
+          <textarea
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="Enter the essay question..."
+            className="textarea-premium min-h-[140px]"
+          />
+        </div>
 
-          {/* Error */}
-          {error && (
-            <Alert variant="destructive" className="rounded-xl">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+        {error && (
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-destructive/10 border border-destructive/20">
+            <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-destructive">{error}</p>
+          </div>
+        )}
+
+        <button
+          onClick={onSubmit}
+          disabled={loading}
+          className="btn-primary w-full text-sm"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4 mr-2" />
+              Generate Plan
+            </>
           )}
+        </button>
+      </div>
+    </div>
+  );
+}
 
-          {/* Actions */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              className="flex-1 h-12 rounded-xl text-sm font-semibold bg-neutral-900 hover:bg-neutral-800 transition-all shadow-sm hover:shadow-md"
-              onClick={onSubmit}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generate Plan
-                </>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={onClear}
-              className="h-12 px-6 rounded-xl border-neutral-200 hover:bg-neutral-50"
-            >
-              Clear
-            </Button>
+// ============================================================================
+// PLAN RESULTS DISPLAY
+// ============================================================================
+
+function PlanResultsDisplay({
+  result,
+  onBack,
+}: {
+  result: PlanResult;
+  onBack: () => void;
+}) {
+  const [showDetailed, setShowDetailed] = useState(true);
+
+  return (
+    <div className="max-w-4xl mx-auto animate-in">
+      {/* Back Button */}
+      <button onClick={onBack} className="btn-ghost mb-8 -ml-2">
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Edit Question
+      </button>
+
+      {/* Detail Toggle */}
+      <div
+        className="card-elevated rounded-2xl p-4 mb-8 flex items-center justify-between"
+      >
+        <div className="flex items-center gap-3">
+          {showDetailed ? (
+            <Eye className="w-5 h-5 text-foreground" />
+          ) : (
+            <EyeOff className="w-5 h-5 text-muted-foreground" />
+          )}
+          <div>
+            <p className="text-sm font-medium">Detailed View</p>
+            <p className="text-xs text-muted-foreground">
+              Show examples, chains, and techniques
+            </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        <Switch checked={showDetailed} onCheckedChange={setShowDetailed} />
+      </div>
+
+      <div className="space-y-6">
+        {/* Introduction */}
+        <div className="card-elevated rounded-3xl overflow-hidden">
+          <div className="p-5 border-b border-border/50 flex items-center gap-4">
+            <div
+              className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-sm font-semibold text-primary-foreground"
+              style={{ boxShadow: "var(--shadow-sm)" }}
+            >
+              1
+            </div>
+            <div className="flex-1">
+              <h3 className="text-title">Introduction</h3>
+              <p className="text-xs text-muted-foreground">Define terms & thesis</p>
+            </div>
+            <AOBadge ao="ao1" />
+          </div>
+          <div className="p-6">
+            <div className="card-inset p-4 rounded-xl">
+              <p className="text-sm leading-relaxed">
+                {result.introduction?.whatToWrite || result.thesis}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Arguments */}
+        {result.arguments.map((arg, index) => (
+          <div key={index} className="card-elevated rounded-3xl overflow-hidden">
+            <div className="p-5 border-b border-border/50 flex items-center gap-4">
+              <div
+                className={cn(
+                  "w-10 h-10 rounded-xl flex items-center justify-center text-sm font-semibold text-white",
+                  index === 0 ? "bg-[hsl(var(--ao2))]" : "bg-[hsl(var(--error))]"
+                )}
+                style={{ boxShadow: "var(--shadow-sm)" }}
+              >
+                {index + 2}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-title">
+                  Argument {index === 0 ? "FOR" : "AGAINST"}
+                </h3>
+                <p className="text-xs text-muted-foreground line-clamp-1">{arg.point}</p>
+              </div>
+              <div className="flex gap-1.5">
+                <AOBadge ao="ao1" />
+                <AOBadge ao="ao2" />
+                <AOBadge ao="ao3" />
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              {showDetailed && arg.chainOfReasoning && arg.chainOfReasoning.length > 0 && (
+                <div className="card-inset p-4 rounded-xl">
+                  <p className="text-caption mb-3">Chain of Reasoning</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {arg.chainOfReasoning.slice(0, 5).map((step, i) => (
+                      <span key={i} className="flex items-center gap-2">
+                        <span className="px-3 py-1.5 bg-card rounded-lg text-xs font-medium border border-border/50">
+                          {step}
+                        </span>
+                        {arg.chainOfReasoning && i < Math.min(arg.chainOfReasoning.length - 1, 4) && (
+                          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {showDetailed ? (
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="card-inset p-4 rounded-xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <BookOpen className="w-3.5 h-3.5" style={{ color: "hsl(var(--ao1))" }} />
+                      <p className="text-caption" style={{ color: "hsl(var(--ao1))" }}>Theory</p>
+                    </div>
+                    <p className="text-sm leading-relaxed">{arg.explanation}</p>
+                  </div>
+                  <div className="card-inset p-4 rounded-xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <GraduationCap className="w-3.5 h-3.5" style={{ color: "hsl(var(--ao2))" }} />
+                      <p className="text-caption" style={{ color: "hsl(var(--ao2))" }}>Example</p>
+                    </div>
+                    <p className="text-sm leading-relaxed">{arg.example}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="card-inset p-4 rounded-xl">
+                  <p className="text-sm font-medium">{arg.point}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {/* Evaluation */}
+        <div className="card-elevated rounded-3xl overflow-hidden">
+          <div className="p-5 border-b border-border/50 flex items-center gap-4">
+            <div
+              className="w-10 h-10 rounded-xl bg-[hsl(var(--ao3))] flex items-center justify-center text-sm font-semibold text-white"
+              style={{ boxShadow: "var(--shadow-sm)" }}
+            >
+              {result.arguments.length + 2}
+            </div>
+            <div className="flex-1">
+              <h3 className="text-title">Deeper Evaluation</h3>
+              <p className="text-xs text-muted-foreground">Critical analysis</p>
+            </div>
+            <div className="flex gap-1.5">
+              <AOBadge ao="ao3" />
+              <AOBadge ao="ao4" />
+            </div>
+          </div>
+          <div className="p-6 space-y-4">
+            {showDetailed && (
+              <div className="card-inset p-4 rounded-xl">
+                <div className="flex items-center gap-2 mb-3">
+                  <Target className="w-3.5 h-3.5" style={{ color: "hsl(var(--ao3))" }} />
+                  <p className="text-caption" style={{ color: "hsl(var(--ao3))" }}>Techniques</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(result.deeperEvaluation?.techniques || [
+                    "Short vs Long Run",
+                    "Elasticity",
+                    "Magnitude",
+                    "Assumptions",
+                  ]).map((t, i) => (
+                    <span
+                      key={i}
+                      className="px-3 py-1.5 bg-card rounded-lg text-xs font-medium border border-border/50"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {result.evaluations.slice(0, showDetailed ? 3 : 2).map((ev, i) => (
+              <div key={i} className="card-inset p-4 rounded-xl">
+                <p className="text-sm font-medium mb-1">{ev.point}</p>
+                {showDetailed && (
+                  <p className="text-sm text-muted-foreground leading-relaxed">{ev.development}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Diagram */}
+        {result.diagram && result.diagram !== "none" && (
+          <div className="card-elevated rounded-3xl overflow-hidden">
+            <div className="p-5 border-b border-border/50 flex items-center gap-4">
+              <div
+                className="w-10 h-10 rounded-xl bg-[hsl(var(--info))] flex items-center justify-center"
+                style={{ boxShadow: "var(--shadow-sm)" }}
+              >
+                <BarChart3 className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-title">Required Diagram</h3>
+                <p className="text-xs text-muted-foreground">
+                  {result.diagramSection?.name || result.diagram}
+                </p>
+              </div>
+            </div>
+            <div className="p-6">
+              {showDetailed && result.diagramSection?.keyLabels && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {result.diagramSection.keyLabels.map((label, i) => (
+                    <span key={i} className="badge-info">{label}</span>
+                  ))}
+                </div>
+              )}
+              {result.diagramExplanation && (
+                <p className="text-sm leading-relaxed">{result.diagramExplanation}</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Conclusion */}
+        <div className="card-elevated rounded-3xl overflow-hidden">
+          <div className="p-5 border-b border-border/50 flex items-center gap-4">
+            <div
+              className="w-10 h-10 rounded-xl bg-[hsl(var(--success))] flex items-center justify-center text-sm font-semibold text-white"
+              style={{ boxShadow: "var(--shadow-sm)" }}
+            >
+              {result.arguments.length + 3}
+            </div>
+            <div className="flex-1">
+              <h3 className="text-title">Conclusion</h3>
+              <p className="text-xs text-muted-foreground">Weigh evidence & judgement</p>
+            </div>
+            <AOBadge ao="ao4" />
+          </div>
+          <div className="p-6">
+            <div className="card-inset p-4 rounded-xl">
+              <div className="flex items-center gap-2 mb-2">
+                <Lightbulb className="w-3.5 h-3.5" style={{ color: "hsl(var(--success))" }} />
+                <p className="text-caption" style={{ color: "hsl(var(--success))" }}>Final Judgement</p>
+              </div>
+              <p className="text-sm leading-relaxed">{result.conclusion}</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -994,13 +1009,17 @@ function PlannerInputForm({
 
 function LoadingView({ message }: { message: string }) {
   return (
-    <div className="max-w-md mx-auto text-center py-24">
+    <div className="max-w-md mx-auto text-center py-24 animate-fade">
       <div className="relative w-20 h-20 mx-auto mb-8">
-        <div className="absolute inset-0 rounded-full border-4 border-neutral-100" />
-        <div className="absolute inset-0 rounded-full border-4 border-neutral-900 border-t-transparent animate-spin" />
+        <div
+          className="absolute inset-0 rounded-full border-4 border-muted"
+        />
+        <div
+          className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"
+        />
       </div>
-      <h3 className="text-xl font-semibold text-neutral-900 mb-2">{message}</h3>
-      <p className="text-sm text-neutral-500">Powered by Claude AI</p>
+      <h3 className="text-title mb-2">{message}</h3>
+      <p className="text-sm text-muted-foreground">Powered by Claude AI</p>
     </div>
   );
 }
@@ -1010,7 +1029,7 @@ function LoadingView({ message }: { message: string }) {
 // ============================================================================
 
 export default function HomePage() {
-  const [activeMode, setActiveMode] = useState<"grader" | "planner">("grader");
+  const [activeMode, setActiveMode] = useState<ActiveMode>("grader");
 
   // Grader state
   const [graderQuestion, setGraderQuestion] = useState("");
@@ -1061,9 +1080,7 @@ export default function HomePage() {
       setGraderResult(result);
       setGraderView("results");
     } catch (error) {
-      setGraderError(
-        error instanceof Error ? error.message : "An unexpected error occurred"
-      );
+      setGraderError(error instanceof Error ? error.message : "An error occurred");
       setGraderView("input");
     } finally {
       setGraderLoading(false);
@@ -1100,94 +1117,26 @@ export default function HomePage() {
       setPlannerResult(result);
       setPlannerView("results");
     } catch (error) {
-      setPlannerError(
-        error instanceof Error ? error.message : "An unexpected error occurred"
-      );
+      setPlannerError(error instanceof Error ? error.message : "An error occurred");
       setPlannerView("input");
     } finally {
       setPlannerLoading(false);
     }
   };
 
-  const clearGrader = () => {
-    setGraderQuestion("");
-    setGraderAnswer("");
-    setGraderDiagram(null);
-    setGraderResult(null);
-    setGraderError("");
-    setGraderView("input");
-  };
-
-  const clearPlanner = () => {
-    setPlannerQuestion("");
-    setPlannerResult(null);
-    setPlannerError("");
-    setPlannerView("input");
-  };
-
-  const showTabs = (activeMode === "grader" && graderView === "input") ||
-                   (activeMode === "planner" && plannerView === "input");
+  const showNavigation =
+    (activeMode === "grader" && graderView === "input") ||
+    (activeMode === "planner" && plannerView === "input");
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Premium Header */}
-      <header className="relative overflow-hidden border-b border-neutral-100">
-        {/* Subtle gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-neutral-50/80 to-white pointer-events-none" />
+    <div className="min-h-screen bg-background theme-transition">
+      <Header />
 
-        <div className="relative max-w-7xl mx-auto px-6 py-10 text-center">
-          {/* Brand */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-neutral-100 text-[11px] font-medium text-neutral-500 uppercase tracking-widest mb-4">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            Pearson Edexcel IAL
-          </div>
-
-          <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 tracking-tight mb-2">
-            Economics
-          </h1>
-
-          <p className="text-sm text-neutral-400 font-medium">
-            AS & A Level · Units 1–4
-          </p>
-        </div>
-      </header>
-
-      {/* Mode Navigation */}
-      {showTabs && (
-        <nav className="border-b border-neutral-100 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-          <div className="max-w-7xl mx-auto px-6 py-4 flex justify-center">
-            <div className="inline-flex p-1 rounded-xl bg-neutral-100">
-              <button
-                onClick={() => setActiveMode("grader")}
-                className={cn(
-                  "flex items-center gap-2.5 px-5 py-2.5 rounded-lg text-sm font-medium transition-all",
-                  activeMode === "grader"
-                    ? "bg-white text-neutral-900 shadow-sm"
-                    : "text-neutral-500 hover:text-neutral-700"
-                )}
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                Exam Grader
-              </button>
-              <button
-                onClick={() => setActiveMode("planner")}
-                className={cn(
-                  "flex items-center gap-2.5 px-5 py-2.5 rounded-lg text-sm font-medium transition-all",
-                  activeMode === "planner"
-                    ? "bg-white text-neutral-900 shadow-sm"
-                    : "text-neutral-500 hover:text-neutral-700"
-                )}
-              >
-                <FileText className="w-4 h-4" />
-                Essay Planner
-              </button>
-            </div>
-          </div>
-        </nav>
+      {showNavigation && (
+        <Navigation activeMode={activeMode} setActiveMode={setActiveMode} />
       )}
 
-      {/* Content */}
-      <main className="max-w-7xl mx-auto px-6 py-12">
+      <main className="max-w-7xl mx-auto px-6 py-8 pb-24">
         {activeMode === "grader" ? (
           <>
             {graderView === "input" && (
@@ -1203,14 +1152,11 @@ export default function HomePage() {
                 onSubmit={handleGrade}
                 loading={graderLoading}
                 error={graderError}
-                onClear={clearGrader}
               />
             )}
-            {graderView === "loading" && (
-              <LoadingView message="Analyzing your essay..." />
-            )}
+            {graderView === "loading" && <LoadingView message="Analyzing your essay..." />}
             {graderView === "results" && graderResult && (
-              <GradingResultDisplay
+              <GradingResultsDisplay
                 result={graderResult}
                 questionType={graderQuestionType}
                 essayText={graderAnswer}
@@ -1229,40 +1175,15 @@ export default function HomePage() {
                 onSubmit={handlePlan}
                 loading={plannerLoading}
                 error={plannerError}
-                onClear={clearPlanner}
               />
             )}
-            {plannerView === "loading" && (
-              <LoadingView message="Generating essay plan..." />
-            )}
+            {plannerView === "loading" && <LoadingView message="Generating essay plan..." />}
             {plannerView === "results" && plannerResult && (
-              <PlanResultDisplay
-                result={plannerResult}
-                onBack={() => setPlannerView("input")}
-              />
+              <PlanResultsDisplay result={plannerResult} onBack={() => setPlannerView("input")} />
             )}
           </>
         )}
       </main>
-
-      {/* Footer */}
-      <footer className="border-t border-neutral-100 mt-auto">
-        <div className="max-w-7xl mx-auto px-6 py-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-neutral-400" />
-              </div>
-              <p className="text-xs text-neutral-400">
-                AI-powered grading aligned with Edexcel IAL Economics mark schemes
-              </p>
-            </div>
-            <p className="text-xs text-neutral-300">
-              Always verify with your teacher or official mark schemes
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
