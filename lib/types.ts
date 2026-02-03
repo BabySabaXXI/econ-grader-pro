@@ -19,6 +19,21 @@ export interface DetailedAOFeedback {
   ao4: AOFeedback;
 }
 
+// New: Line-by-line feedback showing exactly where marks were earned/lost
+export interface MarkEarned {
+  quote: string;
+  ao: "ao1" | "ao2" | "ao3" | "ao4";
+  points: number;
+  reason: string;
+}
+
+export interface MarkLost {
+  quote: string;
+  ao: "ao1" | "ao2" | "ao3" | "ao4";
+  issue: string;
+  howToFix: string;
+}
+
 export interface GradingResult {
   aoScores: AOScores;
   totalMarks: number;
@@ -27,6 +42,8 @@ export interface GradingResult {
   strengths: string[];
   improvements: string[];
   examinerComment: string;
+  marksEarned?: MarkEarned[];
+  marksLost?: MarkLost[];
   detailedFeedback?: DetailedAOFeedback;
   diagramFeedback?: DiagramFeedback;
 }
@@ -52,20 +69,43 @@ export interface PlanArgument {
   point: string;
   explanation: string;
   example: string;
+  chainOfReasoning?: string[]; // Step-by-step logical chain
 }
 
 export interface PlanEvaluation {
   point: string;
   development: string;
+  chainOfReasoning?: string[]; // Counter-argument logic chain
+}
+
+export interface PlanSection {
+  title: string;
+  aoTags: ("ao1" | "ao2" | "ao3" | "ao4")[];
+  whatToWrite: string;
+  tips?: string[];
+  chainOfReasoning?: string[];
+}
+
+export interface DiagramSection {
+  name: string;
+  explanation: string;
+  keyLabels: string[];
 }
 
 export interface PlanResult {
   thesis: string;
+  introduction?: PlanSection;
   arguments: PlanArgument[];
   evaluations: PlanEvaluation[];
+  deeperEvaluation?: {
+    techniques: string[];
+    whatToWrite: string;
+  };
   diagram: string;
   diagramExplanation: string;
+  diagramSection?: DiagramSection;
   conclusion: string;
+  conclusionSection?: PlanSection;
 }
 
 export interface PlanRequest {

@@ -20,6 +20,8 @@ import {
   GradingResult,
   PlanResult,
   QuestionType,
+  MarkEarned,
+  MarkLost,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { AnimatedButton } from "@/components/ui/button";
@@ -147,6 +149,92 @@ function FeedbackItem({
 }
 
 // ============================================================================
+// AO BADGE COMPONENT
+// ============================================================================
+
+function AOBadge({ ao, size = "sm" }: { ao: string; size?: "sm" | "md" }) {
+  const colors: Record<string, string> = {
+    ao1: "bg-sky-100 text-sky-700 border-sky-200",
+    ao2: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    ao3: "bg-violet-100 text-violet-700 border-violet-200",
+    ao4: "bg-amber-100 text-amber-700 border-amber-200",
+  };
+
+  return (
+    <span className={cn(
+      "inline-flex items-center font-semibold uppercase tracking-wider border rounded-md",
+      colors[ao] || "bg-stone-100 text-stone-700 border-stone-200",
+      size === "sm" ? "text-[10px] px-1.5 py-0.5" : "text-xs px-2 py-1"
+    )}>
+      {ao.toUpperCase()}
+    </span>
+  );
+}
+
+// ============================================================================
+// MARK EARNED ITEM COMPONENT
+// ============================================================================
+
+function MarkEarnedItem({
+  item,
+  delay = 0,
+}: {
+  item: MarkEarned;
+  delay?: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay, duration: 0.4 }}
+      className="relative p-5 rounded-xl bg-white border-l-4 border-emerald-400 shadow-sm"
+    >
+      <div className="flex items-start justify-between gap-4 mb-3">
+        <AOBadge ao={item.ao} />
+        <span className="text-sm font-semibold text-emerald-600">+{item.points}</span>
+      </div>
+      <p className="text-base italic text-stone-700 leading-relaxed mb-3">
+        &ldquo;{item.quote}&rdquo;
+      </p>
+      <p className="text-sm text-stone-500">{item.reason}</p>
+    </motion.div>
+  );
+}
+
+// ============================================================================
+// MARK LOST ITEM COMPONENT
+// ============================================================================
+
+function MarkLostItem({
+  item,
+  delay = 0,
+}: {
+  item: MarkLost;
+  delay?: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay, duration: 0.4 }}
+      className="relative p-5 rounded-xl bg-white border-l-4 border-rose-400 shadow-sm"
+    >
+      <div className="flex items-start gap-3 mb-3">
+        <AOBadge ao={item.ao} />
+      </div>
+      <p className="text-base italic text-stone-700 leading-relaxed mb-2">
+        &ldquo;{item.quote}&rdquo;
+      </p>
+      <p className="text-sm text-stone-500 mb-4">{item.issue}</p>
+      <div className="p-4 rounded-lg bg-stone-50 border-l-2 border-stone-300">
+        <p className="text-[10px] font-semibold tracking-wider uppercase text-stone-400 mb-1">How to fix</p>
+        <p className="text-sm text-stone-600">{item.howToFix}</p>
+      </div>
+    </motion.div>
+  );
+}
+
+// ============================================================================
 // GRADING RESULT DISPLAY
 // ============================================================================
 
@@ -242,6 +330,40 @@ function GradingResultDisplay({
         </CardContent>
       </AnimatedCard>
 
+      {/* Where You Lost Marks */}
+      {result.marksLost && result.marksLost.length > 0 && (
+        <AnimatedCard delay={0.25}>
+          <CardContent className="p-6">
+            <h4 className="text-sm font-medium text-rose-600 mb-5 flex items-center gap-2 uppercase tracking-wider">
+              <span className="w-2 h-2 rounded-full bg-rose-500" />
+              Where You Lost Marks
+            </h4>
+            <div className="space-y-4">
+              {result.marksLost.map((item, index) => (
+                <MarkLostItem key={index} item={item} delay={index * 0.08} />
+              ))}
+            </div>
+          </CardContent>
+        </AnimatedCard>
+      )}
+
+      {/* Where You Earned Marks */}
+      {result.marksEarned && result.marksEarned.length > 0 && (
+        <AnimatedCard delay={0.3}>
+          <CardContent className="p-6">
+            <h4 className="text-sm font-medium text-emerald-600 mb-5 flex items-center gap-2 uppercase tracking-wider">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              Where You Earned Marks
+            </h4>
+            <div className="space-y-4">
+              {result.marksEarned.map((item, index) => (
+                <MarkEarnedItem key={index} item={item} delay={index * 0.08} />
+              ))}
+            </div>
+          </CardContent>
+        </AnimatedCard>
+      )}
+
       {/* Strengths */}
       <AnimatedCard delay={0.3}>
         <CardContent className="p-6">
@@ -290,99 +412,349 @@ function GradingResultDisplay({
 }
 
 // ============================================================================
+// CHAIN OF REASONING COMPONENT
+// ============================================================================
+
+function ChainOfReasoning({ steps }: { steps: string[] }) {
+  return (
+    <div className="p-4 rounded-lg bg-stone-50 border border-stone-200">
+      <p className="text-[10px] font-semibold tracking-wider uppercase text-stone-400 mb-3">
+        Chain of Reasoning
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        {steps.map((step, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <span className="px-3 py-1.5 text-xs bg-white border border-stone-200 rounded-md text-stone-700">
+              {step}
+            </span>
+            {index < steps.length - 1 && (
+              <ArrowRight className="w-4 h-4 text-stone-300 flex-shrink-0" />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// SECTION NUMBER COMPONENT
+// ============================================================================
+
+function SectionNumber({ number }: { number: number }) {
+  const circledNumbers = ["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨"];
+  return (
+    <span className="text-2xl text-stone-300 font-light">
+      {circledNumbers[number - 1] || number}
+    </span>
+  );
+}
+
+// ============================================================================
+// TIP CHIP COMPONENT
+// ============================================================================
+
+function TipChip({ text, variant = "default" }: { text: string; variant?: "default" | "warning" | "success" }) {
+  const colors = {
+    default: "bg-stone-100 text-stone-600 border-stone-200",
+    warning: "bg-amber-50 text-amber-700 border-amber-200",
+    success: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  };
+  return (
+    <span className={cn("inline-flex items-center px-2.5 py-1 text-[11px] rounded-full border", colors[variant])}>
+      {text}
+    </span>
+  );
+}
+
+// ============================================================================
 // PLAN RESULT DISPLAY
 // ============================================================================
 
 function PlanResultDisplay({ result }: { result: PlanResult }) {
+  // Determine if first argument is FOR and second is AGAINST based on content
+  const getArgumentLabel = (index: number, point: string) => {
+    const lowerPoint = point.toLowerCase();
+    if (index === 0 || lowerPoint.includes("for") || lowerPoint.includes("support") || lowerPoint.includes("benefit")) {
+      return { label: "FOR", sublabel: point };
+    }
+    if (index === 1 || lowerPoint.includes("against") || lowerPoint.includes("counter") || lowerPoint.includes("however")) {
+      return { label: "AGAINST", sublabel: point };
+    }
+    return { label: `Argument ${index + 1}`, sublabel: point };
+  };
+
   return (
-    <div className="space-y-5">
-      {/* Thesis */}
+    <div className="space-y-6">
+      {/* Section 1: Introduction */}
       <AnimatedCard delay={0}>
         <CardContent className="p-6">
-          <h4 className="text-sm font-medium text-stone-700 mb-4">Thesis Statement</h4>
-          <div className="p-5 rounded-xl plan-thesis">
-            <p className="text-sm text-stone-700 leading-relaxed">{result.thesis}</p>
-          </div>
-        </CardContent>
-      </AnimatedCard>
-
-      {/* Main Arguments */}
-      <AnimatedCard delay={0.1}>
-        <CardContent className="p-6">
-          <h4 className="text-sm font-medium text-stone-700 mb-4">Main Arguments</h4>
-          <div className="space-y-4">
-            {result.arguments.map((arg, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="p-5 rounded-xl plan-argument"
-              >
-                <div className="flex items-start gap-3 mb-3">
-                  <span className="w-7 h-7 rounded-full bg-stone-800 text-white flex items-center justify-center text-xs font-semibold">
-                    {index + 1}
-                  </span>
-                  <h5 className="font-medium text-sm text-stone-800 pt-1">{arg.point}</h5>
-                </div>
-                <div className="space-y-3 pl-10">
-                  <div>
-                    <span className="text-[10px] font-semibold tracking-wider uppercase text-sky-600 block mb-1">Theory</span>
-                    <p className="text-sm text-stone-600 leading-relaxed">{arg.explanation}</p>
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-semibold tracking-wider uppercase text-emerald-600 block mb-1">Example</span>
-                    <p className="text-sm text-stone-600 leading-relaxed">{arg.example}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </CardContent>
-      </AnimatedCard>
-
-      {/* Evaluations */}
-      <AnimatedCard delay={0.2}>
-        <CardContent className="p-6">
-          <h4 className="text-sm font-medium text-stone-700 mb-4">Evaluation Points</h4>
-          <div className="space-y-3">
-            {result.evaluations.map((evaluation, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.08 }}
-                className="p-4 rounded-xl plan-evaluation"
-              >
-                <h5 className="font-medium text-sm text-amber-800 mb-1">{evaluation.point}</h5>
-                <p className="text-sm text-amber-700/80 leading-relaxed">{evaluation.development}</p>
-              </motion.div>
-            ))}
-          </div>
-        </CardContent>
-      </AnimatedCard>
-
-      {/* Diagram Recommendation */}
-      {result.diagram && result.diagram !== "none" && (
-        <AnimatedCard delay={0.3}>
-          <CardContent className="p-6">
-            <h4 className="text-sm font-medium text-stone-700 mb-4">Recommended Diagram</h4>
-            <div className="p-4 rounded-xl plan-diagram">
-              <p className="font-medium text-sm text-violet-800 mb-2 capitalize">
-                {result.diagram.replace("-", " ")} Diagram
-              </p>
-              <p className="text-sm text-violet-700/80 leading-relaxed">{result.diagramExplanation}</p>
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <SectionNumber number={1} />
+              <h4 className="text-lg font-medium text-stone-800">Introduction (Brief!)</h4>
             </div>
+            <AOBadge ao="ao1" size="md" />
+          </div>
+
+          {/* What to Write Box */}
+          <div className="p-4 rounded-lg bg-amber-50/50 border-l-4 border-amber-400 mb-4">
+            <p className="text-[10px] font-semibold tracking-wider uppercase text-amber-600 mb-2">
+              What to Write
+            </p>
+            <p className="text-sm text-stone-700 leading-relaxed">
+              {result.introduction?.whatToWrite || result.thesis}
+            </p>
+          </div>
+
+          {/* Tips */}
+          <div className="flex flex-wrap gap-2">
+            {result.introduction?.tips ? (
+              result.introduction.tips.map((tip, i) => (
+                <TipChip key={i} text={tip} />
+              ))
+            ) : (
+              <>
+                <TipChip text="Maximum 2-3 sentences" />
+                <TipChip text="Don't waste marks allocation here" />
+                <TipChip text="Signal you understand it's a debate" />
+              </>
+            )}
+          </div>
+        </CardContent>
+      </AnimatedCard>
+
+      {/* Section 2+: Arguments with Integrated Evaluation */}
+      {result.arguments.map((arg, index) => {
+        const { label } = getArgumentLabel(index, arg.point);
+        const isFor = label === "FOR";
+        const sectionNum = index + 2;
+
+        return (
+          <AnimatedCard key={index} delay={0.1 + index * 0.1}>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <SectionNumber number={sectionNum} />
+                  <div>
+                    <h4 className="text-lg font-medium text-stone-800">
+                      Argument {label} + Integrated Evaluation
+                    </h4>
+                    <p className="text-sm text-stone-500 mt-0.5">
+                      {isFor ? label + ": " : label + ": "}{arg.point}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <AOBadge ao="ao1" size="md" />
+                  <AOBadge ao="ao2" size="md" />
+                  <AOBadge ao="ao3" size="md" />
+                  <AOBadge ao="ao4" size="md" />
+                </div>
+              </div>
+
+              {/* Chain of Reasoning */}
+              {arg.chainOfReasoning && arg.chainOfReasoning.length > 0 && (
+                <div className="mb-4">
+                  <ChainOfReasoning steps={arg.chainOfReasoning} />
+                </div>
+              )}
+
+              {/* What to Write Box */}
+              <div className="p-4 rounded-lg bg-amber-50/50 border-l-4 border-amber-400 mb-4">
+                <p className="text-[10px] font-semibold tracking-wider uppercase text-amber-600 mb-2">
+                  What to Write
+                </p>
+                <p className="text-sm text-stone-700 leading-relaxed mb-3">
+                  &ldquo;The main argument {isFor ? "supporting" : "against"} [proposition] is that {arg.point.toLowerCase()}. This leads to {arg.explanation}. Evidence from {arg.example} supports this view. As illustrated in the diagram, [explain diagram]. HOWEVER, the extent to which this holds depends on [condition]. This is significant because [explain why the condition matters].&rdquo;
+                </p>
+              </div>
+
+              {/* Detail boxes */}
+              <div className="grid md:grid-cols-2 gap-3 mb-4">
+                <div className="p-3 rounded-lg bg-sky-50 border border-sky-100">
+                  <p className="text-[10px] font-semibold tracking-wider uppercase text-sky-600 mb-1">Theory</p>
+                  <p className="text-sm text-stone-600">{arg.explanation}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-100">
+                  <p className="text-[10px] font-semibold tracking-wider uppercase text-emerald-600 mb-1">Example</p>
+                  <p className="text-sm text-stone-600">{arg.example}</p>
+                </div>
+              </div>
+
+              {/* Tips */}
+              <div className="flex flex-wrap gap-2">
+                <TipChip text="Full analytical chain (4+ links)" />
+                <TipChip text="Diagram analysis" />
+                <TipChip text="IMMEDIATELY evaluate - don't wait until later" variant="warning" />
+                <TipChip text='The "however" is crucial for AO4' variant="warning" />
+              </div>
+            </CardContent>
+          </AnimatedCard>
+        );
+      })}
+
+      {/* Section: Deeper Evaluation */}
+      <AnimatedCard delay={0.3}>
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <SectionNumber number={result.arguments.length + 2} />
+              <h4 className="text-lg font-medium text-stone-800">Deeper Evaluation Paragraph</h4>
+            </div>
+            <div className="flex gap-1">
+              <AOBadge ao="ao3" size="md" />
+              <AOBadge ao="ao4" size="md" />
+            </div>
+          </div>
+
+          <p className="text-sm text-stone-600 mb-4 font-medium">Multiple evaluation techniques:</p>
+
+          {/* What to Write Box */}
+          <div className="p-4 rounded-lg bg-amber-50/50 border-l-4 border-amber-400 mb-4">
+            <p className="text-[10px] font-semibold tracking-wider uppercase text-amber-600 mb-2">
+              What to Write
+            </p>
+            <p className="text-sm text-stone-700 leading-relaxed">
+              {result.deeperEvaluation?.whatToWrite ||
+                `"The outcome is likely to differ significantly depending on [time horizon / elasticity / context]. Transaction costs may prevent Coasian bargaining in practice. Furthermore, Magnitude: small externalities may not justify intervention costs. The magnitude of the effect is also crucial: [consideration]. Information: government may know less than market participants. Compared to alternative approaches such as [X], this [policy/outcome] is [more/less] effective because [reason]."`
+              }
+            </p>
+          </div>
+
+          {/* Evaluation Techniques */}
+          <div className="p-4 rounded-lg bg-violet-50/50 border border-violet-100 mb-4">
+            <p className="text-[10px] font-semibold tracking-wider uppercase text-violet-600 mb-3">
+              Evaluation Techniques to Use
+            </p>
+            <ul className="space-y-2">
+              {(result.deeperEvaluation?.techniques || [
+                "Transaction costs may prevent Coasian bargaining in practice",
+                "Depends on whether externality is local (easier to solve) or global (harder)",
+                "Magnitude: small externalities may not justify intervention costs",
+                "Information: government may know less than market participants",
+              ]).map((technique, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-stone-600">
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400 mt-1.5 flex-shrink-0" />
+                  {technique}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Evaluation Points from API */}
+          {result.evaluations.map((evaluation, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.08 }}
+              className="p-4 rounded-lg bg-amber-50 border border-amber-100 mb-3"
+            >
+              <h5 className="font-medium text-sm text-amber-800 mb-1">{evaluation.point}</h5>
+              <p className="text-sm text-amber-700/80 leading-relaxed">{evaluation.development}</p>
+              {evaluation.chainOfReasoning && evaluation.chainOfReasoning.length > 0 && (
+                <div className="mt-3">
+                  <ChainOfReasoning steps={evaluation.chainOfReasoning} />
+                </div>
+              )}
+            </motion.div>
+          ))}
+
+          {/* Tips */}
+          <div className="flex flex-wrap gap-2">
+            <TipChip text="This is where you show Level 5 thinking" variant="success" />
+            <TipChip text="Use at least 3 different evaluation techniques" variant="warning" />
+            <TipChip text="Short run vs long run" />
+            <TipChip text="Elasticity conditions" />
+            <TipChip text="Magnitude/significance" />
+            <TipChip text="Challenging assumptions" />
+            <TipChip text="Comparing alternatives" />
+          </div>
+        </CardContent>
+      </AnimatedCard>
+
+      {/* Required Diagram Section */}
+      {result.diagram && result.diagram !== "none" && (
+        <AnimatedCard delay={0.35}>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-6 h-6 rounded bg-violet-500 flex items-center justify-center">
+                <FileText className="w-3.5 h-3.5 text-white" />
+              </div>
+              <h4 className="text-sm font-semibold tracking-wider uppercase text-stone-600">
+                Required Diagram: {result.diagramSection?.name || result.diagram.replace("-", " ")}
+              </h4>
+            </div>
+
+            <div className="p-4 rounded-lg bg-stone-50 border border-stone-200 mb-4">
+              <p className="text-sm text-stone-700 leading-relaxed">
+                {result.diagramSection?.explanation || result.diagramExplanation}
+              </p>
+            </div>
+
+            {result.diagramSection?.keyLabels && (
+              <div className="mb-4">
+                <p className="text-[10px] font-semibold tracking-wider uppercase text-stone-400 mb-2">
+                  Key Labels to Include
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {result.diagramSection.keyLabels.map((label, i) => (
+                    <span key={i} className="px-2.5 py-1 text-xs bg-violet-100 text-violet-700 rounded-md border border-violet-200">
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <p className="text-xs text-stone-500 italic">
+              {result.diagramExplanation}
+            </p>
           </CardContent>
         </AnimatedCard>
       )}
 
-      {/* Conclusion */}
+      {/* Section: Conclusion */}
       <AnimatedCard delay={0.4}>
         <CardContent className="p-6">
-          <h4 className="text-sm font-medium text-stone-700 mb-4">Conclusion</h4>
-          <div className="p-5 rounded-xl plan-conclusion">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <SectionNumber number={result.arguments.length + 3} />
+              <h4 className="text-lg font-medium text-stone-800">Conclusion - MAKE A JUDGEMENT</h4>
+            </div>
+            <AOBadge ao="ao4" size="md" />
+          </div>
+
+          <p className="text-sm text-stone-600 mb-4">Definitive answer to the question</p>
+
+          {/* What to Write Box */}
+          <div className="p-4 rounded-lg bg-amber-50/50 border-l-4 border-amber-400 mb-4">
+            <p className="text-[10px] font-semibold tracking-wider uppercase text-amber-600 mb-2">
+              What to Write
+            </p>
+            <p className="text-sm text-stone-700 leading-relaxed">
+              {result.conclusionSection?.whatToWrite ||
+                `"On balance, [proposition] is [more likely / less likely / only partially true] because [main reason]. The most significant factor determining the outcome is [key condition]. In most realistic scenarios, [your judgement], although this conclusion would change if [alternative condition]. Therefore, [direct answer to the question]."`
+              }
+            </p>
+          </div>
+
+          {/* Actual conclusion */}
+          <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100 mb-4">
+            <p className="text-[10px] font-semibold tracking-wider uppercase text-emerald-600 mb-2">
+              Your Conclusion
+            </p>
             <p className="text-sm text-stone-700 leading-relaxed">{result.conclusion}</p>
+          </div>
+
+          {/* Tips */}
+          <div className="flex flex-wrap gap-2">
+            <TipChip text="DO NOT FENCE-SIT" variant="warning" />
+            <TipChip text="State which argument is stronger" variant="warning" />
+            <TipChip text="Justify with clear criteria" />
+            <TipChip text="Identify the KEY condition" variant="success" />
+            <TipChip text="Answer the actual question asked" variant="success" />
           </div>
         </CardContent>
       </AnimatedCard>

@@ -99,8 +99,31 @@ You must respond with ONLY a valid JSON object in this exact format (no markdown
     "<another improvement>",
     "<third improvement if applicable>"
   ],
-  "examinerComment": "<2-3 sentence overall assessment in the voice of an experienced examiner>"
-}`;
+  "examinerComment": "<2-3 sentence overall assessment in the voice of an experienced examiner>",
+  "marksEarned": [
+    {
+      "quote": "<exact short quote from the essay that earned marks>",
+      "ao": "<ao1|ao2|ao3|ao4>",
+      "points": <number of marks this earned, typically 1>,
+      "reason": "<brief explanation of why this earned marks>"
+    }
+  ],
+  "marksLost": [
+    {
+      "quote": "<exact short quote from essay OR description of what was missing/weak>",
+      "ao": "<ao1|ao2|ao3|ao4>",
+      "issue": "<what was wrong or missing>",
+      "howToFix": "<specific actionable advice to improve>"
+    }
+  ]
+}
+
+IMPORTANT for marksEarned and marksLost:
+- Include 3-6 items in marksEarned showing specific phrases/sentences that demonstrated good economics
+- Include 2-4 items in marksLost showing specific weaknesses or missing elements
+- For marksLost, quote the weak section if identifiable, or describe what should have been included
+- Each quote should be a SHORT excerpt (under 100 characters ideally) - just enough to identify the section
+- Be specific about which AO each point relates to`;
 
 export const PLANNER_PROMPT = `You are an expert Edexcel IAL Economics tutor helping students plan A*-grade essays. Create detailed essay plans that will help students structure high-quality responses.
 
@@ -110,9 +133,9 @@ export const PLANNER_PROMPT = `You are an expert Edexcel IAL Economics tutor hel
 2. **PEEL Structure**: Point, Explain, Example, Link for each paragraph
 3. **Economic Theory**: Reference relevant models, theories, and economists
 4. **Real-World Application**: Use current and relevant examples
-5. **Evaluation**: Consider multiple perspectives and limitations
+5. **Evaluation**: Consider multiple perspectives and limitations - integrate evaluation immediately after arguments (don't wait until the end!)
 6. **Diagrams**: Integrate relevant diagrams where appropriate
-7. **Balanced Conclusion**: Weigh evidence and reach a justified judgment
+7. **Balanced Conclusion**: Weigh evidence and reach a justified judgment - DO NOT FENCE-SIT
 
 ## Question Information
 
@@ -134,36 +157,57 @@ You must respond with ONLY a valid JSON object in this exact format (no markdown
 
 {
   "thesis": "<clear thesis statement that answers the question and previews your argument>",
+  "introduction": {
+    "title": "Introduction (Brief!)",
+    "aoTags": ["ao1"],
+    "whatToWrite": "<template: Market failure refers to [definition]. The extent to which [question proposition] depends on [factor 1] and [factor 2].>",
+    "tips": ["Maximum 2-3 sentences", "Don't waste marks allocation here", "Signal you understand it's a debate"]
+  },
   "arguments": [
     {
-      "point": "<main point/topic sentence>",
+      "point": "<main argument FOR/supporting the proposition>",
       "explanation": "<economic theory and reasoning>",
-      "example": "<real-world example with specific details>"
+      "example": "<real-world example with specific details>",
+      "chainOfReasoning": ["<step 1 of logical chain>", "<step 2: leads to...>", "<step 3: therefore...>", "<step 4: causes...>", "<final step: results in...>"]
     },
     {
-      "point": "<second main point>",
+      "point": "<counter-argument AGAINST/challenging the proposition>",
       "explanation": "<economic theory and reasoning>",
-      "example": "<real-world example>"
-    },
-    {
-      "point": "<third main point if needed>",
-      "explanation": "<economic theory and reasoning>",
-      "example": "<real-world example>"
+      "example": "<real-world example>",
+      "chainOfReasoning": ["<step 1>", "<step 2>", "<step 3>", "<step 4>"]
     }
   ],
   "evaluations": [
     {
-      "point": "<counter-argument or limitation>",
-      "development": "<why this matters and how it affects the overall argument>"
-    },
-    {
-      "point": "<another evaluation point>",
-      "development": "<development of this point>"
+      "point": "<evaluation technique: e.g., time horizon, magnitude, context>",
+      "development": "<why this matters and how it affects the overall argument>",
+      "chainOfReasoning": ["<evaluation logic step 1>", "<step 2>", "<step 3>"]
     }
   ],
+  "deeperEvaluation": {
+    "techniques": [
+      "Transaction costs may prevent Coasian bargaining in practice",
+      "Depends on elasticity (short run vs long run)",
+      "Magnitude: small externalities may not justify intervention costs",
+      "Information: government may know less than market participants",
+      "Compare to alternative approaches"
+    ],
+    "whatToWrite": "<template: The outcome is likely to differ significantly depending on [time horizon / elasticity / context]. Transaction costs may prevent [theory] in practice. Furthermore, Magnitude: [consideration]. Compared to alternative approaches such as [X], this [policy/outcome] is [more/less] effective because [reason].>"
+  },
   "diagram": "<one of: ad-as, supply-demand, monopoly, externality, labour-market, none>",
   "diagramExplanation": "<how to use this diagram in the essay, what to label and show>",
-  "conclusion": "<balanced conclusion that weighs arguments and reaches a justified judgment>"
+  "diagramSection": {
+    "name": "<e.g., Negative Externality of Production>",
+    "explanation": "<e.g., MPC shows costs to producers only. MSC = MPC + external cost. Free market equilibrium at Qm leads to overproduction. Socially optimal is Q* where MSC=D. Welfare loss triangle shows deadweight loss.>",
+    "keyLabels": ["MSC", "MPC=S", "D=MSB", "Qm", "Q*", "Welfare loss triangle", "External cost"]
+  },
+  "conclusion": "<balanced conclusion that weighs arguments and reaches a justified judgment>",
+  "conclusionSection": {
+    "title": "Conclusion - MAKE A JUDGEMENT",
+    "aoTags": ["ao4"],
+    "whatToWrite": "<template: On balance, [proposition] is [more likely / less likely / only partially true] because [main reason]. The most significant factor determining the outcome is [key condition]. In most realistic scenarios, [your judgement], although this conclusion would change if [alternative condition]. Therefore, [direct answer to the question].>",
+    "tips": ["DO NOT FENCE-SIT", "State which argument is stronger", "Justify with clear criteria", "Identify the KEY condition", "Answer the actual question asked"]
+  }
 }`;
 
 export function buildGradingPrompt(
