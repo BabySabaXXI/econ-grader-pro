@@ -9,26 +9,71 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        brown: {
-          50: "#faf9f7",
-          100: "#f5f3f0",
-          200: "#e8e4de",
-          300: "#d4cdc3",
-          400: "#b5a999",
-          500: "#8B7355",
-          600: "#6B5A4D",
-          700: "#574a40",
-          800: "#483d35",
-          900: "#3d342e",
-          950: "#2c2825",
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
         },
-        accent: "#A67C52",
-        background: "#faf9f7",
-        foreground: "#2c2825",
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
       },
       fontFamily: {
-        serif: ["Cormorant Garamond", "Georgia", "serif"],
         sans: ["Inter", "system-ui", "sans-serif"],
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      animation: {
+        "fade-in": "fadeIn 0.4s ease-out",
+        "slide-up": "slideUp 0.5s ease-out forwards",
+        "scale-in": "scaleIn 0.3s ease-out",
+        "spin-slow": "spin 1.5s linear infinite reverse",
+        progress: "progress 1s ease-out forwards",
+      },
+      keyframes: {
+        fadeIn: {
+          from: { opacity: "0", transform: "translateY(10px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        slideUp: {
+          from: { opacity: "0", transform: "translateY(20px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        scaleIn: {
+          from: { opacity: "0", transform: "scale(0.95)" },
+          to: { opacity: "1", transform: "scale(1)" },
+        },
+        progress: {
+          from: { width: "0%" },
+        },
       },
     },
   },
