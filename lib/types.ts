@@ -5,6 +5,20 @@ export interface AOScores {
   ao4: number;
 }
 
+export interface AOFeedback {
+  score: number;
+  maxScore: number;
+  feedback: string;
+  examples: string[];
+}
+
+export interface DetailedAOFeedback {
+  ao1: AOFeedback;
+  ao2: AOFeedback;
+  ao3: AOFeedback;
+  ao4: AOFeedback;
+}
+
 export interface GradingResult {
   aoScores: AOScores;
   totalMarks: number;
@@ -13,6 +27,17 @@ export interface GradingResult {
   strengths: string[];
   improvements: string[];
   examinerComment: string;
+  detailedFeedback?: DetailedAOFeedback;
+  diagramFeedback?: DiagramFeedback;
+}
+
+export interface DiagramFeedback {
+  score: number;
+  maxScore: number;
+  accuracy: string;
+  labelling: string;
+  integration: string;
+  suggestions: string[];
 }
 
 export interface GradeRequest {
@@ -20,6 +45,7 @@ export interface GradeRequest {
   question: string;
   questionType: string;
   topic?: string;
+  diagramImage?: string; // base64 encoded image
 }
 
 export interface PlanArgument {
