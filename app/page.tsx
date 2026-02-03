@@ -1,8 +1,6 @@
 "use client";
 
-// Last updated: 2026-02-03 - Full page loading transitions
-import { useState, useRef, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef, useCallback } from "react";
 import {
   CheckCircle2,
   FileText,
@@ -11,10 +9,12 @@ import {
   Check,
   ArrowRight,
   Sparkles,
-  Eye,
-  List,
   ArrowLeft,
-  Edit3,
+  Loader2,
+  AlertCircle,
+  ChevronRight,
+  BarChart3,
+  Target,
 } from "lucide-react";
 import {
   QUESTION_TYPE_OPTIONS,
@@ -25,18 +25,22 @@ import {
   GradingResult,
   PlanResult,
   QuestionType,
-  MarkEarned,
-  MarkLost,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { AnimatedButton } from "@/components/ui/button";
-import { AnimatedPillTabs } from "@/components/ui/tabs";
-import { AnimatedCard, Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Select } from "@/components/ui/select";
-import { CircularProgress, LinearProgress } from "@/components/ui/progress";
-import { Spinner } from "@/components/ui/spinner";
-import { GradingLoader } from "@/components/ui/grading-loader";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EssayViewer } from "@/components/ui/essay-viewer";
 
 // ============================================================================
@@ -50,28 +54,17 @@ type ViewState = "input" | "loading" | "results";
 // ============================================================================
 
 function getScoreColor(percentage: number): string {
-  if (percentage >= 80) return "hsl(142 40% 40%)"; // emerald
-  if (percentage >= 60) return "hsl(200 50% 50%)"; // sky
-  if (percentage >= 45) return "hsl(38 70% 50%)";  // amber
-  return "hsl(0 60% 50%)";                          // rose
+  if (percentage >= 80) return "text-emerald-600";
+  if (percentage >= 60) return "text-blue-600";
+  if (percentage >= 45) return "text-amber-600";
+  return "text-red-600";
 }
 
-// ============================================================================
-// BACK BUTTON COMPONENT
-// ============================================================================
-
-function BackButton({ onClick, label = "Edit Answer" }: { onClick: () => void; label?: string }) {
-  return (
-    <motion.button
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      onClick={onClick}
-      className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 transition-colors mb-6"
-    >
-      <ArrowLeft className="w-4 h-4 text-stone-500 group-hover:-translate-x-0.5 transition-transform" />
-      <span className="text-sm font-medium text-stone-600">{label}</span>
-    </motion.button>
-  );
+function getScoreBgColor(percentage: number): string {
+  if (percentage >= 80) return "bg-emerald-500";
+  if (percentage >= 60) return "bg-blue-500";
+  if (percentage >= 45) return "bg-amber-500";
+  return "bg-red-500";
 }
 
 // ============================================================================
@@ -79,23 +72,20 @@ function BackButton({ onClick, label = "Edit Answer" }: { onClick: () => void; l
 // ============================================================================
 
 function LevelBadge({ level }: { level: number }) {
-  const labels: Record<number, string> = {
-    5: "Excellent",
-    4: "Good",
-    3: "Sound",
-    2: "Basic",
-    1: "Limited",
+  const config: Record<number, { label: string; className: string }> = {
+    5: { label: "Excellent", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    4: { label: "Good", className: "bg-blue-50 text-blue-700 border-blue-200" },
+    3: { label: "Sound", className: "bg-amber-50 text-amber-700 border-amber-200" },
+    2: { label: "Basic", className: "bg-orange-50 text-orange-700 border-orange-200" },
+    1: { label: "Limited", className: "bg-red-50 text-red-700 border-red-200" },
   };
 
-  const badgeClass = `badge-level-${level}`;
+  const { label, className } = config[level] || config[1];
 
   return (
-    <span className={cn(
-      "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border",
-      badgeClass
-    )}>
-      Level {level} · {labels[level] || "Unknown"}
-    </span>
+    <Badge variant="outline" className={cn("text-xs font-medium", className)}>
+      Level {level} · {label}
+    </Badge>
   );
 }
 
@@ -103,129 +93,45 @@ function LevelBadge({ level }: { level: number }) {
 // AO SCORE BAR COMPONENT
 // ============================================================================
 
-const AO_COLORS = {
-  ao1: {
-    bg: "bg-sky-100",
-    fill: "bg-gradient-to-r from-sky-400 via-sky-500 to-sky-600",
-    text: "text-sky-700",
-    border: "border-sky-300",
-    glow: "shadow-sky-400/30",
-  },
-  ao2: {
-    bg: "bg-emerald-100",
-    fill: "bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-600",
-    text: "text-emerald-700",
-    border: "border-emerald-300",
-    glow: "shadow-emerald-400/30",
-  },
-  ao3: {
-    bg: "bg-violet-100",
-    fill: "bg-gradient-to-r from-violet-400 via-violet-500 to-violet-600",
-    text: "text-violet-700",
-    border: "border-violet-300",
-    glow: "shadow-violet-400/30",
-  },
-  ao4: {
-    bg: "bg-amber-100",
-    fill: "bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600",
-    text: "text-amber-700",
-    border: "border-amber-300",
-    glow: "shadow-amber-400/30",
-  },
+const AO_CONFIG = {
+  ao1: { label: "Knowledge", color: "bg-blue-500", bgLight: "bg-blue-100", text: "text-blue-700" },
+  ao2: { label: "Application", color: "bg-emerald-500", bgLight: "bg-emerald-100", text: "text-emerald-700" },
+  ao3: { label: "Analysis", color: "bg-violet-500", bgLight: "bg-violet-100", text: "text-violet-700" },
+  ao4: { label: "Evaluation", color: "bg-amber-500", bgLight: "bg-amber-100", text: "text-amber-700" },
 };
 
 function AOScoreBar({
-  label,
   aoKey,
   score,
   maxScore,
-  delay = 0,
 }: {
-  label: string;
   aoKey: "ao1" | "ao2" | "ao3" | "ao4";
   score: number;
   maxScore: number;
-  delay?: number;
 }) {
   const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
-  const colors = AO_COLORS[aoKey];
+  const config = AO_CONFIG[aoKey];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay, duration: 0.4 }}
-      className="flex items-center gap-4 py-3"
-    >
-      <span className={cn("w-12 text-xs font-bold uppercase tracking-wider", colors.text)}>
-        {label}
-      </span>
-      <div className={cn("flex-1 h-4 rounded-full overflow-hidden border", colors.bg, colors.border)}>
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${percentage}%` }}
-          transition={{ delay: delay + 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className={cn(
-            "h-full rounded-full relative",
-            colors.fill,
-            percentage > 0 && "shadow-lg",
-            percentage > 0 && colors.glow
-          )}
-        >
-          {/* Animated shimmer effect */}
-          {percentage > 20 && (
-            <motion.div
-              initial={{ x: "-100%" }}
-              animate={{ x: "200%" }}
-              transition={{ repeat: Infinity, duration: 2, ease: "linear", delay: delay + 1 }}
-              className="absolute inset-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-            />
-          )}
-        </motion.div>
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className={cn("text-xs font-semibold uppercase tracking-wide", config.text)}>
+            {aoKey.toUpperCase()}
+          </span>
+          <span className="text-[10px] text-neutral-400">{config.label}</span>
+        </div>
+        <span className="text-sm font-medium text-neutral-900">
+          {score}<span className="text-neutral-400">/{maxScore}</span>
+        </span>
       </div>
-      <div className="w-16 text-right">
-        <span className={cn("text-sm font-bold", colors.text)}>{score}</span>
-        <span className="text-xs text-stone-400">/{maxScore}</span>
+      <div className={cn("h-2 rounded-full overflow-hidden", config.bgLight)}>
+        <div
+          className={cn("h-full rounded-full transition-all duration-700 ease-out", config.color)}
+          style={{ width: `${percentage}%` }}
+        />
       </div>
-    </motion.div>
-  );
-}
-
-// ============================================================================
-// FEEDBACK ITEM COMPONENT
-// ============================================================================
-
-function FeedbackItem({
-  text,
-  type,
-  delay = 0,
-}: {
-  text: string;
-  type: "strength" | "improvement";
-  delay?: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.4 }}
-      className={cn(
-        "flex gap-3 p-4 rounded-xl",
-        type === "strength" ? "feedback-strength" : "feedback-improvement"
-      )}
-    >
-      <span className={cn(
-        "flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center",
-        type === "strength" ? "bg-emerald-500 text-white" : "bg-amber-500 text-white"
-      )}>
-        {type === "strength" ? (
-          <Check className="w-3 h-3" />
-        ) : (
-          <ArrowRight className="w-3 h-3" />
-        )}
-      </span>
-      <span className="text-sm text-stone-700 leading-relaxed">{text}</span>
-    </motion.div>
+    </div>
   );
 }
 
@@ -233,94 +139,19 @@ function FeedbackItem({
 // AO BADGE COMPONENT
 // ============================================================================
 
-function AOBadge({ ao, size = "sm" }: { ao: string; size?: "sm" | "md" }) {
-  const colors: Record<string, string> = {
-    ao1: "bg-sky-100 text-sky-700 border-sky-200",
-    ao2: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    ao3: "bg-violet-100 text-violet-700 border-violet-200",
-    ao4: "bg-amber-100 text-amber-700 border-amber-200",
-  };
+function AOBadge({ ao }: { ao: string }) {
+  const config = AO_CONFIG[ao as keyof typeof AO_CONFIG];
+  if (!config) return null;
 
   return (
-    <span className={cn(
-      "inline-flex items-center font-semibold uppercase tracking-wider border rounded-md",
-      colors[ao] || "bg-stone-100 text-stone-700 border-stone-200",
-      size === "sm" ? "text-[10px] px-1.5 py-0.5" : "text-xs px-2 py-1"
-    )}>
+    <Badge variant="outline" className={cn("text-[10px] font-semibold uppercase", config.text, config.bgLight.replace('bg-', 'border-').replace('100', '200'))}>
       {ao.toUpperCase()}
-    </span>
+    </Badge>
   );
 }
 
 // ============================================================================
-// MARK EARNED ITEM COMPONENT
-// ============================================================================
-
-function MarkEarnedItem({
-  item,
-  delay = 0,
-}: {
-  item: MarkEarned;
-  delay?: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay, duration: 0.4 }}
-      className="relative p-5 rounded-xl bg-white border-l-4 border-emerald-400 shadow-sm"
-    >
-      <div className="flex items-start justify-between gap-4 mb-3">
-        <AOBadge ao={item.ao} />
-        <span className="text-sm font-semibold text-emerald-600">+{item.points}</span>
-      </div>
-      <p className="text-base italic text-stone-700 leading-relaxed mb-3">
-        &ldquo;{item.quote}&rdquo;
-      </p>
-      <p className="text-sm text-stone-500">{item.reason}</p>
-    </motion.div>
-  );
-}
-
-// ============================================================================
-// MARK LOST ITEM COMPONENT
-// ============================================================================
-
-function MarkLostItem({
-  item,
-  delay = 0,
-}: {
-  item: MarkLost;
-  delay?: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay, duration: 0.4 }}
-      className="relative p-5 rounded-xl bg-white border-l-4 border-red-500 shadow-sm"
-    >
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <AOBadge ao={item.ao} />
-        <span className="text-xs font-semibold text-red-600 bg-red-50 px-2 py-1 rounded-md">Mark Lost</span>
-      </div>
-      <p className="text-base italic text-stone-700 leading-relaxed mb-2">
-        &ldquo;{item.quote}&rdquo;
-      </p>
-      <div className="p-3 rounded-lg bg-red-50 border border-red-200 mb-4">
-        <p className="text-[10px] font-semibold tracking-wider uppercase text-red-600 mb-1">Issue</p>
-        <p className="text-sm text-stone-600">{item.issue}</p>
-      </div>
-      <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
-        <p className="text-[10px] font-semibold tracking-wider uppercase text-amber-600 mb-1">How to fix</p>
-        <p className="text-sm text-stone-600">{item.howToFix}</p>
-      </div>
-    </motion.div>
-  );
-}
-
-// ============================================================================
-// GRADING RESULT DISPLAY - TWO COLUMN LAYOUT
+// GRADING RESULT DISPLAY
 // ============================================================================
 
 function GradingResultDisplay({
@@ -339,24 +170,29 @@ function GradingResultDisplay({
   const hasHighlights = (result.marksEarned?.length || 0) > 0 || (result.marksLost?.length || 0) > 0;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -30 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="max-w-7xl mx-auto"
-    >
-      <BackButton onClick={onBack} label="Edit Answer" />
+    <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <Button
+        variant="ghost"
+        onClick={onBack}
+        className="mb-6 text-neutral-600 hover:text-neutral-900"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Edit Answer
+      </Button>
 
-      {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* LEFT COLUMN - Essay View (wider) */}
+        {/* Left Column - Essay View */}
         <div className="lg:col-span-7 xl:col-span-8">
-          <AnimatedCard delay={0.05} className="sticky top-6">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-5">
-                <h4 className="text-sm font-medium text-stone-700">Your Essay with Feedback Highlights</h4>
-              </div>
+          <Card className="sticky top-6">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base font-medium text-neutral-900">
+                Your Essay
+              </CardTitle>
+              <CardDescription>
+                Click highlighted text to see detailed feedback
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
               {hasHighlights ? (
                 <EssayViewer
                   essay={essayText}
@@ -366,619 +202,377 @@ function GradingResultDisplay({
                   onToggleDetailedFeedback={() => setShowDetailedFeedback(!showDetailedFeedback)}
                 />
               ) : (
-                <div className="p-8 bg-white rounded-2xl border border-stone-200 shadow-sm">
-                  <p className="text-base leading-[2] text-stone-700 whitespace-pre-wrap font-[system-ui]">
+                <div className="p-6 bg-neutral-50 rounded-lg border border-neutral-200">
+                  <p className="text-[15px] leading-[1.9] text-neutral-700 whitespace-pre-wrap">
                     {essayText}
                   </p>
                 </div>
               )}
             </CardContent>
-          </AnimatedCard>
+          </Card>
         </div>
 
-        {/* RIGHT COLUMN - Widget Boxes */}
-        <div className="lg:col-span-5 xl:col-span-4 space-y-6">
-          {/* Overall Score Card - Compact */}
-          <AnimatedCard delay={0}>
-            <CardContent className="p-6">
+        {/* Right Column - Score Cards */}
+        <div className="lg:col-span-5 xl:col-span-4 space-y-4">
+          {/* Overall Score */}
+          <Card>
+            <CardContent className="pt-6">
               <div className="flex items-center gap-6">
-                <CircularProgress
-                  value={result.overallPercentage}
-                  size={100}
-                  strokeWidth={6}
-                  color={getScoreColor(result.overallPercentage)}
-                >
-                  <span className="text-2xl font-light text-stone-800">
-                    {result.overallPercentage}%
-                  </span>
-                </CircularProgress>
+                <div className="relative">
+                  <svg className="w-24 h-24 -rotate-90">
+                    <circle
+                      cx="48"
+                      cy="48"
+                      r="40"
+                      stroke="currentColor"
+                      strokeWidth="8"
+                      fill="none"
+                      className="text-neutral-100"
+                    />
+                    <circle
+                      cx="48"
+                      cy="48"
+                      r="40"
+                      stroke="currentColor"
+                      strokeWidth="8"
+                      fill="none"
+                      strokeDasharray={`${2 * Math.PI * 40}`}
+                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - result.overallPercentage / 100)}`}
+                      strokeLinecap="round"
+                      className={cn("transition-all duration-1000", getScoreBgColor(result.overallPercentage).replace('bg-', 'text-'))}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className={cn("text-2xl font-semibold", getScoreColor(result.overallPercentage))}>
+                      {result.overallPercentage}%
+                    </span>
+                  </div>
+                </div>
                 <div className="flex-1">
-                  <h3 className="text-2xl font-light text-stone-800 mb-2">
-                    {result.totalMarks} <span className="text-stone-400 text-base">/ {markScheme.total}</span>
-                  </h3>
+                  <div className="text-3xl font-light text-neutral-900 mb-2">
+                    {result.totalMarks}
+                    <span className="text-lg text-neutral-400">/{markScheme.total}</span>
+                  </div>
                   <LevelBadge level={result.levelAchieved} />
-                  <p className="text-xs text-stone-500 mt-2 leading-relaxed">
+                  <p className="text-xs text-neutral-500 mt-2 leading-relaxed">
                     {LEVEL_DESCRIPTORS[result.levelAchieved]}
                   </p>
                 </div>
               </div>
             </CardContent>
-          </AnimatedCard>
+          </Card>
 
-          {/* AO Breakdown - Compact */}
-          <AnimatedCard delay={0.1}>
-            <CardContent className="p-5">
-              <h4 className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-4">AO Breakdown</h4>
-              <div className="space-y-1">
-                {markScheme.ao1 > 0 && (
-                  <AOScoreBar label="AO1" aoKey="ao1" score={result.aoScores.ao1} maxScore={markScheme.ao1} delay={0.1} />
-                )}
-                {markScheme.ao2 > 0 && (
-                  <AOScoreBar label="AO2" aoKey="ao2" score={result.aoScores.ao2} maxScore={markScheme.ao2} delay={0.15} />
-                )}
-                {markScheme.ao3 > 0 && (
-                  <AOScoreBar label="AO3" aoKey="ao3" score={result.aoScores.ao3} maxScore={markScheme.ao3} delay={0.2} />
-                )}
-                {markScheme.ao4 > 0 && (
-                  <AOScoreBar label="AO4" aoKey="ao4" score={result.aoScores.ao4} maxScore={markScheme.ao4} delay={0.25} />
-                )}
-              </div>
-              <div className="mt-4 pt-3 border-t border-stone-100 grid grid-cols-4 gap-2 text-center">
-                <div className="p-2 rounded-lg bg-sky-50">
-                  <div className="text-[10px] font-semibold text-sky-700">AO1</div>
-                  <div className="text-[9px] text-sky-600">Knowledge</div>
-                </div>
-                <div className="p-2 rounded-lg bg-emerald-50">
-                  <div className="text-[10px] font-semibold text-emerald-700">AO2</div>
-                  <div className="text-[9px] text-emerald-600">Apply</div>
-                </div>
-                <div className="p-2 rounded-lg bg-violet-50">
-                  <div className="text-[10px] font-semibold text-violet-700">AO3</div>
-                  <div className="text-[9px] text-violet-600">Analysis</div>
-                </div>
-                <div className="p-2 rounded-lg bg-amber-50">
-                  <div className="text-[10px] font-semibold text-amber-700">AO4</div>
-                  <div className="text-[9px] text-amber-600">Evaluate</div>
-                </div>
-              </div>
+          {/* AO Breakdown */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-neutral-500 uppercase tracking-wide">
+                Assessment Objectives
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {markScheme.ao1 > 0 && (
+                <AOScoreBar aoKey="ao1" score={result.aoScores.ao1} maxScore={markScheme.ao1} />
+              )}
+              {markScheme.ao2 > 0 && (
+                <AOScoreBar aoKey="ao2" score={result.aoScores.ao2} maxScore={markScheme.ao2} />
+              )}
+              {markScheme.ao3 > 0 && (
+                <AOScoreBar aoKey="ao3" score={result.aoScores.ao3} maxScore={markScheme.ao3} />
+              )}
+              {markScheme.ao4 > 0 && (
+                <AOScoreBar aoKey="ao4" score={result.aoScores.ao4} maxScore={markScheme.ao4} />
+              )}
             </CardContent>
-          </AnimatedCard>
+          </Card>
 
           {/* Examiner Comment */}
-          <AnimatedCard delay={0.15}>
-            <CardContent className="p-5">
-              <h4 className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-3">Examiner&apos;s Comment</h4>
-              <div className="relative p-4 rounded-xl bg-stone-50 border-l-2 border-stone-300">
-                <p className="text-sm text-stone-700 leading-relaxed italic">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-neutral-500 uppercase tracking-wide">
+                Examiner Feedback
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="p-4 bg-neutral-50 rounded-lg border-l-2 border-neutral-300">
+                <p className="text-sm text-neutral-700 leading-relaxed italic">
                   &ldquo;{result.examinerComment}&rdquo;
                 </p>
               </div>
             </CardContent>
-          </AnimatedCard>
+          </Card>
 
-          {/* Quick Stats - Lost vs Earned */}
+          {/* Feedback Summary */}
           {hasHighlights && (
-            <AnimatedCard delay={0.2}>
-              <CardContent className="p-5">
-                <h4 className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-4">Feedback Summary</h4>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-neutral-500 uppercase tracking-wide">
+                  Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
-                    <div className="text-2xl font-bold text-emerald-600">
+                  <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100">
+                    <div className="text-2xl font-semibold text-emerald-600">
                       +{result.marksEarned?.reduce((sum, m) => sum + m.points, 0) || 0}
                     </div>
                     <div className="text-xs text-emerald-600 font-medium">Marks Earned</div>
-                    <div className="text-[10px] text-emerald-500 mt-1">{result.marksEarned?.length || 0} items highlighted</div>
                   </div>
-                  <div className="p-4 rounded-xl bg-red-50 border border-red-200">
-                    <div className="text-2xl font-bold text-red-600">
+                  <div className="p-4 rounded-lg bg-red-50 border border-red-100">
+                    <div className="text-2xl font-semibold text-red-600">
                       {result.marksLost?.length || 0}
                     </div>
                     <div className="text-xs text-red-600 font-medium">Issues Found</div>
-                    <div className="text-[10px] text-red-500 mt-1">Areas to improve</div>
                   </div>
                 </div>
               </CardContent>
-            </AnimatedCard>
+            </Card>
           )}
 
-          {/* Strengths - Compact List */}
-          <AnimatedCard delay={0.25}>
-            <CardContent className="p-5">
-              <h4 className="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-3 flex items-center gap-2">
-                <span className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
-                  <Check className="w-2.5 h-2.5 text-white" />
-                </span>
+          {/* Strengths */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-emerald-600 uppercase tracking-wide flex items-center gap-2">
+                <Check className="w-4 h-4" />
                 Strengths
-              </h4>
-              <div className="space-y-2">
-                {result.strengths.slice(0, 3).map((strength, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="flex gap-2 p-3 rounded-lg bg-emerald-50/60 border border-emerald-100"
-                  >
-                    <span className="w-1 h-1 rounded-full bg-emerald-400 mt-2 flex-shrink-0" />
-                    <span className="text-xs text-stone-600 leading-relaxed">{strength}</span>
-                  </motion.div>
-                ))}
-              </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {result.strengths.slice(0, 3).map((strength, index) => (
+                <div
+                  key={index}
+                  className="flex gap-2 p-3 rounded-lg bg-emerald-50/50 border border-emerald-100"
+                >
+                  <span className="w-1 h-1 rounded-full bg-emerald-400 mt-2 flex-shrink-0" />
+                  <span className="text-xs text-neutral-600 leading-relaxed">{strength}</span>
+                </div>
+              ))}
             </CardContent>
-          </AnimatedCard>
+          </Card>
 
-          {/* Areas for Improvement - Compact List */}
-          <AnimatedCard delay={0.3}>
-            <CardContent className="p-5">
-              <h4 className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-3 flex items-center gap-2">
-                <span className="w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center">
-                  <ArrowRight className="w-2.5 h-2.5 text-white" />
-                </span>
-                To Improve
-              </h4>
-              <div className="space-y-2">
-                {result.improvements.slice(0, 3).map((improvement, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="flex gap-2 p-3 rounded-lg bg-amber-50/60 border border-amber-100"
-                  >
-                    <span className="w-1 h-1 rounded-full bg-amber-400 mt-2 flex-shrink-0" />
-                    <span className="text-xs text-stone-600 leading-relaxed">{improvement}</span>
-                  </motion.div>
-                ))}
-              </div>
+          {/* Improvements */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-amber-600 uppercase tracking-wide flex items-center gap-2">
+                <Target className="w-4 h-4" />
+                Areas to Improve
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {result.improvements.slice(0, 3).map((improvement, index) => (
+                <div
+                  key={index}
+                  className="flex gap-2 p-3 rounded-lg bg-amber-50/50 border border-amber-100"
+                >
+                  <span className="w-1 h-1 rounded-full bg-amber-400 mt-2 flex-shrink-0" />
+                  <span className="text-xs text-neutral-600 leading-relaxed">{improvement}</span>
+                </div>
+              ))}
             </CardContent>
-          </AnimatedCard>
+          </Card>
         </div>
       </div>
-    </motion.div>
-  );
-}
-
-// ============================================================================
-// CHAIN OF REASONING COMPONENT
-// ============================================================================
-
-function ChainOfReasoning({ steps }: { steps: string[] }) {
-  return (
-    <div className="p-4 rounded-lg bg-stone-50 border border-stone-200">
-      <p className="text-[10px] font-semibold tracking-wider uppercase text-stone-400 mb-3">
-        Chain of Reasoning
-      </p>
-      <div className="flex flex-wrap items-center gap-2">
-        {steps.map((step, index) => (
-          <div key={index} className="flex items-center gap-2">
-            <span className="px-3 py-1.5 text-xs bg-white border border-stone-200 rounded-md text-stone-700">
-              {step}
-            </span>
-            {index < steps.length - 1 && (
-              <ArrowRight className="w-4 h-4 text-stone-300 flex-shrink-0" />
-            )}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
 
 // ============================================================================
-// SECTION NUMBER COMPONENT
-// ============================================================================
-
-function SectionNumber({ number }: { number: number }) {
-  const circledNumbers = ["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨"];
-  return (
-    <span className="text-2xl text-stone-300 font-light">
-      {circledNumbers[number - 1] || number}
-    </span>
-  );
-}
-
-// ============================================================================
-// TIP CHIP COMPONENT
-// ============================================================================
-
-function TipChip({ text, variant = "default" }: { text: string; variant?: "default" | "warning" | "success" }) {
-  const colors = {
-    default: "bg-stone-100 text-stone-600 border-stone-200",
-    warning: "bg-amber-50 text-amber-700 border-amber-200",
-    success: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  };
-  return (
-    <span className={cn("inline-flex items-center px-2.5 py-1 text-[11px] rounded-full border", colors[variant])}>
-      {text}
-    </span>
-  );
-}
-
-// ============================================================================
-// COMPACT CHAIN COMPONENT (for skeleton mode)
-// ============================================================================
-
-function CompactChain({ steps }: { steps: string[] }) {
-  if (!steps || steps.length === 0) return null;
-  return (
-    <div className="flex flex-wrap items-center gap-1.5 text-xs text-stone-500">
-      {steps.slice(0, 5).map((step, i) => (
-        <span key={i} className="flex items-center gap-1.5">
-          <span className="px-2 py-0.5 bg-stone-100 rounded text-stone-600">{step}</span>
-          {i < Math.min(steps.length - 1, 4) && <span className="text-stone-300">→</span>}
-        </span>
-      ))}
-      {steps.length > 5 && <span className="text-stone-400">...</span>}
-    </div>
-  );
-}
-
-// ============================================================================
-// PLAN RESULT DISPLAY - FULL PAGE VERSION
+// PLAN RESULT DISPLAY
 // ============================================================================
 
 function PlanResultDisplay({ result, onBack }: { result: PlanResult; onBack: () => void }) {
-  const [planMode, setPlanMode] = useState<"skeleton" | "full">("skeleton");
-
-  // Determine if first argument is FOR and second is AGAINST based on content
-  const getArgumentLabel = (index: number, point: string) => {
-    const lowerPoint = point.toLowerCase();
-    if (index === 0 || lowerPoint.includes("for") || lowerPoint.includes("support") || lowerPoint.includes("benefit")) {
-      return { label: "FOR", sublabel: point };
-    }
-    if (index === 1 || lowerPoint.includes("against") || lowerPoint.includes("counter") || lowerPoint.includes("however")) {
-      return { label: "AGAINST", sublabel: point };
-    }
-    return { label: `Argument ${index + 1}`, sublabel: point };
-  };
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -30 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="max-w-4xl mx-auto"
-    >
-      <BackButton onClick={onBack} label="Edit Question" />
+    <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <Button
+        variant="ghost"
+        onClick={onBack}
+        className="mb-6 text-neutral-600 hover:text-neutral-900"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Edit Question
+      </Button>
 
-      {/* Mode Toggle */}
-      <div className="flex items-center justify-center gap-3 mb-8">
-        <button
-          onClick={() => setPlanMode("skeleton")}
-          className={cn(
-            "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all",
-            planMode === "skeleton"
-              ? "bg-stone-800 text-white shadow-lg"
-              : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-          )}
-        >
-          <List className="w-4 h-4" />
-          Skeleton View
-        </button>
-        <button
-          onClick={() => setPlanMode("full")}
-          className={cn(
-            "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all",
-            planMode === "full"
-              ? "bg-stone-800 text-white shadow-lg"
-              : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-          )}
-        >
-          <FileText className="w-4 h-4" />
-          Full Detail
-        </button>
-      </div>
-
-      <div className="space-y-6">
-        {/* Section 1: Introduction */}
-        <AnimatedCard delay={0}>
-          <CardContent className={cn("transition-all", planMode === "skeleton" ? "p-4" : "p-6")}>
-            <div className="flex items-start justify-between mb-3">
+      <div className="space-y-4">
+        {/* Introduction */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <SectionNumber number={1} />
-                <h4 className={cn("font-medium text-stone-800", planMode === "skeleton" ? "text-base" : "text-lg")}>Introduction (Brief!)</h4>
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-100 text-neutral-600 text-sm font-medium">
+                  1
+                </span>
+                <CardTitle className="text-lg font-medium">Introduction</CardTitle>
               </div>
-              <AOBadge ao="ao1" size={planMode === "skeleton" ? "sm" : "md"} />
+              <AOBadge ao="ao1" />
             </div>
-
-            {/* What to Write Box */}
-            <div className={cn("rounded-lg bg-amber-50/50 border-l-4 border-amber-400", planMode === "skeleton" ? "p-3 mb-2" : "p-4 mb-4")}>
-              <p className="text-[10px] font-semibold tracking-wider uppercase text-amber-600 mb-1">
+          </CardHeader>
+          <CardContent>
+            <div className="p-4 rounded-lg bg-amber-50/50 border-l-2 border-amber-400">
+              <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-wider mb-1">
                 What to Write
               </p>
-              <p className={cn("text-stone-700 leading-relaxed", planMode === "skeleton" ? "text-xs" : "text-sm")}>
+              <p className="text-sm text-neutral-700 leading-relaxed">
                 {result.introduction?.whatToWrite || result.thesis}
               </p>
             </div>
-
-            {/* Tips - only in full mode */}
-            {planMode === "full" && (
-              <div className="flex flex-wrap gap-2">
-                {result.introduction?.tips ? (
-                  result.introduction.tips.map((tip, i) => (
-                    <TipChip key={i} text={tip} />
-                  ))
-                ) : (
-                  <>
-                    <TipChip text="Maximum 2-3 sentences" />
-                    <TipChip text="Don't waste marks allocation here" />
-                    <TipChip text="Signal you understand it's a debate" />
-                  </>
-                )}
-              </div>
-            )}
           </CardContent>
-        </AnimatedCard>
+        </Card>
 
-        {/* Section 2+: Arguments with Integrated Evaluation */}
-        {result.arguments.map((arg, index) => {
-          const { label } = getArgumentLabel(index, arg.point);
-          const isFor = label === "FOR";
-          const sectionNum = index + 2;
-
-          return (
-            <AnimatedCard key={index} delay={0.1 + index * 0.1}>
-              <CardContent className={cn("transition-all", planMode === "skeleton" ? "p-4" : "p-6")}>
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <SectionNumber number={sectionNum} />
-                    <div>
-                      <h4 className={cn("font-medium text-stone-800", planMode === "skeleton" ? "text-base" : "text-lg")}>
-                        Argument {label} {planMode === "full" && "+ Integrated Evaluation"}
-                      </h4>
-                      <p className={cn("text-stone-500 mt-0.5", planMode === "skeleton" ? "text-xs" : "text-sm")}>
-                        {arg.point}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-1">
-                    <AOBadge ao="ao1" size={planMode === "skeleton" ? "sm" : "md"} />
-                    <AOBadge ao="ao2" size={planMode === "skeleton" ? "sm" : "md"} />
-                    <AOBadge ao="ao3" size={planMode === "skeleton" ? "sm" : "md"} />
-                    <AOBadge ao="ao4" size={planMode === "skeleton" ? "sm" : "md"} />
+        {/* Arguments */}
+        {result.arguments.map((arg, index) => (
+          <Card key={index}>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-100 text-neutral-600 text-sm font-medium">
+                    {index + 2}
+                  </span>
+                  <div>
+                    <CardTitle className="text-lg font-medium">
+                      Argument {index === 0 ? "FOR" : "AGAINST"}
+                    </CardTitle>
+                    <CardDescription className="text-sm">{arg.point}</CardDescription>
                   </div>
                 </div>
-
-                {/* Chain of Reasoning - Compact in skeleton, full in full mode */}
-                {arg.chainOfReasoning && arg.chainOfReasoning.length > 0 && (
-                  <div className={planMode === "skeleton" ? "mb-2" : "mb-4"}>
-                    {planMode === "skeleton" ? (
-                      <CompactChain steps={arg.chainOfReasoning} />
-                    ) : (
-                      <ChainOfReasoning steps={arg.chainOfReasoning} />
-                    )}
-                  </div>
-                )}
-
-                {/* What to Write Box - only in full mode */}
-                {planMode === "full" && (
-                  <div className="p-4 rounded-lg bg-amber-50/50 border-l-4 border-amber-400 mb-4">
-                    <p className="text-[10px] font-semibold tracking-wider uppercase text-amber-600 mb-2">
-                      What to Write
-                    </p>
-                    <p className="text-sm text-stone-700 leading-relaxed mb-3">
-                      &ldquo;The main argument {isFor ? "supporting" : "against"} [proposition] is that {arg.point.toLowerCase()}. This leads to {arg.explanation}. Evidence from {arg.example} supports this view. As illustrated in the diagram, [explain diagram]. HOWEVER, the extent to which this holds depends on [condition]. This is significant because [explain why the condition matters].&rdquo;
-                    </p>
-                  </div>
-                )}
-
-                {/* Detail boxes - compact in skeleton */}
-                <div className={cn("grid gap-3", planMode === "skeleton" ? "grid-cols-1" : "md:grid-cols-2", planMode === "full" && "mb-4")}>
-                  <div className={cn("rounded-lg bg-sky-50 border border-sky-100", planMode === "skeleton" ? "p-2" : "p-3")}>
-                    <p className="text-[10px] font-semibold tracking-wider uppercase text-sky-600 mb-1">Theory</p>
-                    <p className={cn("text-stone-600", planMode === "skeleton" ? "text-xs line-clamp-2" : "text-sm")}>{arg.explanation}</p>
-                  </div>
-                  <div className={cn("rounded-lg bg-emerald-50 border border-emerald-100", planMode === "skeleton" ? "p-2" : "p-3")}>
-                    <p className="text-[10px] font-semibold tracking-wider uppercase text-emerald-600 mb-1">Example</p>
-                    <p className={cn("text-stone-600", planMode === "skeleton" ? "text-xs line-clamp-2" : "text-sm")}>{arg.example}</p>
-                  </div>
+                <div className="flex gap-1">
+                  <AOBadge ao="ao1" />
+                  <AOBadge ao="ao2" />
+                  <AOBadge ao="ao3" />
                 </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {arg.chainOfReasoning && arg.chainOfReasoning.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
+                  {arg.chainOfReasoning.slice(0, 5).map((step, i) => (
+                    <span key={i} className="flex items-center gap-2">
+                      <span className="px-2.5 py-1 bg-neutral-100 rounded-md text-neutral-600">
+                        {step}
+                      </span>
+                      {arg.chainOfReasoning && i < Math.min(arg.chainOfReasoning.length - 1, 4) && (
+                        <ChevronRight className="w-3 h-3 text-neutral-300" />
+                      )}
+                    </span>
+                  ))}
+                </div>
+              )}
 
-                {/* Tips - only in full mode */}
-                {planMode === "full" && (
-                  <div className="flex flex-wrap gap-2">
-                    <TipChip text="Full analytical chain (4+ links)" />
-                    <TipChip text="Diagram analysis" />
-                    <TipChip text="IMMEDIATELY evaluate - don't wait until later" variant="warning" />
-                    <TipChip text='The "however" is crucial for AO4' variant="warning" />
-                  </div>
-                )}
-              </CardContent>
-            </AnimatedCard>
-          );
-        })}
+              <div className="grid md:grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
+                  <p className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider mb-1">
+                    Theory
+                  </p>
+                  <p className="text-sm text-neutral-600">{arg.explanation}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-100">
+                  <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider mb-1">
+                    Example
+                  </p>
+                  <p className="text-sm text-neutral-600">{arg.example}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
 
-        {/* Section: Deeper Evaluation */}
-        <AnimatedCard delay={0.3}>
-          <CardContent className={cn("transition-all", planMode === "skeleton" ? "p-4" : "p-6")}>
-            <div className="flex items-start justify-between mb-3">
+        {/* Evaluation */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <SectionNumber number={result.arguments.length + 2} />
-                <h4 className={cn("font-medium text-stone-800", planMode === "skeleton" ? "text-base" : "text-lg")}>Deeper Evaluation</h4>
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-100 text-neutral-600 text-sm font-medium">
+                  {result.arguments.length + 2}
+                </span>
+                <CardTitle className="text-lg font-medium">Deeper Evaluation</CardTitle>
               </div>
               <div className="flex gap-1">
-                <AOBadge ao="ao3" size={planMode === "skeleton" ? "sm" : "md"} />
-                <AOBadge ao="ao4" size={planMode === "skeleton" ? "sm" : "md"} />
+                <AOBadge ao="ao3" />
+                <AOBadge ao="ao4" />
               </div>
             </div>
-
-            {planMode === "full" && (
-              <p className="text-sm text-stone-600 mb-4 font-medium">Multiple evaluation techniques:</p>
-            )}
-
-            {/* What to Write Box - only full mode */}
-            {planMode === "full" && (
-              <div className="p-4 rounded-lg bg-amber-50/50 border-l-4 border-amber-400 mb-4">
-                <p className="text-[10px] font-semibold tracking-wider uppercase text-amber-600 mb-2">
-                  What to Write
-                </p>
-                <p className="text-sm text-stone-700 leading-relaxed">
-                  {result.deeperEvaluation?.whatToWrite ||
-                    `"The outcome is likely to differ significantly depending on [time horizon / elasticity / context]. Transaction costs may prevent Coasian bargaining in practice. Furthermore, Magnitude: small externalities may not justify intervention costs. The magnitude of the effect is also crucial: [consideration]. Information: government may know less than market participants. Compared to alternative approaches such as [X], this [policy/outcome] is [more/less] effective because [reason]."`
-                  }
-                </p>
-              </div>
-            )}
-
-            {/* Evaluation Techniques - compact in skeleton */}
-            <div className={cn("rounded-lg bg-violet-50/50 border border-violet-100", planMode === "skeleton" ? "p-3 mb-2" : "p-4 mb-4")}>
-              <p className={cn("font-semibold tracking-wider uppercase text-violet-600", planMode === "skeleton" ? "text-[9px] mb-2" : "text-[10px] mb-3")}>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="p-4 rounded-lg bg-violet-50/50 border border-violet-100">
+              <p className="text-[10px] font-semibold text-violet-600 uppercase tracking-wider mb-2">
                 Evaluation Techniques
               </p>
-              <ul className={cn("space-y-1", planMode === "skeleton" && "space-y-0.5")}>
+              <ul className="space-y-1">
                 {(result.deeperEvaluation?.techniques || [
-                  "Transaction costs",
-                  "Local vs global scope",
+                  "Short run vs long run",
+                  "Elasticity conditions",
                   "Magnitude/significance",
-                  "Information asymmetry",
-                ]).slice(0, planMode === "skeleton" ? 4 : undefined).map((technique, i) => (
-                  <li key={i} className={cn("flex items-start gap-2 text-stone-600", planMode === "skeleton" ? "text-xs" : "text-sm")}>
-                    <span className="w-1 h-1 rounded-full bg-violet-400 mt-1.5 flex-shrink-0" />
-                    {planMode === "skeleton" ? technique.split(" ").slice(0, 4).join(" ") + (technique.split(" ").length > 4 ? "..." : "") : technique}
+                  "Challenging assumptions",
+                ]).map((technique, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-neutral-600">
+                    <span className="w-1 h-1 rounded-full bg-violet-400 mt-2 flex-shrink-0" />
+                    {technique}
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* Evaluation Points from API - compact in skeleton */}
-            {result.evaluations.slice(0, planMode === "skeleton" ? 2 : undefined).map((evaluation, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.08 }}
-                className={cn("rounded-lg bg-amber-50 border border-amber-100", planMode === "skeleton" ? "p-2 mb-2" : "p-4 mb-3")}
-              >
-                <h5 className={cn("font-medium text-amber-800", planMode === "skeleton" ? "text-xs mb-0.5" : "text-sm mb-1")}>{evaluation.point}</h5>
-                {planMode === "full" && (
-                  <p className="text-sm text-amber-700/80 leading-relaxed">{evaluation.development}</p>
-                )}
-                {planMode === "full" && evaluation.chainOfReasoning && evaluation.chainOfReasoning.length > 0 && (
-                  <div className="mt-3">
-                    <ChainOfReasoning steps={evaluation.chainOfReasoning} />
-                  </div>
-                )}
-                {planMode === "skeleton" && evaluation.chainOfReasoning && evaluation.chainOfReasoning.length > 0 && (
-                  <CompactChain steps={evaluation.chainOfReasoning} />
-                )}
-              </motion.div>
+            {result.evaluations.slice(0, 2).map((evaluation, index) => (
+              <div key={index} className="p-4 rounded-lg bg-amber-50 border border-amber-100">
+                <h5 className="text-sm font-medium text-amber-800 mb-1">{evaluation.point}</h5>
+                <p className="text-sm text-amber-700/80">{evaluation.development}</p>
+              </div>
             ))}
-
-            {/* Tips - only full mode */}
-            {planMode === "full" && (
-              <div className="flex flex-wrap gap-2">
-                <TipChip text="This is where you show Level 5 thinking" variant="success" />
-                <TipChip text="Use at least 3 different evaluation techniques" variant="warning" />
-                <TipChip text="Short run vs long run" />
-                <TipChip text="Elasticity conditions" />
-                <TipChip text="Magnitude/significance" />
-                <TipChip text="Challenging assumptions" />
-                <TipChip text="Comparing alternatives" />
-              </div>
-            )}
           </CardContent>
-        </AnimatedCard>
+        </Card>
 
-        {/* Required Diagram Section */}
+        {/* Diagram */}
         {result.diagram && result.diagram !== "none" && (
-          <AnimatedCard delay={0.35}>
-            <CardContent className={cn("transition-all", planMode === "skeleton" ? "p-4" : "p-6")}>
-              <div className="flex items-center gap-2 mb-3">
-                <div className={cn("rounded bg-violet-500 flex items-center justify-center", planMode === "skeleton" ? "w-5 h-5" : "w-6 h-6")}>
-                  <FileText className={cn("text-white", planMode === "skeleton" ? "w-3 h-3" : "w-3.5 h-3.5")} />
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded bg-violet-500 flex items-center justify-center">
+                  <BarChart3 className="w-3.5 h-3.5 text-white" />
                 </div>
-                <h4 className={cn("font-semibold tracking-wider uppercase text-stone-600", planMode === "skeleton" ? "text-xs" : "text-sm")}>
-                  Diagram: {result.diagramSection?.name || result.diagram.replace("-", " ")}
-                </h4>
+                <CardTitle className="text-sm font-semibold uppercase tracking-wide text-neutral-600">
+                  Required Diagram: {result.diagramSection?.name || result.diagram.replace("-", " ")}
+                </CardTitle>
               </div>
-
-              {planMode === "full" && (
-                <div className="p-4 rounded-lg bg-stone-50 border border-stone-200 mb-4">
-                  <p className="text-sm text-stone-700 leading-relaxed">
-                    {result.diagramSection?.explanation || result.diagramExplanation}
-                  </p>
-                </div>
-              )}
-
+            </CardHeader>
+            <CardContent>
               {result.diagramSection?.keyLabels && (
-                <div className={planMode === "full" ? "mb-4" : "mb-2"}>
-                  <p className="text-[10px] font-semibold tracking-wider uppercase text-stone-400 mb-2">
-                    Key Labels
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {result.diagramSection.keyLabels.slice(0, planMode === "skeleton" ? 5 : undefined).map((label, i) => (
-                      <span key={i} className={cn("bg-violet-100 text-violet-700 rounded-md border border-violet-200", planMode === "skeleton" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs")}>
-                        {label}
-                      </span>
-                    ))}
-                    {planMode === "skeleton" && result.diagramSection.keyLabels.length > 5 && (
-                      <span className="text-xs text-stone-400">+{result.diagramSection.keyLabels.length - 5} more</span>
-                    )}
-                  </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {result.diagramSection.keyLabels.map((label, i) => (
+                    <Badge key={i} variant="secondary" className="text-xs">
+                      {label}
+                    </Badge>
+                  ))}
                 </div>
               )}
-
-              {planMode === "full" && (
-                <p className="text-xs text-stone-500 italic">
-                  {result.diagramExplanation}
-                </p>
+              {result.diagramExplanation && (
+                <p className="text-sm text-neutral-600 mt-3">{result.diagramExplanation}</p>
               )}
             </CardContent>
-          </AnimatedCard>
+          </Card>
         )}
 
-        {/* Section: Conclusion */}
-        <AnimatedCard delay={0.4}>
-          <CardContent className={cn("transition-all", planMode === "skeleton" ? "p-4" : "p-6")}>
-            <div className="flex items-start justify-between mb-3">
+        {/* Conclusion */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <SectionNumber number={result.arguments.length + 3} />
-                <h4 className={cn("font-medium text-stone-800", planMode === "skeleton" ? "text-base" : "text-lg")}>Conclusion</h4>
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-100 text-neutral-600 text-sm font-medium">
+                  {result.arguments.length + 3}
+                </span>
+                <CardTitle className="text-lg font-medium">Conclusion</CardTitle>
               </div>
-              <AOBadge ao="ao4" size={planMode === "skeleton" ? "sm" : "md"} />
+              <AOBadge ao="ao4" />
             </div>
-
-            {planMode === "full" && (
-              <p className="text-sm text-stone-600 mb-4">Definitive answer to the question</p>
-            )}
-
-            {/* What to Write Box - only full mode */}
-            {planMode === "full" && (
-              <div className="p-4 rounded-lg bg-amber-50/50 border-l-4 border-amber-400 mb-4">
-                <p className="text-[10px] font-semibold tracking-wider uppercase text-amber-600 mb-2">
-                  What to Write
-                </p>
-                <p className="text-sm text-stone-700 leading-relaxed">
-                  {result.conclusionSection?.whatToWrite ||
-                    `"On balance, [proposition] is [more likely / less likely / only partially true] because [main reason]. The most significant factor determining the outcome is [key condition]. In most realistic scenarios, [your judgement], although this conclusion would change if [alternative condition]. Therefore, [direct answer to the question]."`
-                  }
-                </p>
-              </div>
-            )}
-
-            {/* Actual conclusion */}
-            <div className={cn("rounded-lg bg-emerald-50 border border-emerald-100", planMode === "skeleton" ? "p-3" : "p-4 mb-4")}>
-              <p className="text-[10px] font-semibold tracking-wider uppercase text-emerald-600 mb-1">
+          </CardHeader>
+          <CardContent>
+            <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100">
+              <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider mb-1">
                 Your Conclusion
               </p>
-              <p className={cn("text-stone-700 leading-relaxed", planMode === "skeleton" ? "text-xs" : "text-sm")}>{result.conclusion}</p>
+              <p className="text-sm text-neutral-700 leading-relaxed">{result.conclusion}</p>
             </div>
-
-            {/* Tips - only full mode */}
-            {planMode === "full" && (
-              <div className="flex flex-wrap gap-2">
-                <TipChip text="DO NOT FENCE-SIT" variant="warning" />
-                <TipChip text="State which argument is stronger" variant="warning" />
-                <TipChip text="Justify with clear criteria" />
-                <TipChip text="Identify the KEY condition" variant="success" />
-                <TipChip text="Answer the actual question asked" variant="success" />
-              </div>
-            )}
           </CardContent>
-        </AnimatedCard>
+        </Card>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -996,12 +590,10 @@ function DiagramUpload({
   onRemove: () => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
 
   const handleFile = useCallback(
     (file: File) => {
       if (!file.type.startsWith("image/")) {
-        alert("Please upload an image file");
         return;
       }
 
@@ -1015,31 +607,23 @@ function DiagramUpload({
     [onUpload]
   );
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setIsDragging(false);
-      const file = e.dataTransfer.files[0];
-      if (file) handleFile(file);
-    },
-    [handleFile]
-  );
-
   if (image) {
     return (
-      <Card className="mt-6">
-        <CardContent className="p-5">
+      <Card>
+        <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-stone-700">Diagram Uploaded</span>
-            <button
+            <Label>Diagram Uploaded</Label>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={onRemove}
-              className="text-rose-500 hover:text-rose-600 transition-colors flex items-center gap-1.5 text-xs font-medium"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="w-4 h-4 mr-1" />
               Remove
-            </button>
+            </Button>
           </div>
-          <div className="rounded-xl overflow-hidden border border-stone-200">
+          <div className="rounded-lg overflow-hidden border border-neutral-200">
             <img
               src={image}
               alt="Uploaded diagram"
@@ -1052,36 +636,20 @@ function DiagramUpload({
   }
 
   return (
-    <Card className="mt-6">
-      <CardContent className="p-5">
+    <Card>
+      <CardContent className="pt-6">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium text-stone-700">Diagram Upload</span>
-          <span className="text-[10px] font-medium tracking-wider uppercase text-stone-400 px-2 py-1 rounded-full bg-stone-100">
-            Optional
-          </span>
+          <Label>Diagram Upload</Label>
+          <Badge variant="secondary" className="text-[10px]">Optional</Badge>
         </div>
-        <motion.div
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
-          className={cn(
-            "flex flex-col items-center justify-center p-8 rounded-xl cursor-pointer transition-colors",
-            "border-2 border-dashed",
-            isDragging
-              ? "border-stone-400 bg-stone-50"
-              : "border-stone-200 bg-stone-50/50 hover:border-stone-300"
-          )}
+        <div
+          className="flex flex-col items-center justify-center p-8 rounded-lg cursor-pointer transition-colors border-2 border-dashed border-neutral-200 hover:border-neutral-300 bg-neutral-50/50 hover:bg-neutral-50"
           onClick={() => fileInputRef.current?.click()}
-          onDrop={handleDrop}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setIsDragging(true);
-          }}
-          onDragLeave={() => setIsDragging(false)}
         >
-          <Upload className="w-8 h-8 text-stone-300 mb-3" />
-          <span className="text-sm font-medium text-stone-600 mb-1">Click or drag to upload</span>
-          <span className="text-xs text-stone-400">PNG, JPG up to 10MB</span>
-        </motion.div>
+          <Upload className="w-8 h-8 text-neutral-300 mb-3" />
+          <span className="text-sm font-medium text-neutral-600 mb-1">Click to upload</span>
+          <span className="text-xs text-neutral-400">PNG, JPG up to 10MB</span>
+        </div>
         <input
           ref={fileInputRef}
           type="file"
@@ -1129,53 +697,51 @@ function GraderInputForm({
   onClear: () => void;
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -30 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="max-w-2xl mx-auto"
-    >
+    <div className="max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="text-center mb-10">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="w-16 h-16 rounded-2xl bg-gradient-to-br from-stone-100 to-stone-200 flex items-center justify-center mx-auto mb-5"
-        >
-          <CheckCircle2 className="w-8 h-8 text-stone-500" />
-        </motion.div>
-        <h2 className="text-2xl font-light text-stone-800 mb-2">Grade Your Answer</h2>
-        <p className="text-sm text-stone-500">Get AI-powered feedback on your economics essay</p>
+        <div className="w-14 h-14 rounded-2xl bg-neutral-100 flex items-center justify-center mx-auto mb-5">
+          <CheckCircle2 className="w-7 h-7 text-neutral-600" />
+        </div>
+        <h2 className="text-2xl font-semibold text-neutral-900 mb-2">Grade Your Answer</h2>
+        <p className="text-sm text-neutral-500">Get AI-powered feedback on your economics essay</p>
       </div>
 
       <div className="space-y-6">
-        <Select
-          label="Question Type"
-          value={questionType}
-          onChange={(e) => setQuestionType(e.target.value as QuestionType)}
-        >
-          {QUESTION_TYPE_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
+        <div className="space-y-2">
+          <Label>Question Type</Label>
+          <Select value={questionType} onValueChange={(v) => setQuestionType(v as QuestionType)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {QUESTION_TYPE_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Textarea
-          label="Exam Question"
-          placeholder="Paste the exam question here..."
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          className="min-h-[100px]"
-        />
+        <div className="space-y-2">
+          <Label>Exam Question</Label>
+          <Textarea
+            placeholder="Paste the exam question here..."
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            className="min-h-[100px] resize-none"
+          />
+        </div>
 
-        <Textarea
-          label="Student Answer"
-          placeholder="Paste the student's answer here for grading..."
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-        />
+        <div className="space-y-2">
+          <Label>Student Answer</Label>
+          <Textarea
+            placeholder="Paste the student's answer here for grading..."
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            className="min-h-[200px] resize-none"
+          />
+        </div>
 
         <DiagramUpload
           image={diagram}
@@ -1184,24 +750,21 @@ function GraderInputForm({
         />
 
         {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-4 rounded-xl bg-rose-50 border border-rose-100 text-sm text-rose-600"
-          >
-            {error}
-          </motion.div>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         <div className="flex gap-3 pt-2">
-          <AnimatedButton
+          <Button
             className="flex-1"
             onClick={onSubmit}
             disabled={loading}
           >
             {loading ? (
               <>
-                <Spinner size={16} className="mr-2" />
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Grading...
               </>
             ) : (
@@ -1210,13 +773,13 @@ function GraderInputForm({
                 Grade Answer
               </>
             )}
-          </AnimatedButton>
-          <AnimatedButton variant="secondary" onClick={onClear}>
+          </Button>
+          <Button variant="outline" onClick={onClear}>
             Clear
-          </AnimatedButton>
+          </Button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -1244,65 +807,58 @@ function PlannerInputForm({
   onClear: () => void;
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -30 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="max-w-2xl mx-auto"
-    >
+    <div className="max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="text-center mb-10">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="w-16 h-16 rounded-2xl bg-gradient-to-br from-stone-100 to-stone-200 flex items-center justify-center mx-auto mb-5"
-        >
-          <FileText className="w-8 h-8 text-stone-500" />
-        </motion.div>
-        <h2 className="text-2xl font-light text-stone-800 mb-2">Plan Your Essay</h2>
-        <p className="text-sm text-stone-500">Generate a comprehensive A*-grade essay structure</p>
+        <div className="w-14 h-14 rounded-2xl bg-neutral-100 flex items-center justify-center mx-auto mb-5">
+          <FileText className="w-7 h-7 text-neutral-600" />
+        </div>
+        <h2 className="text-2xl font-semibold text-neutral-900 mb-2">Plan Your Essay</h2>
+        <p className="text-sm text-neutral-500">Generate a comprehensive A*-grade essay structure</p>
       </div>
 
       <div className="space-y-6">
-        <Select
-          label="Question Type"
-          value={questionType}
-          onChange={(e) => setQuestionType(e.target.value as QuestionType)}
-        >
-          {QUESTION_TYPE_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
+        <div className="space-y-2">
+          <Label>Question Type</Label>
+          <Select value={questionType} onValueChange={(v) => setQuestionType(v as QuestionType)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {QUESTION_TYPE_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Textarea
-          label="Essay Question"
-          placeholder="Type or paste the essay question here..."
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-        />
+        <div className="space-y-2">
+          <Label>Essay Question</Label>
+          <Textarea
+            placeholder="Type or paste the essay question here..."
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            className="min-h-[120px] resize-none"
+          />
+        </div>
 
         {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-4 rounded-xl bg-rose-50 border border-rose-100 text-sm text-rose-600"
-          >
-            {error}
-          </motion.div>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         <div className="flex gap-3 pt-2">
-          <AnimatedButton
+          <Button
             className="flex-1"
             onClick={onSubmit}
             disabled={loading}
           >
             {loading ? (
               <>
-                <Spinner size={16} className="mr-2" />
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Generating...
               </>
             ) : (
@@ -1311,36 +867,34 @@ function PlannerInputForm({
                 Generate Plan
               </>
             )}
-          </AnimatedButton>
-          <AnimatedButton variant="secondary" onClick={onClear}>
+          </Button>
+          <Button variant="outline" onClick={onClear}>
             Clear
-          </AnimatedButton>
+          </Button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
 // ============================================================================
-// LOADING VIEW COMPONENT
+// LOADING VIEW
 // ============================================================================
 
 function LoadingView({ message }: { message: string }) {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      className="max-w-2xl mx-auto"
-    >
-      <GradingLoader isLoading={true} message={message} />
-    </motion.div>
+    <div className="max-w-md mx-auto text-center py-20 animate-in fade-in duration-300">
+      <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-6">
+        <Loader2 className="w-8 h-8 text-neutral-600 animate-spin" />
+      </div>
+      <h3 className="text-lg font-medium text-neutral-900 mb-2">{message}</h3>
+      <p className="text-sm text-neutral-500">This may take a moment...</p>
+    </div>
   );
 }
 
 // ============================================================================
-// MAIN PAGE COMPONENT
+// MAIN PAGE
 // ============================================================================
 
 export default function HomePage() {
@@ -1364,7 +918,6 @@ export default function HomePage() {
   const [plannerError, setPlannerError] = useState("");
   const [plannerView, setPlannerView] = useState<ViewState>("input");
 
-  // Handle grading
   const handleGrade = async () => {
     if (!graderQuestion.trim() || !graderAnswer.trim()) {
       setGraderError("Please enter both a question and your answer.");
@@ -1405,7 +958,6 @@ export default function HomePage() {
     }
   };
 
-  // Handle planning
   const handlePlan = async () => {
     if (!plannerQuestion.trim()) {
       setPlannerError("Please enter a question.");
@@ -1445,7 +997,6 @@ export default function HomePage() {
     }
   };
 
-  // Clear functions
   const clearGrader = () => {
     setGraderQuestion("");
     setGraderAnswer("");
@@ -1462,156 +1013,115 @@ export default function HomePage() {
     setPlannerView("input");
   };
 
-  // Back to input handlers
-  const handleGraderBack = () => {
-    setGraderView("input");
-  };
-
-  const handlePlannerBack = () => {
-    setPlannerView("input");
-  };
-
-  const tabItems = [
-    {
-      value: "grader",
-      label: "Exam Grader",
-      icon: <CheckCircle2 className="w-4 h-4" />,
-    },
-    {
-      value: "planner",
-      label: "Essay Planner",
-      icon: <FileText className="w-4 h-4" />,
-    },
-  ];
-
-  // Determine if we should show mode tabs (only in input view)
   const showTabs = (activeMode === "grader" && graderView === "input") ||
                    (activeMode === "planner" && plannerView === "input");
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--background))]">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="text-center py-10 px-6 border-b border-stone-100">
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-[11px] font-medium tracking-[0.2em] uppercase text-stone-400 mb-2"
-        >
-          Pearson Edexcel IAL
-        </motion.div>
-        <motion.h1
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="text-3xl md:text-4xl font-light text-stone-800 mb-2"
-        >
-          Economics
-        </motion.h1>
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="text-sm text-stone-400"
-        >
-          AS & A Level · Units 1–4
-        </motion.div>
+      <header className="border-b border-neutral-100">
+        <div className="max-w-7xl mx-auto px-6 py-8 text-center">
+          <p className="text-[11px] font-medium tracking-[0.2em] uppercase text-neutral-400 mb-2">
+            Pearson Edexcel IAL
+          </p>
+          <h1 className="text-3xl font-semibold text-neutral-900 mb-1">
+            Economics
+          </h1>
+          <p className="text-sm text-neutral-400">
+            AS & A Level · Units 1–4
+          </p>
+        </div>
       </header>
 
-      {/* Mode Navigation - Only show when in input view */}
-      <AnimatePresence>
-        {showTabs && (
-          <motion.nav
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="flex justify-center py-6 px-4 border-b border-stone-100"
-          >
-            <AnimatedPillTabs
-              items={tabItems}
-              value={activeMode}
-              onValueChange={(v) => setActiveMode(v as "grader" | "planner")}
-            />
-          </motion.nav>
-        )}
-      </AnimatePresence>
+      {/* Mode Navigation */}
+      {showTabs && (
+        <nav className="border-b border-neutral-100">
+          <div className="max-w-7xl mx-auto px-6 py-4 flex justify-center">
+            <Tabs value={activeMode} onValueChange={(v) => setActiveMode(v as "grader" | "planner")}>
+              <TabsList className="bg-neutral-100">
+                <TabsTrigger value="grader" className="gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Exam Grader
+                </TabsTrigger>
+                <TabsTrigger value="planner" className="gap-2">
+                  <FileText className="w-4 h-4" />
+                  Essay Planner
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        </nav>
+      )}
 
       {/* Content */}
-      <main className="py-10 px-6">
-        <AnimatePresence mode="wait">
-          {activeMode === "grader" ? (
-            <div key="grader">
-              <AnimatePresence mode="wait">
-                {graderView === "input" && (
-                  <GraderInputForm
-                    key="grader-input"
-                    question={graderQuestion}
-                    setQuestion={setGraderQuestion}
-                    answer={graderAnswer}
-                    setAnswer={setGraderAnswer}
-                    questionType={graderQuestionType}
-                    setQuestionType={setGraderQuestionType}
-                    diagram={graderDiagram}
-                    setDiagram={setGraderDiagram}
-                    onSubmit={handleGrade}
-                    loading={graderLoading}
-                    error={graderError}
-                    onClear={clearGrader}
-                  />
-                )}
-                {graderView === "loading" && (
-                  <LoadingView key="grader-loading" message="Analyzing your essay..." />
-                )}
-                {graderView === "results" && graderResult && (
-                  <GradingResultDisplay
-                    key="grader-results"
-                    result={graderResult}
-                    questionType={graderQuestionType}
-                    essayText={graderAnswer}
-                    onBack={handleGraderBack}
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-          ) : (
-            <div key="planner">
-              <AnimatePresence mode="wait">
-                {plannerView === "input" && (
-                  <PlannerInputForm
-                    key="planner-input"
-                    question={plannerQuestion}
-                    setQuestion={setPlannerQuestion}
-                    questionType={plannerQuestionType}
-                    setQuestionType={setPlannerQuestionType}
-                    onSubmit={handlePlan}
-                    loading={plannerLoading}
-                    error={plannerError}
-                    onClear={clearPlanner}
-                  />
-                )}
-                {plannerView === "loading" && (
-                  <LoadingView key="planner-loading" message="Generating essay plan..." />
-                )}
-                {plannerView === "results" && plannerResult && (
-                  <PlanResultDisplay
-                    key="planner-results"
-                    result={plannerResult}
-                    onBack={handlePlannerBack}
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-          )}
-        </AnimatePresence>
+      <main className="max-w-7xl mx-auto px-6 py-10">
+        {activeMode === "grader" ? (
+          <>
+            {graderView === "input" && (
+              <GraderInputForm
+                question={graderQuestion}
+                setQuestion={setGraderQuestion}
+                answer={graderAnswer}
+                setAnswer={setGraderAnswer}
+                questionType={graderQuestionType}
+                setQuestionType={setGraderQuestionType}
+                diagram={graderDiagram}
+                setDiagram={setGraderDiagram}
+                onSubmit={handleGrade}
+                loading={graderLoading}
+                error={graderError}
+                onClear={clearGrader}
+              />
+            )}
+            {graderView === "loading" && (
+              <LoadingView message="Analyzing your essay..." />
+            )}
+            {graderView === "results" && graderResult && (
+              <GradingResultDisplay
+                result={graderResult}
+                questionType={graderQuestionType}
+                essayText={graderAnswer}
+                onBack={() => setGraderView("input")}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            {plannerView === "input" && (
+              <PlannerInputForm
+                question={plannerQuestion}
+                setQuestion={setPlannerQuestion}
+                questionType={plannerQuestionType}
+                setQuestionType={setPlannerQuestionType}
+                onSubmit={handlePlan}
+                loading={plannerLoading}
+                error={plannerError}
+                onClear={clearPlanner}
+              />
+            )}
+            {plannerView === "loading" && (
+              <LoadingView message="Generating essay plan..." />
+            )}
+            {plannerView === "results" && plannerResult && (
+              <PlanResultDisplay
+                result={plannerResult}
+                onBack={() => setPlannerView("input")}
+              />
+            )}
+          </>
+        )}
       </main>
 
       {/* Footer */}
-      <footer className="text-center py-10 text-xs border-t border-stone-100 mt-10">
-        <p className="text-stone-400">
-          AI-powered grading aligned with Edexcel IAL Economics mark schemes
-        </p>
-        <p className="text-stone-300 mt-1">
-          Always verify with your teacher or official mark schemes
-        </p>
+      <footer className="border-t border-neutral-100 mt-10">
+        <div className="max-w-7xl mx-auto px-6 py-8 text-center">
+          <p className="text-xs text-neutral-400">
+            AI-powered grading aligned with Edexcel IAL Economics mark schemes
+          </p>
+          <p className="text-xs text-neutral-300 mt-1">
+            Always verify with your teacher or official mark schemes
+          </p>
+        </div>
       </footer>
     </div>
   );

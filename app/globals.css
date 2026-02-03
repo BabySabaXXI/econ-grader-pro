@@ -4,44 +4,72 @@
 
 @layer base {
   :root {
-    /* Zen Japanese Color Palette */
-    --background: 30 20% 99%;
-    --foreground: 30 10% 10%;
+    /* Apple-inspired neutral palette */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 30 10% 10%;
+    --card-foreground: 0 0% 9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 30 10% 10%;
+    --popover-foreground: 0 0% 9%;
 
-    --primary: 30 6% 20%;
-    --primary-foreground: 30 20% 98%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 30 10% 96%;
-    --secondary-foreground: 30 10% 25%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
 
-    --muted: 30 10% 96%;
-    --muted-foreground: 30 6% 45%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 30 10% 94%;
-    --accent-foreground: 30 10% 20%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
 
-    --destructive: 0 60% 50%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 30 10% 90%;
-    --input: 30 10% 90%;
-    --ring: 30 6% 30%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 9%;
 
     --radius: 0.75rem;
 
-    /* Functional colors - muted but distinguishable */
-    --success: 142 40% 40%;
-    --success-light: 142 30% 95%;
-    --warning: 38 70% 50%;
-    --warning-light: 38 50% 95%;
-    --info: 200 50% 50%;
-    --info-light: 200 40% 95%;
+    /* Semantic colors */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+
+    /* Chart colors */
+    --chart-1: 217 91% 60%;
+    --chart-2: 142 71% 45%;
+    --chart-3: 262 83% 58%;
+    --chart-4: 38 92% 50%;
+  }
+
+  .dark {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 64%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 83%;
   }
 
   * {
@@ -50,90 +78,96 @@
 
   html {
     scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
   }
 
   ::selection {
-    @apply bg-stone-200 text-stone-900;
+    @apply bg-neutral-200 text-neutral-900;
   }
 }
 
 @layer components {
-  /* Badge styles for levels - functional color coding */
+  /* Level badges - Clean, professional */
   .badge-level-5 {
-    @apply bg-emerald-50 text-emerald-700 border-emerald-200;
+    @apply bg-emerald-50 text-emerald-700 border-emerald-200/60;
   }
-
   .badge-level-4 {
-    @apply bg-sky-50 text-sky-700 border-sky-200;
+    @apply bg-blue-50 text-blue-700 border-blue-200/60;
   }
-
   .badge-level-3 {
-    @apply bg-amber-50 text-amber-700 border-amber-200;
+    @apply bg-amber-50 text-amber-700 border-amber-200/60;
   }
-
   .badge-level-2 {
-    @apply bg-orange-50 text-orange-700 border-orange-200;
+    @apply bg-orange-50 text-orange-700 border-orange-200/60;
   }
-
   .badge-level-1 {
-    @apply bg-rose-50 text-rose-700 border-rose-200;
+    @apply bg-red-50 text-red-700 border-red-200/60;
   }
 
-  /* AO Progress bar colors */
-  .ao-bar-ao1 {
-    @apply bg-gradient-to-r from-sky-400 to-sky-500;
+  /* AO color system */
+  .ao-ao1 { @apply text-blue-600; }
+  .ao-ao2 { @apply text-emerald-600; }
+  .ao-ao3 { @apply text-violet-600; }
+  .ao-ao4 { @apply text-amber-600; }
+
+  .ao-bg-ao1 { @apply bg-blue-50 border-blue-200/50; }
+  .ao-bg-ao2 { @apply bg-emerald-50 border-emerald-200/50; }
+  .ao-bg-ao3 { @apply bg-violet-50 border-violet-200/50; }
+  .ao-bg-ao4 { @apply bg-amber-50 border-amber-200/50; }
+
+  /* Highlight system for marks */
+  .highlight-earned {
+    @apply bg-emerald-100/80 text-emerald-900 rounded px-0.5
+           border-b-2 border-emerald-500 cursor-pointer
+           transition-all duration-200 hover:bg-emerald-200/80;
   }
 
-  .ao-bar-ao2 {
-    @apply bg-gradient-to-r from-emerald-400 to-emerald-500;
+  .highlight-lost {
+    @apply bg-red-100/80 text-red-900 rounded px-0.5
+           border-b-2 border-red-500 cursor-pointer
+           transition-all duration-200 hover:bg-red-200/80;
   }
 
-  .ao-bar-ao3 {
-    @apply bg-gradient-to-r from-violet-400 to-violet-500;
+  /* Professional card styles */
+  .card-elevated {
+    @apply bg-white border border-neutral-200/60 shadow-sm
+           hover:shadow-md transition-shadow duration-300;
   }
 
-  .ao-bar-ao4 {
-    @apply bg-gradient-to-r from-amber-400 to-amber-500;
-  }
-
-  /* Feedback item styles */
-  .feedback-strength {
-    @apply bg-emerald-50/80 border border-emerald-100;
-  }
-
-  .feedback-improvement {
-    @apply bg-amber-50/80 border border-amber-100;
-  }
-
-  /* Plan section styles */
-  .plan-thesis {
-    @apply bg-sky-50/50 border-l-2 border-sky-400;
-  }
-
-  .plan-argument {
-    @apply bg-stone-50/50 border border-stone-100;
-  }
-
-  .plan-evaluation {
-    @apply bg-amber-50/50 border border-amber-100;
-  }
-
-  .plan-diagram {
-    @apply bg-violet-50/50 border border-violet-100;
-  }
-
-  .plan-conclusion {
-    @apply bg-emerald-50/50 border-l-2 border-emerald-400;
+  /* Clean input focus states */
+  .input-focus {
+    @apply focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2
+           focus:border-transparent transition-all duration-200;
   }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Subtle gradient backgrounds */
+  .gradient-subtle {
+    @apply bg-gradient-to-b from-neutral-50 to-white;
+  }
+
+  /* Professional shadows */
+  .shadow-subtle {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  }
+
+  .shadow-elevated {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  }
+
+  /* Smooth transitions */
+  .transition-smooth {
+    @apply transition-all duration-300 ease-out;
   }
 }
