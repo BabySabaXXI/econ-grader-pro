@@ -59,7 +59,6 @@ export const KEYWORD_DIAGRAM_MAP: Record<string, string[]> = {
   'raw material costs': ['supply-shift-left'],
   'wage costs': ['supply-shift-left'],
   'natural disaster': ['supply-shift-left'],
-  'supply shock': ['supply-shift-left'],
 
   // Consumer/Producer Surplus
   'consumer surplus': ['consumer-producer-surplus'],
@@ -86,7 +85,6 @@ export const KEYWORD_DIAGRAM_MAP: Record<string, string[]> = {
   'addiction': ['inelastic-demand'],
   'few substitutes': ['inelastic-demand'],
   'many substitutes': ['elastic-demand'],
-  'price taker': ['perfectly-elastic-demand'],
   'total revenue': ['elastic-demand', 'inelastic-demand'],
 
   // ============================================================================
@@ -238,7 +236,7 @@ export const KEYWORD_DIAGRAM_MAP: Record<string, string[]> = {
   // AS shifts
   'cost-push inflation': ['sras-shift-left'],
   'cost push': ['sras-shift-left'],
-  'supply shock': ['sras-shift-left'],
+  'supply shock': ['supply-shift-left', 'sras-shift-left'],
   'oil price shock': ['sras-shift-left'],
   'oil shock': ['sras-shift-left'],
   'stagflation': ['sras-shift-left'],
