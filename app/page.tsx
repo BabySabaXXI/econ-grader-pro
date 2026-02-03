@@ -9,7 +9,9 @@ import {
   Trash2,
   Check,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Eye,
+  List
 } from "lucide-react";
 import {
   QUESTION_TYPE_OPTIONS,
@@ -31,6 +33,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { CircularProgress, LinearProgress } from "@/components/ui/progress";
 import { LoadingOverlay, Spinner } from "@/components/ui/spinner";
+import { GradingLoader } from "@/components/ui/grading-loader";
+import { EssayViewer } from "@/components/ui/essay-viewer";
 
 // ============================================================================
 // SCORE COLOR HELPER
@@ -241,11 +245,15 @@ function MarkLostItem({
 function GradingResultDisplay({
   result,
   questionType,
+  essayText,
 }: {
   result: GradingResult;
   questionType: QuestionType;
+  essayText: string;
 }) {
+  const [viewMode, setViewMode] = useState<"essay" | "feedback">("essay");
   const markScheme = MARK_SCHEMES[questionType];
+  const hasHighlights = (result.marksEarned?.length || 0) > 0 || (result.marksLost?.length || 0) > 0;
 
   return (
     <div className="space-y-5">
@@ -279,134 +287,202 @@ function GradingResultDisplay({
         </CardContent>
       </AnimatedCard>
 
-      {/* AO Breakdown */}
-      <AnimatedCard delay={0.1}>
-        <CardContent className="p-6">
-          <h4 className="text-sm font-medium text-stone-700 mb-4">Assessment Objectives</h4>
-          <div className="space-y-1">
-            {markScheme.ao1 > 0 && (
-              <AOScoreBar label="AO1" aoKey="ao1" score={result.aoScores.ao1} maxScore={markScheme.ao1} delay={0.1} />
+      {/* View Mode Toggle */}
+      {hasHighlights && (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => setViewMode("essay")}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+              viewMode === "essay"
+                ? "bg-stone-800 text-white shadow-md"
+                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
             )}
-            {markScheme.ao2 > 0 && (
-              <AOScoreBar label="AO2" aoKey="ao2" score={result.aoScores.ao2} maxScore={markScheme.ao2} delay={0.15} />
+          >
+            <Eye className="w-4 h-4" />
+            Essay View
+          </button>
+          <button
+            onClick={() => setViewMode("feedback")}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+              viewMode === "feedback"
+                ? "bg-stone-800 text-white shadow-md"
+                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
             )}
-            {markScheme.ao3 > 0 && (
-              <AOScoreBar label="AO3" aoKey="ao3" score={result.aoScores.ao3} maxScore={markScheme.ao3} delay={0.2} />
-            )}
-            {markScheme.ao4 > 0 && (
-              <AOScoreBar label="AO4" aoKey="ao4" score={result.aoScores.ao4} maxScore={markScheme.ao4} delay={0.25} />
-            )}
-          </div>
-          <div className="mt-5 pt-4 border-t border-stone-100 grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
-            <div className="p-2 rounded-lg bg-sky-50">
-              <div className="text-xs font-semibold text-sky-700">AO1</div>
-              <div className="text-[10px] text-sky-600">Knowledge</div>
-            </div>
-            <div className="p-2 rounded-lg bg-emerald-50">
-              <div className="text-xs font-semibold text-emerald-700">AO2</div>
-              <div className="text-[10px] text-emerald-600">Application</div>
-            </div>
-            <div className="p-2 rounded-lg bg-violet-50">
-              <div className="text-xs font-semibold text-violet-700">AO3</div>
-              <div className="text-[10px] text-violet-600">Analysis</div>
-            </div>
-            <div className="p-2 rounded-lg bg-amber-50">
-              <div className="text-xs font-semibold text-amber-700">AO4</div>
-              <div className="text-[10px] text-amber-600">Evaluation</div>
-            </div>
-          </div>
-        </CardContent>
-      </AnimatedCard>
-
-      {/* Examiner Comment */}
-      <AnimatedCard delay={0.2}>
-        <CardContent className="p-6">
-          <h4 className="text-sm font-medium text-stone-700 mb-4">Examiner&apos;s Comment</h4>
-          <div className="relative p-5 rounded-xl bg-stone-50 border-l-2 border-stone-300">
-            <p className="text-sm text-stone-700 leading-relaxed italic">
-              &ldquo;{result.examinerComment}&rdquo;
-            </p>
-          </div>
-        </CardContent>
-      </AnimatedCard>
-
-      {/* Where You Lost Marks */}
-      {result.marksLost && result.marksLost.length > 0 && (
-        <AnimatedCard delay={0.25}>
-          <CardContent className="p-6">
-            <h4 className="text-sm font-medium text-rose-600 mb-5 flex items-center gap-2 uppercase tracking-wider">
-              <span className="w-2 h-2 rounded-full bg-rose-500" />
-              Where You Lost Marks
-            </h4>
-            <div className="space-y-4">
-              {result.marksLost.map((item, index) => (
-                <MarkLostItem key={index} item={item} delay={index * 0.08} />
-              ))}
-            </div>
-          </CardContent>
-        </AnimatedCard>
+          >
+            <List className="w-4 h-4" />
+            Feedback List
+          </button>
+        </div>
       )}
 
-      {/* Where You Earned Marks */}
-      {result.marksEarned && result.marksEarned.length > 0 && (
-        <AnimatedCard delay={0.3}>
-          <CardContent className="p-6">
-            <h4 className="text-sm font-medium text-emerald-600 mb-5 flex items-center gap-2 uppercase tracking-wider">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              Where You Earned Marks
-            </h4>
-            <div className="space-y-4">
-              {result.marksEarned.map((item, index) => (
-                <MarkEarnedItem key={index} item={item} delay={index * 0.08} />
-              ))}
-            </div>
-          </CardContent>
-        </AnimatedCard>
-      )}
+      {/* Essay View with Highlights */}
+      <AnimatePresence mode="wait">
+        {viewMode === "essay" && hasHighlights ? (
+          <motion.div
+            key="essay-view"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            <AnimatedCard delay={0.05}>
+              <CardContent className="p-6">
+                <h4 className="text-sm font-medium text-stone-700 mb-4">Your Essay with Feedback</h4>
+                <EssayViewer
+                  essay={essayText}
+                  marksEarned={result.marksEarned || []}
+                  marksLost={result.marksLost || []}
+                />
+              </CardContent>
+            </AnimatedCard>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
-      {/* Strengths */}
-      <AnimatedCard delay={0.3}>
-        <CardContent className="p-6">
-          <h4 className="text-sm font-medium text-emerald-700 mb-4 flex items-center gap-2">
-            <span className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
-              <Check className="w-3 h-3 text-white" />
-            </span>
-            Strengths
-          </h4>
-          <div className="space-y-3">
-            {result.strengths.map((strength, index) => (
-              <FeedbackItem
-                key={index}
-                text={strength}
-                type="strength"
-                delay={index * 0.05}
-              />
-            ))}
-          </div>
-        </CardContent>
-      </AnimatedCard>
+      {/* Feedback List View */}
+      <AnimatePresence mode="wait">
+        {(viewMode === "feedback" || !hasHighlights) && (
+          <motion.div
+            key="feedback-view"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-5"
+          >
+            {/* AO Breakdown */}
+            <AnimatedCard delay={0.1}>
+              <CardContent className="p-6">
+                <h4 className="text-sm font-medium text-stone-700 mb-4">Assessment Objectives</h4>
+                <div className="space-y-1">
+                  {markScheme.ao1 > 0 && (
+                    <AOScoreBar label="AO1" aoKey="ao1" score={result.aoScores.ao1} maxScore={markScheme.ao1} delay={0.1} />
+                  )}
+                  {markScheme.ao2 > 0 && (
+                    <AOScoreBar label="AO2" aoKey="ao2" score={result.aoScores.ao2} maxScore={markScheme.ao2} delay={0.15} />
+                  )}
+                  {markScheme.ao3 > 0 && (
+                    <AOScoreBar label="AO3" aoKey="ao3" score={result.aoScores.ao3} maxScore={markScheme.ao3} delay={0.2} />
+                  )}
+                  {markScheme.ao4 > 0 && (
+                    <AOScoreBar label="AO4" aoKey="ao4" score={result.aoScores.ao4} maxScore={markScheme.ao4} delay={0.25} />
+                  )}
+                </div>
+                <div className="mt-5 pt-4 border-t border-stone-100 grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
+                  <div className="p-2 rounded-lg bg-sky-50">
+                    <div className="text-xs font-semibold text-sky-700">AO1</div>
+                    <div className="text-[10px] text-sky-600">Knowledge</div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-emerald-50">
+                    <div className="text-xs font-semibold text-emerald-700">AO2</div>
+                    <div className="text-[10px] text-emerald-600">Application</div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-violet-50">
+                    <div className="text-xs font-semibold text-violet-700">AO3</div>
+                    <div className="text-[10px] text-violet-600">Analysis</div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-amber-50">
+                    <div className="text-xs font-semibold text-amber-700">AO4</div>
+                    <div className="text-[10px] text-amber-600">Evaluation</div>
+                  </div>
+                </div>
+              </CardContent>
+            </AnimatedCard>
 
-      {/* Areas for Improvement */}
-      <AnimatedCard delay={0.4}>
-        <CardContent className="p-6">
-          <h4 className="text-sm font-medium text-amber-700 mb-4 flex items-center gap-2">
-            <span className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center">
-              <ArrowRight className="w-3 h-3 text-white" />
-            </span>
-            Areas for Improvement
-          </h4>
-          <div className="space-y-3">
-            {result.improvements.map((improvement, index) => (
-              <FeedbackItem
-                key={index}
-                text={improvement}
-                type="improvement"
-                delay={index * 0.05}
-              />
-            ))}
-          </div>
-        </CardContent>
-      </AnimatedCard>
+            {/* Examiner Comment */}
+            <AnimatedCard delay={0.2}>
+              <CardContent className="p-6">
+                <h4 className="text-sm font-medium text-stone-700 mb-4">Examiner&apos;s Comment</h4>
+                <div className="relative p-5 rounded-xl bg-stone-50 border-l-2 border-stone-300">
+                  <p className="text-sm text-stone-700 leading-relaxed italic">
+                    &ldquo;{result.examinerComment}&rdquo;
+                  </p>
+                </div>
+              </CardContent>
+            </AnimatedCard>
+
+            {/* Where You Lost Marks */}
+            {result.marksLost && result.marksLost.length > 0 && (
+              <AnimatedCard delay={0.25}>
+                <CardContent className="p-6">
+                  <h4 className="text-sm font-medium text-rose-600 mb-5 flex items-center gap-2 uppercase tracking-wider">
+                    <span className="w-2 h-2 rounded-full bg-rose-500" />
+                    Where You Lost Marks
+                  </h4>
+                  <div className="space-y-4">
+                    {result.marksLost.map((item, index) => (
+                      <MarkLostItem key={index} item={item} delay={index * 0.08} />
+                    ))}
+                  </div>
+                </CardContent>
+              </AnimatedCard>
+            )}
+
+            {/* Where You Earned Marks */}
+            {result.marksEarned && result.marksEarned.length > 0 && (
+              <AnimatedCard delay={0.3}>
+                <CardContent className="p-6">
+                  <h4 className="text-sm font-medium text-emerald-600 mb-5 flex items-center gap-2 uppercase tracking-wider">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    Where You Earned Marks
+                  </h4>
+                  <div className="space-y-4">
+                    {result.marksEarned.map((item, index) => (
+                      <MarkEarnedItem key={index} item={item} delay={index * 0.08} />
+                    ))}
+                  </div>
+                </CardContent>
+              </AnimatedCard>
+            )}
+
+            {/* Strengths */}
+            <AnimatedCard delay={0.3}>
+              <CardContent className="p-6">
+                <h4 className="text-sm font-medium text-emerald-700 mb-4 flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
+                    <Check className="w-3 h-3 text-white" />
+                  </span>
+                  Strengths
+                </h4>
+                <div className="space-y-3">
+                  {result.strengths.map((strength, index) => (
+                    <FeedbackItem
+                      key={index}
+                      text={strength}
+                      type="strength"
+                      delay={index * 0.05}
+                    />
+                  ))}
+                </div>
+              </CardContent>
+            </AnimatedCard>
+
+            {/* Areas for Improvement */}
+            <AnimatedCard delay={0.4}>
+              <CardContent className="p-6">
+                <h4 className="text-sm font-medium text-amber-700 mb-4 flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center">
+                    <ArrowRight className="w-3 h-3 text-white" />
+                  </span>
+                  Areas for Improvement
+                </h4>
+                <div className="space-y-3">
+                  {result.improvements.map((improvement, index) => (
+                    <FeedbackItem
+                      key={index}
+                      text={improvement}
+                      type="improvement"
+                      delay={index * 0.05}
+                    />
+                  ))}
+                </div>
+              </CardContent>
+            </AnimatedCard>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -468,10 +544,31 @@ function TipChip({ text, variant = "default" }: { text: string; variant?: "defau
 }
 
 // ============================================================================
+// COMPACT CHAIN COMPONENT (for skeleton mode)
+// ============================================================================
+
+function CompactChain({ steps }: { steps: string[] }) {
+  if (!steps || steps.length === 0) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 text-xs text-stone-500">
+      {steps.slice(0, 5).map((step, i) => (
+        <span key={i} className="flex items-center gap-1.5">
+          <span className="px-2 py-0.5 bg-stone-100 rounded text-stone-600">{step}</span>
+          {i < Math.min(steps.length - 1, 4) && <span className="text-stone-300">→</span>}
+        </span>
+      ))}
+      {steps.length > 5 && <span className="text-stone-400">...</span>}
+    </div>
+  );
+}
+
+// ============================================================================
 // PLAN RESULT DISPLAY
 // ============================================================================
 
 function PlanResultDisplay({ result }: { result: PlanResult }) {
+  const [planMode, setPlanMode] = useState<"skeleton" | "full">("skeleton");
+
   // Determine if first argument is FOR and second is AGAINST based on content
   const getArgumentLabel = (index: number, point: string) => {
     const lowerPoint = point.toLowerCase();
@@ -486,41 +583,71 @@ function PlanResultDisplay({ result }: { result: PlanResult }) {
 
   return (
     <div className="space-y-6">
+      {/* Mode Toggle */}
+      <div className="flex items-center justify-center gap-2 pb-2">
+        <button
+          onClick={() => setPlanMode("skeleton")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+            planMode === "skeleton"
+              ? "bg-stone-800 text-white shadow-md"
+              : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+          )}
+        >
+          <List className="w-4 h-4" />
+          Skeleton
+        </button>
+        <button
+          onClick={() => setPlanMode("full")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+            planMode === "full"
+              ? "bg-stone-800 text-white shadow-md"
+              : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+          )}
+        >
+          <FileText className="w-4 h-4" />
+          Full Detail
+        </button>
+      </div>
+
       {/* Section 1: Introduction */}
       <AnimatedCard delay={0}>
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between mb-4">
+        <CardContent className={cn("transition-all", planMode === "skeleton" ? "p-4" : "p-6")}>
+          <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-3">
               <SectionNumber number={1} />
-              <h4 className="text-lg font-medium text-stone-800">Introduction (Brief!)</h4>
+              <h4 className={cn("font-medium text-stone-800", planMode === "skeleton" ? "text-base" : "text-lg")}>Introduction (Brief!)</h4>
             </div>
-            <AOBadge ao="ao1" size="md" />
+            <AOBadge ao="ao1" size={planMode === "skeleton" ? "sm" : "md"} />
           </div>
 
           {/* What to Write Box */}
-          <div className="p-4 rounded-lg bg-amber-50/50 border-l-4 border-amber-400 mb-4">
-            <p className="text-[10px] font-semibold tracking-wider uppercase text-amber-600 mb-2">
+          <div className={cn("rounded-lg bg-amber-50/50 border-l-4 border-amber-400", planMode === "skeleton" ? "p-3 mb-2" : "p-4 mb-4")}>
+            <p className="text-[10px] font-semibold tracking-wider uppercase text-amber-600 mb-1">
               What to Write
             </p>
-            <p className="text-sm text-stone-700 leading-relaxed">
+            <p className={cn("text-stone-700 leading-relaxed", planMode === "skeleton" ? "text-xs" : "text-sm")}>
               {result.introduction?.whatToWrite || result.thesis}
             </p>
           </div>
 
-          {/* Tips */}
-          <div className="flex flex-wrap gap-2">
-            {result.introduction?.tips ? (
-              result.introduction.tips.map((tip, i) => (
-                <TipChip key={i} text={tip} />
-              ))
-            ) : (
-              <>
-                <TipChip text="Maximum 2-3 sentences" />
-                <TipChip text="Don't waste marks allocation here" />
-                <TipChip text="Signal you understand it's a debate" />
-              </>
-            )}
-          </div>
+          {/* Tips - only in full mode */}
+          {planMode === "full" && (
+            <div className="flex flex-wrap gap-2">
+              {result.introduction?.tips ? (
+                result.introduction.tips.map((tip, i) => (
+                  <TipChip key={i} text={tip} />
+                ))
+              ) : (
+                <>
+                  <TipChip text="Maximum 2-3 sentences" />
+                  <TipChip text="Don't waste marks allocation here" />
+                  <TipChip text="Signal you understand it's a debate" />
+                </>
+              )}
+            </div>
+          )}
         </CardContent>
       </AnimatedCard>
 
@@ -532,63 +659,71 @@ function PlanResultDisplay({ result }: { result: PlanResult }) {
 
         return (
           <AnimatedCard key={index} delay={0.1 + index * 0.1}>
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
+            <CardContent className={cn("transition-all", planMode === "skeleton" ? "p-4" : "p-6")}>
+              <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <SectionNumber number={sectionNum} />
                   <div>
-                    <h4 className="text-lg font-medium text-stone-800">
-                      Argument {label} + Integrated Evaluation
+                    <h4 className={cn("font-medium text-stone-800", planMode === "skeleton" ? "text-base" : "text-lg")}>
+                      Argument {label} {planMode === "full" && "+ Integrated Evaluation"}
                     </h4>
-                    <p className="text-sm text-stone-500 mt-0.5">
-                      {isFor ? label + ": " : label + ": "}{arg.point}
+                    <p className={cn("text-stone-500 mt-0.5", planMode === "skeleton" ? "text-xs" : "text-sm")}>
+                      {arg.point}
                     </p>
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  <AOBadge ao="ao1" size="md" />
-                  <AOBadge ao="ao2" size="md" />
-                  <AOBadge ao="ao3" size="md" />
-                  <AOBadge ao="ao4" size="md" />
+                  <AOBadge ao="ao1" size={planMode === "skeleton" ? "sm" : "md"} />
+                  <AOBadge ao="ao2" size={planMode === "skeleton" ? "sm" : "md"} />
+                  <AOBadge ao="ao3" size={planMode === "skeleton" ? "sm" : "md"} />
+                  <AOBadge ao="ao4" size={planMode === "skeleton" ? "sm" : "md"} />
                 </div>
               </div>
 
-              {/* Chain of Reasoning */}
+              {/* Chain of Reasoning - Compact in skeleton, full in full mode */}
               {arg.chainOfReasoning && arg.chainOfReasoning.length > 0 && (
-                <div className="mb-4">
-                  <ChainOfReasoning steps={arg.chainOfReasoning} />
+                <div className={planMode === "skeleton" ? "mb-2" : "mb-4"}>
+                  {planMode === "skeleton" ? (
+                    <CompactChain steps={arg.chainOfReasoning} />
+                  ) : (
+                    <ChainOfReasoning steps={arg.chainOfReasoning} />
+                  )}
                 </div>
               )}
 
-              {/* What to Write Box */}
-              <div className="p-4 rounded-lg bg-amber-50/50 border-l-4 border-amber-400 mb-4">
-                <p className="text-[10px] font-semibold tracking-wider uppercase text-amber-600 mb-2">
-                  What to Write
-                </p>
-                <p className="text-sm text-stone-700 leading-relaxed mb-3">
-                  &ldquo;The main argument {isFor ? "supporting" : "against"} [proposition] is that {arg.point.toLowerCase()}. This leads to {arg.explanation}. Evidence from {arg.example} supports this view. As illustrated in the diagram, [explain diagram]. HOWEVER, the extent to which this holds depends on [condition]. This is significant because [explain why the condition matters].&rdquo;
-                </p>
-              </div>
+              {/* What to Write Box - only in full mode */}
+              {planMode === "full" && (
+                <div className="p-4 rounded-lg bg-amber-50/50 border-l-4 border-amber-400 mb-4">
+                  <p className="text-[10px] font-semibold tracking-wider uppercase text-amber-600 mb-2">
+                    What to Write
+                  </p>
+                  <p className="text-sm text-stone-700 leading-relaxed mb-3">
+                    &ldquo;The main argument {isFor ? "supporting" : "against"} [proposition] is that {arg.point.toLowerCase()}. This leads to {arg.explanation}. Evidence from {arg.example} supports this view. As illustrated in the diagram, [explain diagram]. HOWEVER, the extent to which this holds depends on [condition]. This is significant because [explain why the condition matters].&rdquo;
+                  </p>
+                </div>
+              )}
 
-              {/* Detail boxes */}
-              <div className="grid md:grid-cols-2 gap-3 mb-4">
-                <div className="p-3 rounded-lg bg-sky-50 border border-sky-100">
+              {/* Detail boxes - compact in skeleton */}
+              <div className={cn("grid gap-3", planMode === "skeleton" ? "grid-cols-1" : "md:grid-cols-2", planMode === "full" && "mb-4")}>
+                <div className={cn("rounded-lg bg-sky-50 border border-sky-100", planMode === "skeleton" ? "p-2" : "p-3")}>
                   <p className="text-[10px] font-semibold tracking-wider uppercase text-sky-600 mb-1">Theory</p>
-                  <p className="text-sm text-stone-600">{arg.explanation}</p>
+                  <p className={cn("text-stone-600", planMode === "skeleton" ? "text-xs line-clamp-2" : "text-sm")}>{arg.explanation}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-100">
+                <div className={cn("rounded-lg bg-emerald-50 border border-emerald-100", planMode === "skeleton" ? "p-2" : "p-3")}>
                   <p className="text-[10px] font-semibold tracking-wider uppercase text-emerald-600 mb-1">Example</p>
-                  <p className="text-sm text-stone-600">{arg.example}</p>
+                  <p className={cn("text-stone-600", planMode === "skeleton" ? "text-xs line-clamp-2" : "text-sm")}>{arg.example}</p>
                 </div>
               </div>
 
-              {/* Tips */}
-              <div className="flex flex-wrap gap-2">
-                <TipChip text="Full analytical chain (4+ links)" />
-                <TipChip text="Diagram analysis" />
-                <TipChip text="IMMEDIATELY evaluate - don't wait until later" variant="warning" />
-                <TipChip text='The "however" is crucial for AO4' variant="warning" />
-              </div>
+              {/* Tips - only in full mode */}
+              {planMode === "full" && (
+                <div className="flex flex-wrap gap-2">
+                  <TipChip text="Full analytical chain (4+ links)" />
+                  <TipChip text="Diagram analysis" />
+                  <TipChip text="IMMEDIATELY evaluate - don't wait until later" variant="warning" />
+                  <TipChip text='The "however" is crucial for AO4' variant="warning" />
+                </div>
+              )}
             </CardContent>
           </AnimatedCard>
         );
@@ -596,166 +731,190 @@ function PlanResultDisplay({ result }: { result: PlanResult }) {
 
       {/* Section: Deeper Evaluation */}
       <AnimatedCard delay={0.3}>
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between mb-4">
+        <CardContent className={cn("transition-all", planMode === "skeleton" ? "p-4" : "p-6")}>
+          <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-3">
               <SectionNumber number={result.arguments.length + 2} />
-              <h4 className="text-lg font-medium text-stone-800">Deeper Evaluation Paragraph</h4>
+              <h4 className={cn("font-medium text-stone-800", planMode === "skeleton" ? "text-base" : "text-lg")}>Deeper Evaluation</h4>
             </div>
             <div className="flex gap-1">
-              <AOBadge ao="ao3" size="md" />
-              <AOBadge ao="ao4" size="md" />
+              <AOBadge ao="ao3" size={planMode === "skeleton" ? "sm" : "md"} />
+              <AOBadge ao="ao4" size={planMode === "skeleton" ? "sm" : "md"} />
             </div>
           </div>
 
-          <p className="text-sm text-stone-600 mb-4 font-medium">Multiple evaluation techniques:</p>
+          {planMode === "full" && (
+            <p className="text-sm text-stone-600 mb-4 font-medium">Multiple evaluation techniques:</p>
+          )}
 
-          {/* What to Write Box */}
-          <div className="p-4 rounded-lg bg-amber-50/50 border-l-4 border-amber-400 mb-4">
-            <p className="text-[10px] font-semibold tracking-wider uppercase text-amber-600 mb-2">
-              What to Write
-            </p>
-            <p className="text-sm text-stone-700 leading-relaxed">
-              {result.deeperEvaluation?.whatToWrite ||
-                `"The outcome is likely to differ significantly depending on [time horizon / elasticity / context]. Transaction costs may prevent Coasian bargaining in practice. Furthermore, Magnitude: small externalities may not justify intervention costs. The magnitude of the effect is also crucial: [consideration]. Information: government may know less than market participants. Compared to alternative approaches such as [X], this [policy/outcome] is [more/less] effective because [reason]."`
-              }
-            </p>
-          </div>
+          {/* What to Write Box - only full mode */}
+          {planMode === "full" && (
+            <div className="p-4 rounded-lg bg-amber-50/50 border-l-4 border-amber-400 mb-4">
+              <p className="text-[10px] font-semibold tracking-wider uppercase text-amber-600 mb-2">
+                What to Write
+              </p>
+              <p className="text-sm text-stone-700 leading-relaxed">
+                {result.deeperEvaluation?.whatToWrite ||
+                  `"The outcome is likely to differ significantly depending on [time horizon / elasticity / context]. Transaction costs may prevent Coasian bargaining in practice. Furthermore, Magnitude: small externalities may not justify intervention costs. The magnitude of the effect is also crucial: [consideration]. Information: government may know less than market participants. Compared to alternative approaches such as [X], this [policy/outcome] is [more/less] effective because [reason]."`
+                }
+              </p>
+            </div>
+          )}
 
-          {/* Evaluation Techniques */}
-          <div className="p-4 rounded-lg bg-violet-50/50 border border-violet-100 mb-4">
-            <p className="text-[10px] font-semibold tracking-wider uppercase text-violet-600 mb-3">
-              Evaluation Techniques to Use
+          {/* Evaluation Techniques - compact in skeleton */}
+          <div className={cn("rounded-lg bg-violet-50/50 border border-violet-100", planMode === "skeleton" ? "p-3 mb-2" : "p-4 mb-4")}>
+            <p className={cn("font-semibold tracking-wider uppercase text-violet-600", planMode === "skeleton" ? "text-[9px] mb-2" : "text-[10px] mb-3")}>
+              Evaluation Techniques
             </p>
-            <ul className="space-y-2">
+            <ul className={cn("space-y-1", planMode === "skeleton" && "space-y-0.5")}>
               {(result.deeperEvaluation?.techniques || [
-                "Transaction costs may prevent Coasian bargaining in practice",
-                "Depends on whether externality is local (easier to solve) or global (harder)",
-                "Magnitude: small externalities may not justify intervention costs",
-                "Information: government may know less than market participants",
-              ]).map((technique, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-stone-600">
-                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400 mt-1.5 flex-shrink-0" />
-                  {technique}
+                "Transaction costs",
+                "Local vs global scope",
+                "Magnitude/significance",
+                "Information asymmetry",
+              ]).slice(0, planMode === "skeleton" ? 4 : undefined).map((technique, i) => (
+                <li key={i} className={cn("flex items-start gap-2 text-stone-600", planMode === "skeleton" ? "text-xs" : "text-sm")}>
+                  <span className="w-1 h-1 rounded-full bg-violet-400 mt-1.5 flex-shrink-0" />
+                  {planMode === "skeleton" ? technique.split(" ").slice(0, 4).join(" ") + (technique.split(" ").length > 4 ? "..." : "") : technique}
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Evaluation Points from API */}
-          {result.evaluations.map((evaluation, index) => (
+          {/* Evaluation Points from API - compact in skeleton */}
+          {result.evaluations.slice(0, planMode === "skeleton" ? 2 : undefined).map((evaluation, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.08 }}
-              className="p-4 rounded-lg bg-amber-50 border border-amber-100 mb-3"
+              className={cn("rounded-lg bg-amber-50 border border-amber-100", planMode === "skeleton" ? "p-2 mb-2" : "p-4 mb-3")}
             >
-              <h5 className="font-medium text-sm text-amber-800 mb-1">{evaluation.point}</h5>
-              <p className="text-sm text-amber-700/80 leading-relaxed">{evaluation.development}</p>
-              {evaluation.chainOfReasoning && evaluation.chainOfReasoning.length > 0 && (
+              <h5 className={cn("font-medium text-amber-800", planMode === "skeleton" ? "text-xs mb-0.5" : "text-sm mb-1")}>{evaluation.point}</h5>
+              {planMode === "full" && (
+                <p className="text-sm text-amber-700/80 leading-relaxed">{evaluation.development}</p>
+              )}
+              {planMode === "full" && evaluation.chainOfReasoning && evaluation.chainOfReasoning.length > 0 && (
                 <div className="mt-3">
                   <ChainOfReasoning steps={evaluation.chainOfReasoning} />
                 </div>
               )}
+              {planMode === "skeleton" && evaluation.chainOfReasoning && evaluation.chainOfReasoning.length > 0 && (
+                <CompactChain steps={evaluation.chainOfReasoning} />
+              )}
             </motion.div>
           ))}
 
-          {/* Tips */}
-          <div className="flex flex-wrap gap-2">
-            <TipChip text="This is where you show Level 5 thinking" variant="success" />
-            <TipChip text="Use at least 3 different evaluation techniques" variant="warning" />
-            <TipChip text="Short run vs long run" />
-            <TipChip text="Elasticity conditions" />
-            <TipChip text="Magnitude/significance" />
-            <TipChip text="Challenging assumptions" />
-            <TipChip text="Comparing alternatives" />
-          </div>
+          {/* Tips - only full mode */}
+          {planMode === "full" && (
+            <div className="flex flex-wrap gap-2">
+              <TipChip text="This is where you show Level 5 thinking" variant="success" />
+              <TipChip text="Use at least 3 different evaluation techniques" variant="warning" />
+              <TipChip text="Short run vs long run" />
+              <TipChip text="Elasticity conditions" />
+              <TipChip text="Magnitude/significance" />
+              <TipChip text="Challenging assumptions" />
+              <TipChip text="Comparing alternatives" />
+            </div>
+          )}
         </CardContent>
       </AnimatedCard>
 
       {/* Required Diagram Section */}
       {result.diagram && result.diagram !== "none" && (
         <AnimatedCard delay={0.35}>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-6 h-6 rounded bg-violet-500 flex items-center justify-center">
-                <FileText className="w-3.5 h-3.5 text-white" />
+          <CardContent className={cn("transition-all", planMode === "skeleton" ? "p-4" : "p-6")}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className={cn("rounded bg-violet-500 flex items-center justify-center", planMode === "skeleton" ? "w-5 h-5" : "w-6 h-6")}>
+                <FileText className={cn("text-white", planMode === "skeleton" ? "w-3 h-3" : "w-3.5 h-3.5")} />
               </div>
-              <h4 className="text-sm font-semibold tracking-wider uppercase text-stone-600">
-                Required Diagram: {result.diagramSection?.name || result.diagram.replace("-", " ")}
+              <h4 className={cn("font-semibold tracking-wider uppercase text-stone-600", planMode === "skeleton" ? "text-xs" : "text-sm")}>
+                Diagram: {result.diagramSection?.name || result.diagram.replace("-", " ")}
               </h4>
             </div>
 
-            <div className="p-4 rounded-lg bg-stone-50 border border-stone-200 mb-4">
-              <p className="text-sm text-stone-700 leading-relaxed">
-                {result.diagramSection?.explanation || result.diagramExplanation}
-              </p>
-            </div>
+            {planMode === "full" && (
+              <div className="p-4 rounded-lg bg-stone-50 border border-stone-200 mb-4">
+                <p className="text-sm text-stone-700 leading-relaxed">
+                  {result.diagramSection?.explanation || result.diagramExplanation}
+                </p>
+              </div>
+            )}
 
             {result.diagramSection?.keyLabels && (
-              <div className="mb-4">
+              <div className={planMode === "full" ? "mb-4" : "mb-2"}>
                 <p className="text-[10px] font-semibold tracking-wider uppercase text-stone-400 mb-2">
-                  Key Labels to Include
+                  Key Labels
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {result.diagramSection.keyLabels.map((label, i) => (
-                    <span key={i} className="px-2.5 py-1 text-xs bg-violet-100 text-violet-700 rounded-md border border-violet-200">
+                <div className="flex flex-wrap gap-1.5">
+                  {result.diagramSection.keyLabels.slice(0, planMode === "skeleton" ? 5 : undefined).map((label, i) => (
+                    <span key={i} className={cn("bg-violet-100 text-violet-700 rounded-md border border-violet-200", planMode === "skeleton" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs")}>
                       {label}
                     </span>
                   ))}
+                  {planMode === "skeleton" && result.diagramSection.keyLabels.length > 5 && (
+                    <span className="text-xs text-stone-400">+{result.diagramSection.keyLabels.length - 5} more</span>
+                  )}
                 </div>
               </div>
             )}
 
-            <p className="text-xs text-stone-500 italic">
-              {result.diagramExplanation}
-            </p>
+            {planMode === "full" && (
+              <p className="text-xs text-stone-500 italic">
+                {result.diagramExplanation}
+              </p>
+            )}
           </CardContent>
         </AnimatedCard>
       )}
 
       {/* Section: Conclusion */}
       <AnimatedCard delay={0.4}>
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between mb-4">
+        <CardContent className={cn("transition-all", planMode === "skeleton" ? "p-4" : "p-6")}>
+          <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-3">
               <SectionNumber number={result.arguments.length + 3} />
-              <h4 className="text-lg font-medium text-stone-800">Conclusion - MAKE A JUDGEMENT</h4>
+              <h4 className={cn("font-medium text-stone-800", planMode === "skeleton" ? "text-base" : "text-lg")}>Conclusion</h4>
             </div>
-            <AOBadge ao="ao4" size="md" />
+            <AOBadge ao="ao4" size={planMode === "skeleton" ? "sm" : "md"} />
           </div>
 
-          <p className="text-sm text-stone-600 mb-4">Definitive answer to the question</p>
+          {planMode === "full" && (
+            <p className="text-sm text-stone-600 mb-4">Definitive answer to the question</p>
+          )}
 
-          {/* What to Write Box */}
-          <div className="p-4 rounded-lg bg-amber-50/50 border-l-4 border-amber-400 mb-4">
-            <p className="text-[10px] font-semibold tracking-wider uppercase text-amber-600 mb-2">
-              What to Write
-            </p>
-            <p className="text-sm text-stone-700 leading-relaxed">
-              {result.conclusionSection?.whatToWrite ||
-                `"On balance, [proposition] is [more likely / less likely / only partially true] because [main reason]. The most significant factor determining the outcome is [key condition]. In most realistic scenarios, [your judgement], although this conclusion would change if [alternative condition]. Therefore, [direct answer to the question]."`
-              }
-            </p>
-          </div>
+          {/* What to Write Box - only full mode */}
+          {planMode === "full" && (
+            <div className="p-4 rounded-lg bg-amber-50/50 border-l-4 border-amber-400 mb-4">
+              <p className="text-[10px] font-semibold tracking-wider uppercase text-amber-600 mb-2">
+                What to Write
+              </p>
+              <p className="text-sm text-stone-700 leading-relaxed">
+                {result.conclusionSection?.whatToWrite ||
+                  `"On balance, [proposition] is [more likely / less likely / only partially true] because [main reason]. The most significant factor determining the outcome is [key condition]. In most realistic scenarios, [your judgement], although this conclusion would change if [alternative condition]. Therefore, [direct answer to the question]."`
+                }
+              </p>
+            </div>
+          )}
 
           {/* Actual conclusion */}
-          <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100 mb-4">
-            <p className="text-[10px] font-semibold tracking-wider uppercase text-emerald-600 mb-2">
+          <div className={cn("rounded-lg bg-emerald-50 border border-emerald-100", planMode === "skeleton" ? "p-3" : "p-4 mb-4")}>
+            <p className="text-[10px] font-semibold tracking-wider uppercase text-emerald-600 mb-1">
               Your Conclusion
             </p>
-            <p className="text-sm text-stone-700 leading-relaxed">{result.conclusion}</p>
+            <p className={cn("text-stone-700 leading-relaxed", planMode === "skeleton" ? "text-xs" : "text-sm")}>{result.conclusion}</p>
           </div>
 
-          {/* Tips */}
-          <div className="flex flex-wrap gap-2">
-            <TipChip text="DO NOT FENCE-SIT" variant="warning" />
-            <TipChip text="State which argument is stronger" variant="warning" />
-            <TipChip text="Justify with clear criteria" />
-            <TipChip text="Identify the KEY condition" variant="success" />
-            <TipChip text="Answer the actual question asked" variant="success" />
-          </div>
+          {/* Tips - only full mode */}
+          {planMode === "full" && (
+            <div className="flex flex-wrap gap-2">
+              <TipChip text="DO NOT FENCE-SIT" variant="warning" />
+              <TipChip text="State which argument is stronger" variant="warning" />
+              <TipChip text="Justify with clear criteria" />
+              <TipChip text="Identify the KEY condition" variant="success" />
+              <TipChip text="Answer the actual question asked" variant="success" />
+            </div>
+          )}
         </CardContent>
       </AnimatedCard>
     </div>
@@ -1039,7 +1198,6 @@ export default function HomePage() {
     <div className="min-h-screen bg-[hsl(var(--background))]">
       {/* Loading Overlays */}
       <AnimatePresence>
-        {graderLoading && <LoadingOverlay message="Grading your answer..." />}
         {plannerLoading && <LoadingOverlay message="Generating essay plan..." />}
       </AnimatePresence>
 
@@ -1162,8 +1320,10 @@ export default function HomePage() {
 
               {/* Results Section */}
               <div>
-                {graderResult ? (
-                  <GradingResultDisplay result={graderResult} questionType={graderQuestionType} />
+                {graderLoading ? (
+                  <GradingLoader isLoading={graderLoading} />
+                ) : graderResult ? (
+                  <GradingResultDisplay result={graderResult} questionType={graderQuestionType} essayText={graderAnswer} />
                 ) : (
                   <EmptyState type="grader" />
                 )}
