@@ -3,26 +3,27 @@
 import { useState, useRef, useCallback } from "react";
 import {
   ArrowLeft,
-  Loader2,
-  AlertCircle,
-  ChevronRight,
-  Sparkles,
+  ArrowChevronRight,
+  CircleCheck,
+  CircleCheckFill,
+  CircleExclamation,
+  CircleExclamationFill,
   Eye,
-  EyeOff,
-  Upload,
-  Trash2,
-  CheckCircle2,
-  Target,
-  TrendingUp,
-  BookOpen,
-  PenLine,
-  LayoutGrid,
-  ListTree,
+  EyeSlash,
   FileText,
+  PencilToSquare,
+  Sparkles,
+  SparklesFill,
+  TrashBin,
+  ArrowUpFromLine,
+  BookOpen,
+  ListCheck,
+  ChartColumn,
+  TargetDart,
+  ArrowUpRightFromSquare,
+  Bulb,
   GraduationCap,
-  Lightbulb,
-  BarChart3,
-} from "lucide-react";
+} from "@gravity-ui/icons";
 import {
   QUESTION_TYPE_OPTIONS,
   MARK_SCHEMES,
@@ -130,27 +131,27 @@ function Navigation({
           <button
             onClick={() => setActiveMode("grader")}
             className={cn(
-              "flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+              "flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ease-out",
               activeMode === "grader"
                 ? "bg-card text-foreground"
                 : "text-muted-foreground hover:text-foreground"
             )}
             style={activeMode === "grader" ? { boxShadow: "var(--shadow-md)" } : {}}
           >
-            <CheckCircle2 className="w-4 h-4" />
+            <CircleCheckFill className="w-4 h-4" />
             Grade Essay
           </button>
           <button
             onClick={() => setActiveMode("planner")}
             className={cn(
-              "flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+              "flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ease-out",
               activeMode === "planner"
                 ? "bg-card text-foreground"
                 : "text-muted-foreground hover:text-foreground"
             )}
             style={activeMode === "planner" ? { boxShadow: "var(--shadow-md)" } : {}}
           >
-            <ListTree className="w-4 h-4" />
+            <ListCheck className="w-4 h-4" />
             Plan Essay
           </button>
         </div>
@@ -189,7 +190,7 @@ function PremiumSelect({
             </option>
           ))}
         </select>
-        <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground rotate-90 pointer-events-none" />
+        <ArrowChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground rotate-90 pointer-events-none" />
       </div>
     </div>
   );
@@ -230,9 +231,9 @@ function DiagramUpload({
           <span className="text-caption">Diagram</span>
           <button
             onClick={onRemove}
-            className="btn-ghost text-xs text-destructive hover:text-destructive"
+            className="btn-ghost text-xs text-destructive hover:text-destructive flex items-center gap-1.5"
           >
-            <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+            <TrashBin className="w-3.5 h-3.5" />
             Remove
           </button>
         </div>
@@ -254,14 +255,14 @@ function DiagramUpload({
       <button
         onClick={() => fileInputRef.current?.click()}
         className="w-full p-6 rounded-xl border-2 border-dashed border-border/50 hover:border-border
-                   bg-muted/20 hover:bg-muted/30 transition-all duration-200
+                   bg-muted/20 hover:bg-muted/30 transition-all duration-300
                    flex flex-col items-center gap-2 group"
       >
         <div
           className="w-10 h-10 rounded-full bg-muted flex items-center justify-center
-                     group-hover:bg-accent transition-colors"
+                     group-hover:bg-accent transition-colors duration-300"
         >
-          <Upload className="w-4 h-4 text-muted-foreground" />
+          <ArrowUpFromLine className="w-4 h-4 text-muted-foreground" />
         </div>
         <span className="text-sm text-muted-foreground">Click to upload</span>
       </button>
@@ -434,7 +435,7 @@ function GraderInputForm({
           className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-card mb-6"
           style={{ boxShadow: "var(--shadow-lg)" }}
         >
-          <PenLine className="w-7 h-7 text-foreground" />
+          <PencilToSquare className="w-7 h-7 text-foreground" />
         </div>
         <h2 className="text-headline mb-3">Grade Your Essay</h2>
         <p className="text-muted-foreground max-w-md mx-auto">
@@ -479,7 +480,7 @@ function GraderInputForm({
 
         {error && (
           <div className="flex items-start gap-3 p-4 rounded-xl bg-destructive/10 border border-destructive/20">
-            <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+            <CircleExclamationFill className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
             <p className="text-sm text-destructive">{error}</p>
           </div>
         )}
@@ -491,12 +492,12 @@ function GraderInputForm({
         >
           {loading ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <span className="w-4 h-4 mr-2 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
               Analyzing...
             </>
           ) : (
             <>
-              <Sparkles className="w-4 h-4 mr-2" />
+              <SparklesFill className="w-4 h-4 mr-2" />
               Grade Essay
             </>
           )}
@@ -530,9 +531,9 @@ function GradingResultsDisplay({
       {/* Back Button */}
       <button
         onClick={onBack}
-        className="btn-ghost mb-8 -ml-2"
+        className="btn-ghost mb-8 -ml-2 flex items-center gap-2"
       >
-        <ArrowLeft className="w-4 h-4 mr-2" />
+        <ArrowLeft className="w-4 h-4" />
         Edit Answer
       </button>
 
@@ -540,7 +541,7 @@ function GradingResultsDisplay({
         {/* Main Content */}
         <div className="lg:col-span-8 space-y-6">
           {/* Essay Viewer Card */}
-          <div className="card-elevated rounded-3xl overflow-hidden">
+          <div className="card-elevated rounded-3xl overflow-hidden animate-slide-up" style={{ animationDelay: "0.1s" }}>
             <div className="p-6 border-b border-border/50">
               <div className="flex items-center justify-between">
                 <h3 className="text-title">Your Essay</h3>
@@ -576,7 +577,7 @@ function GradingResultsDisplay({
         {/* Sidebar */}
         <div className="lg:col-span-4 space-y-6">
           {/* Score Card */}
-          <div className="card-elevated rounded-3xl p-6">
+          <div className="card-elevated rounded-3xl p-6 animate-slide-up" style={{ animationDelay: "0.15s" }}>
             <div className="flex items-center gap-6">
               <ScoreRing percentage={result.overallPercentage} />
               <div>
@@ -597,7 +598,7 @@ function GradingResultsDisplay({
           </div>
 
           {/* AO Breakdown */}
-          <div className="card-elevated rounded-3xl p-6 space-y-5">
+          <div className="card-elevated rounded-3xl p-6 space-y-5 animate-slide-up" style={{ animationDelay: "0.2s" }}>
             <h4 className="text-caption">Assessment Objectives</h4>
             {markScheme.ao1 > 0 && (
               <AOProgressBar aoKey="ao1" score={result.aoScores.ao1} maxScore={markScheme.ao1} />
@@ -614,7 +615,7 @@ function GradingResultsDisplay({
           </div>
 
           {/* Examiner Comment */}
-          <div className="card-elevated rounded-3xl p-6">
+          <div className="card-elevated rounded-3xl p-6 animate-slide-up" style={{ animationDelay: "0.25s" }}>
             <h4 className="text-caption mb-4">Examiner Feedback</h4>
             <div className="card-inset p-4 rounded-xl">
               <p className="text-sm text-foreground/80 leading-relaxed italic">
@@ -624,9 +625,9 @@ function GradingResultsDisplay({
           </div>
 
           {/* Strengths */}
-          <div className="card-elevated rounded-3xl p-6">
+          <div className="card-elevated rounded-3xl p-6 animate-slide-up" style={{ animationDelay: "0.3s" }}>
             <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="w-4 h-4" style={{ color: "hsl(var(--success))" }} />
+              <ArrowUpRightFromSquare className="w-4 h-4" style={{ color: "hsl(var(--success))" }} />
               <h4 className="text-caption" style={{ color: "hsl(var(--success))" }}>Strengths</h4>
             </div>
             <div className="space-y-2">
@@ -643,9 +644,9 @@ function GradingResultsDisplay({
           </div>
 
           {/* Improvements */}
-          <div className="card-elevated rounded-3xl p-6">
+          <div className="card-elevated rounded-3xl p-6 animate-slide-up" style={{ animationDelay: "0.35s" }}>
             <div className="flex items-center gap-2 mb-4">
-              <Target className="w-4 h-4" style={{ color: "hsl(var(--warning))" }} />
+              <TargetDart className="w-4 h-4" style={{ color: "hsl(var(--warning))" }} />
               <h4 className="text-caption" style={{ color: "hsl(var(--warning))" }}>To Improve</h4>
             </div>
             <div className="space-y-2">
@@ -695,7 +696,7 @@ function PlannerInputForm({
           className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-card mb-6"
           style={{ boxShadow: "var(--shadow-lg)" }}
         >
-          <ListTree className="w-7 h-7 text-foreground" />
+          <ListCheck className="w-7 h-7 text-foreground" />
         </div>
         <h2 className="text-headline mb-3">Plan Your Essay</h2>
         <p className="text-muted-foreground max-w-md mx-auto">
@@ -724,7 +725,7 @@ function PlannerInputForm({
 
         {error && (
           <div className="flex items-start gap-3 p-4 rounded-xl bg-destructive/10 border border-destructive/20">
-            <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+            <CircleExclamationFill className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
             <p className="text-sm text-destructive">{error}</p>
           </div>
         )}
@@ -736,12 +737,12 @@ function PlannerInputForm({
         >
           {loading ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <span className="w-4 h-4 mr-2 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
               Generating...
             </>
           ) : (
             <>
-              <Sparkles className="w-4 h-4 mr-2" />
+              <SparklesFill className="w-4 h-4 mr-2" />
               Generate Plan
             </>
           )}
@@ -767,20 +768,18 @@ function PlanResultsDisplay({
   return (
     <div className="max-w-4xl mx-auto animate-in">
       {/* Back Button */}
-      <button onClick={onBack} className="btn-ghost mb-8 -ml-2">
-        <ArrowLeft className="w-4 h-4 mr-2" />
+      <button onClick={onBack} className="btn-ghost mb-8 -ml-2 flex items-center gap-2">
+        <ArrowLeft className="w-4 h-4" />
         Edit Question
       </button>
 
       {/* Detail Toggle */}
-      <div
-        className="card-elevated rounded-2xl p-4 mb-8 flex items-center justify-between"
-      >
+      <div className="card-elevated rounded-2xl p-4 mb-8 flex items-center justify-between animate-slide-up">
         <div className="flex items-center gap-3">
           {showDetailed ? (
             <Eye className="w-5 h-5 text-foreground" />
           ) : (
-            <EyeOff className="w-5 h-5 text-muted-foreground" />
+            <EyeSlash className="w-5 h-5 text-muted-foreground" />
           )}
           <div>
             <p className="text-sm font-medium">Detailed View</p>
@@ -794,7 +793,7 @@ function PlanResultsDisplay({
 
       <div className="space-y-6">
         {/* Introduction */}
-        <div className="card-elevated rounded-3xl overflow-hidden">
+        <div className="card-elevated rounded-3xl overflow-hidden animate-slide-up" style={{ animationDelay: "0.05s" }}>
           <div className="p-5 border-b border-border/50 flex items-center gap-4">
             <div
               className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-sm font-semibold text-primary-foreground"
@@ -819,7 +818,7 @@ function PlanResultsDisplay({
 
         {/* Arguments */}
         {result.arguments.map((arg, index) => (
-          <div key={index} className="card-elevated rounded-3xl overflow-hidden">
+          <div key={index} className="card-elevated rounded-3xl overflow-hidden animate-slide-up" style={{ animationDelay: `${0.1 + index * 0.05}s` }}>
             <div className="p-5 border-b border-border/50 flex items-center gap-4">
               <div
                 className={cn(
@@ -853,7 +852,7 @@ function PlanResultsDisplay({
                           {step}
                         </span>
                         {arg.chainOfReasoning && i < Math.min(arg.chainOfReasoning.length - 1, 4) && (
-                          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                          <ArrowChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
                         )}
                       </span>
                     ))}
@@ -888,7 +887,7 @@ function PlanResultsDisplay({
         ))}
 
         {/* Evaluation */}
-        <div className="card-elevated rounded-3xl overflow-hidden">
+        <div className="card-elevated rounded-3xl overflow-hidden animate-slide-up" style={{ animationDelay: `${0.2 + result.arguments.length * 0.05}s` }}>
           <div className="p-5 border-b border-border/50 flex items-center gap-4">
             <div
               className="w-10 h-10 rounded-xl bg-[hsl(var(--ao3))] flex items-center justify-center text-sm font-semibold text-white"
@@ -909,7 +908,7 @@ function PlanResultsDisplay({
             {showDetailed && (
               <div className="card-inset p-4 rounded-xl">
                 <div className="flex items-center gap-2 mb-3">
-                  <Target className="w-3.5 h-3.5" style={{ color: "hsl(var(--ao3))" }} />
+                  <TargetDart className="w-3.5 h-3.5" style={{ color: "hsl(var(--ao3))" }} />
                   <p className="text-caption" style={{ color: "hsl(var(--ao3))" }}>Techniques</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -943,13 +942,13 @@ function PlanResultsDisplay({
 
         {/* Diagram */}
         {result.diagram && result.diagram !== "none" && (
-          <div className="card-elevated rounded-3xl overflow-hidden">
+          <div className="card-elevated rounded-3xl overflow-hidden animate-slide-up" style={{ animationDelay: `${0.25 + result.arguments.length * 0.05}s` }}>
             <div className="p-5 border-b border-border/50 flex items-center gap-4">
               <div
                 className="w-10 h-10 rounded-xl bg-[hsl(var(--info))] flex items-center justify-center"
                 style={{ boxShadow: "var(--shadow-sm)" }}
               >
-                <BarChart3 className="w-5 h-5 text-white" />
+                <ChartColumn className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1">
                 <h3 className="text-title">Required Diagram</h3>
@@ -974,7 +973,7 @@ function PlanResultsDisplay({
         )}
 
         {/* Conclusion */}
-        <div className="card-elevated rounded-3xl overflow-hidden">
+        <div className="card-elevated rounded-3xl overflow-hidden animate-slide-up" style={{ animationDelay: `${0.3 + result.arguments.length * 0.05}s` }}>
           <div className="p-5 border-b border-border/50 flex items-center gap-4">
             <div
               className="w-10 h-10 rounded-xl bg-[hsl(var(--success))] flex items-center justify-center text-sm font-semibold text-white"
@@ -991,7 +990,7 @@ function PlanResultsDisplay({
           <div className="p-6">
             <div className="card-inset p-4 rounded-xl">
               <div className="flex items-center gap-2 mb-2">
-                <Lightbulb className="w-3.5 h-3.5" style={{ color: "hsl(var(--success))" }} />
+                <Bulb className="w-3.5 h-3.5" style={{ color: "hsl(var(--success))" }} />
                 <p className="text-caption" style={{ color: "hsl(var(--success))" }}>Final Judgement</p>
               </div>
               <p className="text-sm leading-relaxed">{result.conclusion}</p>
@@ -1010,16 +1009,37 @@ function PlanResultsDisplay({
 function LoadingView({ message }: { message: string }) {
   return (
     <div className="max-w-md mx-auto text-center py-24 animate-fade">
-      <div className="relative w-20 h-20 mx-auto mb-8">
-        <div
-          className="absolute inset-0 rounded-full border-4 border-muted"
-        />
-        <div
-          className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"
-        />
+      <div className="relative w-24 h-24 mx-auto mb-8">
+        {/* Outer ring */}
+        <div className="absolute inset-0 rounded-full border-4 border-muted" />
+        {/* Spinning ring */}
+        <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+        {/* Inner pulsing dot */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div
+            className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center"
+            style={{ animation: "pulse-soft 2s ease-in-out infinite" }}
+          >
+            <SparklesFill className="w-4 h-4 text-primary" />
+          </div>
+        </div>
       </div>
       <h3 className="text-title mb-2">{message}</h3>
       <p className="text-sm text-muted-foreground">Powered by Claude AI</p>
+
+      {/* Animated dots */}
+      <div className="flex justify-center gap-1.5 mt-6">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="w-2 h-2 rounded-full bg-primary/40"
+            style={{
+              animation: "pulse-soft 1.4s ease-in-out infinite",
+              animationDelay: `${i * 0.2}s`,
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 }
