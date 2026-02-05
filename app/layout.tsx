@@ -1,8 +1,51 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import "./globals.css";
 
+const inter = localFont({
+  src: [
+    {
+      path: "../public/fonts/Inter-Variable.woff2",
+      weight: "100 900",
+    },
+  ],
+  variable: "--font-inter",
+});
+
+const satoshi = localFont({
+  src: [
+    {
+      path: "../public/fonts/Satoshi-Light.woff2",
+      weight: "300",
+    },
+    {
+      path: "../public/fonts/Satoshi-Regular.woff2",
+      weight: "400",
+    },
+    {
+      path: "../public/fonts/Satoshi-Medium.woff2",
+      weight: "500",
+    },
+    {
+      path: "../public/fonts/Satoshi-Bold.woff2",
+      weight: "700",
+    },
+  ],
+  variable: "--font-satoshi",
+});
+
+const interDisplay = localFont({
+  src: [
+    {
+      path: "../public/fonts/InterDisplay-Medium.woff2",
+      weight: "500",
+    },
+  ],
+  variable: "--font-inter-display",
+});
+
 export const metadata: Metadata = {
-  title: "Edexcel IAL Economics | AI Essay Grader & Planner",
+  title: "EconGrader Pro | AI Essay Grader & Planner",
   description:
     "AI-powered Edexcel IAL Economics essay grading with detailed Assessment Objective breakdowns and essay planning assistance.",
   keywords: [
@@ -22,16 +65,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="font-sans antialiased">
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${satoshi.variable} ${inter.variable} ${interDisplay.variable} font-satoshi text-p-sm antialiased`}
+      >
         {children}
       </body>
     </html>

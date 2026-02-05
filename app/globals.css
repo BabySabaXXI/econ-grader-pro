@@ -4,62 +4,134 @@
 
 @layer base {
   :root {
-    /* shadcn/ui color tokens */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    /* ========================================
+       NeuraTalk-inspired Design System
+       ======================================== */
+
+    /* Core neutrals */
+    --static-white: #ffffff;
+    --static-black: #0e121b;
+    --white-0: #ffffff;
+    --strong-950: #0e121b;
+    --bg-weak-50: #f5f7fa;
+    --bg-surface-800: #222530;
+    --bg-soft-200: #e1e4ea;
+    --bg-sub-300: #cacfd8;
+    --text-sub-600: #525866;
+    --text-soft-400: #99a0ae;
+    --text-disabled-300: #cacfd8;
+
+    /* Stroke / Border */
+    --stroke-soft-200: #e1e4ea;
+    --stroke-strong-950: #0e121b;
+    --stroke-white-0: #ffffff;
+    --stroke-sub-300: #cacfd8;
+
+    /* Status colors */
+    --error-base: #fb3748;
+    --error-light: #ffc0c5;
+    --error-lighter: #ffebec;
+    --warning-base: #ff8447;
+    --warning-light: #ffd5c0;
+    --warning-lighter: #fff1eb;
+    --success-base: #1fc16b;
+    --success-light: #c2f5da;
+    --success-lighter: #e0faec;
+    --information-base: #335cff;
+    --information-light: #c0d5ff;
+    --information-lighter: #ebf1ff;
+    --feature-base: #7d52f4;
+    --feature-light: #cac0ff;
+    --feature-lighter: #efebff;
+    --away-base: #f6b51e;
+    --away-light: #ffecc0;
+    --away-lighter: #fffaeb;
+    --verified-base: #47c2ff;
+    --verified-light: #c0eaff;
+    --verified-lighter: #ebf8ff;
+
+    /* Blue scale */
+    --blue-50: #ebf1ff;
+    --blue-100: #d5e2ff;
+    --blue-200: #c0d5ff;
+    --blue-300: #97baff;
+    --blue-400: #6895ff;
+    --blue-500: #335cff;
+    --blue-600: #3559e9;
+    --blue-700: #2547d0;
+    --blue-800: #1f3bad;
+    --blue-900: #182f8b;
+    --blue-950: #122368;
+
+    /* Green scale */
+    --green-50: #e0faec;
+    --green-200: #c2f5da;
+    --green-400: #3ee089;
+    --green-500: #1fc16b;
+    --green-600: #1daf61;
+    --green-800: #1a7544;
+
+    /* Overlay */
+    --overlay: rgba(2, 13, 23, 0.24);
+
+    /* ========================================
+       shadcn/ui Token Bridge
+       ======================================== */
+    --background: 0 0% 96.5%;
+    --foreground: 222 47% 8%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card-foreground: 222 47% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --radius: 0.625rem;
+    --popover-foreground: 222 47% 8%;
+    --primary: 222 47% 8%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 8%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 222 47% 8%;
+    --destructive: 355 90% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 222 47% 8%;
+    --radius: 0.75rem;
 
     /* Chart colors */
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 230 80% 60%;
+    --chart-2: 152 60% 45%;
+    --chart-3: 263 70% 55%;
+    --chart-4: 40 90% 50%;
+    --chart-5: 200 80% 55%;
 
-    /* AO Colors */
+    /* AO Colors — mapped to NeuraTalk semantic palette */
     --ao1: 217 91% 60%;
-    --ao2: 142 71% 45%;
-    --ao3: 262 83% 58%;
-    --ao4: 38 92% 50%;
+    --ao2: 152 76% 44%;
+    --ao3: 263 88% 64%;
+    --ao4: 40 93% 54%;
   }
 
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    --background: 222 47% 8%;
+    --foreground: 0 0% 95%;
+    --card: 222 30% 12%;
+    --card-foreground: 0 0% 95%;
+    --popover: 222 30% 12%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 222 47% 8%;
+    --secondary: 222 20% 16%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 222 20% 16%;
+    --muted-foreground: 220 10% 60%;
+    --accent: 222 20% 16%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 355 80% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 20% 20%;
+    --input: 222 20% 20%;
+    --ring: 0 0% 100%;
   }
 
   * {
@@ -79,12 +151,85 @@
   }
 
   ::selection {
-    @apply bg-neutral-200 text-neutral-900;
+    background: var(--blue-100);
+    color: var(--strong-950);
   }
 }
 
 @layer components {
-  /* Level badges - Clean, professional */
+  /* ========================================
+     NeuraTalk Layout Classes
+     ======================================== */
+
+  .content-wrapper {
+    @apply flex flex-col bg-white rounded-3xl
+           shadow-[0_0_1.25rem_0_rgba(0,0,0,0.03)]
+           overflow-hidden;
+  }
+
+  /* ========================================
+     NeuraTalk-inspired Button Styles
+     ======================================== */
+
+  .btn-neura {
+    @apply inline-flex items-center justify-center gap-2
+           h-11 px-5 rounded-full text-sm font-medium
+           transition-all cursor-pointer disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-neura-black {
+    @apply btn-neura bg-[--strong-950] text-white
+           hover:bg-[--strong-950]/90 border border-transparent;
+  }
+
+  .btn-neura-blue {
+    @apply btn-neura bg-gradient-to-r from-[--blue-500] to-[--blue-300]
+           text-white border border-[--stroke-soft-200]
+           hover:opacity-90;
+  }
+
+  .btn-neura-stroke {
+    @apply btn-neura bg-white border border-[--stroke-soft-200]
+           text-[--text-sub-600] hover:border-[--stroke-sub-300]
+           hover:text-[--strong-950];
+  }
+
+  /* ========================================
+     NeuraTalk Field Styles
+     ======================================== */
+
+  .field-neura {
+    @apply w-full border border-[--stroke-soft-200] text-[--strong-950]
+           transition-colors outline-none rounded-xl
+           focus:!border-[--blue-500] placeholder:text-[--text-soft-400];
+  }
+
+  .field-neura-input {
+    @apply field-neura h-12 px-4 text-sm;
+  }
+
+  .field-neura-textarea {
+    @apply field-neura p-4 text-sm resize-none;
+  }
+
+  /* ========================================
+     NeuraTalk Card Styles
+     ======================================== */
+
+  .card-neura {
+    @apply border border-[--stroke-soft-200] rounded-xl bg-white
+           shadow-[0_0_1.25rem_0_rgba(0,0,0,0.03)]
+           transition-all;
+  }
+
+  .card-neura-hover {
+    @apply card-neura hover:border-[--stroke-sub-300] hover:shadow-md;
+  }
+
+  /* ========================================
+     Level Badge System
+     ======================================== */
+
   .badge-level-5 {
     @apply bg-emerald-50 text-emerald-700 border-emerald-200;
   }
@@ -101,96 +246,59 @@
     @apply bg-red-50 text-red-700 border-red-200;
   }
 
-  /* AO color system */
-  .ao-ao1 { @apply text-blue-600; }
-  .ao-ao2 { @apply text-emerald-600; }
-  .ao-ao3 { @apply text-violet-600; }
-  .ao-ao4 { @apply text-amber-600; }
+  /* ========================================
+     AO Color System
+     ======================================== */
 
-  .ao-bg-ao1 { @apply bg-blue-50 border-blue-200; }
-  .ao-bg-ao2 { @apply bg-emerald-50 border-emerald-200; }
-  .ao-bg-ao3 { @apply bg-violet-50 border-violet-200; }
-  .ao-bg-ao4 { @apply bg-amber-50 border-amber-200; }
+  .ao-ao1 { color: var(--information-base); }
+  .ao-ao2 { color: var(--success-base); }
+  .ao-ao3 { color: var(--feature-base); }
+  .ao-ao4 { color: var(--away-base); }
 
-  /* Highlight system for marks */
+  .ao-bg-ao1 { background: var(--information-lighter); border-color: var(--information-light); }
+  .ao-bg-ao2 { background: var(--success-lighter); border-color: var(--success-light); }
+  .ao-bg-ao3 { background: var(--feature-lighter); border-color: var(--feature-light); }
+  .ao-bg-ao4 { background: var(--away-lighter); border-color: var(--away-light); }
+
+  /* ========================================
+     Highlight System
+     ======================================== */
+
   .highlight-earned {
-    @apply bg-emerald-100/80 text-emerald-900 rounded px-0.5
+    @apply bg-emerald-100/80 text-emerald-900 rounded-sm px-0.5 py-0.5
            border-b-2 border-emerald-500 cursor-pointer
            transition-all duration-200 hover:bg-emerald-200/80;
   }
 
   .highlight-lost {
-    @apply bg-red-100/80 text-red-900 rounded px-0.5
+    @apply bg-red-100/80 text-red-900 rounded-sm px-0.5 py-0.5
            border-b-2 border-red-500 cursor-pointer
            transition-all duration-200 hover:bg-red-200/80;
   }
 
-  /* Professional card styles */
-  .card-elevated {
-    @apply bg-white border border-neutral-200/60 shadow-sm
-           hover:shadow-md transition-shadow duration-300;
+  /* ========================================
+     Sidebar Navigation
+     ======================================== */
+
+  .sidebar-link {
+    @apply relative flex items-center gap-3 h-10 px-3 rounded-xl
+           text-sm font-medium transition-colors
+           text-[--text-sub-600] hover:text-[--strong-950] hover:bg-[--bg-weak-50];
   }
 
-  /* Glass morphism */
-  .glass-card {
-    @apply bg-white/70 backdrop-blur-md border border-neutral-200/50;
+  .sidebar-link-active {
+    @apply text-[--blue-500] bg-[--bg-weak-50];
   }
 
-  /* Premium button */
-  .btn-premium {
-    @apply bg-neutral-900 text-white font-medium tracking-tight
-           transition-all duration-200 shadow-sm
-           hover:bg-neutral-800 hover:shadow-md hover:-translate-y-0.5;
-  }
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  /* Typography utilities */
-  .text-display {
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    font-weight: 600;
-    letter-spacing: -0.03em;
-    line-height: 1.1;
-  }
-
-  .text-heading {
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-  }
-
-  /* Gradient backgrounds */
-  .bg-mesh {
-    background-image:
-      radial-gradient(at 0% 0%, hsl(220 80% 97%) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsl(155 80% 97%) 0px, transparent 50%),
-      radial-gradient(at 50% 100%, hsl(45 80% 97%) 0px, transparent 50%);
-  }
-
-  /* Smooth transitions */
-  .transition-premium {
-    @apply transition-all duration-300 ease-out;
-  }
-
-  /* Animation */
-  .animate-fade-in {
-    animation: fadeIn 0.5s ease-out;
-  }
-
-  .animate-slide-up {
-    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .animate-scale-in {
-    animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  .sidebar-link-active svg {
+    @apply text-[--blue-500];
   }
 }
 
-/* Keyframe animations */
+/* ========================================
+   Keyframe Animations
+   ======================================== */
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -211,10 +319,25 @@
   100% { background-position: -200% 0; }
 }
 
-/* Scrollbar styling */
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes pulseRing {
+  0% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.05); opacity: 0.15; }
+  100% { transform: scale(1); opacity: 0.3; }
+}
+
+/* ========================================
+   Scrollbar Styling
+   ======================================== */
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -222,10 +345,19 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(0 0% 85%);
-  border-radius: 4px;
+  background: var(--bg-sub-300);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(0 0% 75%);
+  background: var(--text-soft-400);
+}
+
+/* Hide scrollbar utility */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
