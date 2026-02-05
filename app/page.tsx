@@ -22,6 +22,11 @@ import {
   Lightbulb,
   GraduationCap,
   PanelLeft,
+  TrendingUp,
+  TrendingDown,
+  Sparkles,
+  Target,
+  Zap,
 } from "lucide-react";
 import {
   QUESTION_TYPE_OPTIONS,
@@ -42,31 +47,34 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EssayViewer } from "@/components/ui/essay-viewer";
+import { GradingLoader } from "@/components/ui/grading-loader";
 import Sidebar from "@/components/Sidebar";
 
 // ============================================================================
-// ANIMATION VARIANTS
+// ANIMATION VARIANTS — Brainwave-style spring easing
 // ============================================================================
 
+const springEase: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
 const pageTransition = {
-  initial: { opacity: 0, y: 10 },
+  initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -6 },
-  transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+  exit: { opacity: 0, y: -8 },
+  transition: { duration: 0.45, ease: springEase },
 };
 
 const staggerContainer = {
   animate: {
-    transition: { staggerChildren: 0.1 },
+    transition: { staggerChildren: 0.08 },
   },
 };
 
 const staggerItem = {
-  initial: { opacity: 0, y: 14 },
+  initial: { opacity: 0, y: 16 },
   animate: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+    transition: { duration: 0.5, ease: springEase },
   },
 };
 
@@ -77,48 +85,55 @@ const staggerItem = {
 type ViewState = "input" | "loading" | "results";
 
 // ============================================================================
-// SCORE COLOR HELPERS — muted professional tones
+// SCORE COLOR HELPERS — Brainwave accent colors
 // ============================================================================
 
 function getScoreColor(percentage: number): string {
-  if (percentage >= 80) return "text-[#4a9e72]";
-  if (percentage >= 60) return "text-[#5472b8]";
-  if (percentage >= 45) return "text-[#b89050]";
+  if (percentage >= 80) return "text-[#2fb862]";
+  if (percentage >= 60) return "text-[#3E90F0]";
+  if (percentage >= 45) return "text-[#DDA73F]";
   return "text-[#c75050]";
 }
 
 function getScoreRingColor(percentage: number): string {
-  if (percentage >= 80) return "stroke-[#4a9e72]";
-  if (percentage >= 60) return "stroke-[#5472b8]";
-  if (percentage >= 45) return "stroke-[#b89050]";
+  if (percentage >= 80) return "stroke-[#3FDD78]";
+  if (percentage >= 60) return "stroke-[#3E90F0]";
+  if (percentage >= 45) return "stroke-[#DDA73F]";
   return "stroke-[#c75050]";
 }
 
+function getScoreRingTrailColor(percentage: number): string {
+  if (percentage >= 80) return "rgba(63, 221, 120, 0.12)";
+  if (percentage >= 60) return "rgba(62, 144, 240, 0.12)";
+  if (percentage >= 45) return "rgba(221, 167, 63, 0.12)";
+  return "rgba(199, 80, 80, 0.12)";
+}
+
 // ============================================================================
-// LEVEL BADGE COMPONENT
+// LEVEL BADGE — Brainwave pill style
 // ============================================================================
 
 function LevelBadge({ level }: { level: number }) {
   const config: Record<number, { label: string; className: string }> = {
     5: {
       label: "Excellent",
-      className: "bg-[#eef5f1] text-[#3a7a58] border-[#c2dace]",
+      className: "badge-level-5",
     },
     4: {
       label: "Good",
-      className: "bg-[#f0f2f8] text-[#3d5390] border-[#ccd4ec]",
+      className: "badge-level-4",
     },
     3: {
       label: "Sound",
-      className: "bg-[#f7f2ea] text-[#8a6e3a] border-[#e4d6ba]",
+      className: "badge-level-3",
     },
     2: {
       label: "Basic",
-      className: "bg-[#faf5ee] text-[#9a6830] border-[#ebd8c0]",
+      className: "badge-level-2",
     },
     1: {
       label: "Limited",
-      className: "bg-[#faf2f2] text-[#963e3e] border-[#ebc8c8]",
+      className: "badge-level-1",
     },
   };
 
@@ -127,9 +142,10 @@ function LevelBadge({ level }: { level: number }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center text-xs font-medium px-3 py-1 rounded-full border",
+        "inline-flex items-center text-caption1 font-semibold font-inter px-3 py-1 border",
         className
       )}
+      style={{ borderRadius: "2rem" }}
     >
       Level {level} · {label}
     </span>
@@ -137,37 +153,33 @@ function LevelBadge({ level }: { level: number }) {
 }
 
 // ============================================================================
-// AO CONFIG & COMPONENTS — muted professional palette
+// AO CONFIG — Brainwave accent-based palette
 // ============================================================================
 
 const AO_CONFIG = {
   ao1: {
     label: "Knowledge",
-    color: "bg-[#5472b8]",
-    bgLight: "bg-[#f0f2f8]",
-    text: "text-[#5472b8]",
-    border: "border-[#ccd4ec]",
+    color: "#3E90F0",
+    bgLight: "var(--information-lighter)",
+    borderLight: "var(--information-light)",
   },
   ao2: {
     label: "Application",
-    color: "bg-[#4a9e72]",
-    bgLight: "bg-[#eef5f1]",
-    text: "text-[#4a9e72]",
-    border: "border-[#c2dace]",
+    color: "#2fb862",
+    bgLight: "var(--success-lighter)",
+    borderLight: "var(--success-light)",
   },
   ao3: {
     label: "Analysis",
-    color: "bg-[#7b6eae]",
-    bgLight: "bg-[#f0eef6]",
-    text: "text-[#7b6eae]",
-    border: "border-[#d2cde4]",
+    color: "#8E55EA",
+    bgLight: "var(--feature-lighter)",
+    borderLight: "var(--feature-light)",
   },
   ao4: {
     label: "Evaluation",
-    color: "bg-[#b89050]",
-    bgLight: "bg-[#f7f2ea]",
-    text: "text-[#b89050]",
-    border: "border-[#e4d6ba]",
+    color: "#DDA73F",
+    bgLight: "var(--away-lighter)",
+    borderLight: "var(--away-light)",
   },
 };
 
@@ -187,34 +199,39 @@ function AOScoreBar({
     <div>
       <div className="flex items-center justify-between mb-2.5">
         <div className="flex items-center gap-2.5">
-          <div className={cn("w-2 h-2 rounded-full", config.color)} />
+          <div
+            className="w-2 h-2 rounded-full"
+            style={{ background: config.color }}
+          />
           <span
-            className={cn(
-              "text-[0.7rem] font-medium font-inter uppercase tracking-wider",
-              config.text
-            )}
+            className="text-caption2 font-semibold font-inter uppercase tracking-wider"
+            style={{ color: config.color }}
           >
             {aoKey.toUpperCase()}
           </span>
-          <span className="text-[0.7rem] text-[#9ca3af]">
-            {config.label}
-          </span>
+          <span className="text-caption2 text-n-4">{config.label}</span>
         </div>
-        <span className="text-[0.875rem] font-medium font-inter tabular-nums text-[#111318]">
+        <span className="text-base2 font-semibold font-inter tabular-nums text-n-7">
           {score}
-          <span className="text-[#cdd1d9] font-normal">/{maxScore}</span>
+          <span className="text-n-3 font-normal">/{maxScore}</span>
         </span>
       </div>
-      <div className="h-1.5 rounded-full overflow-hidden bg-[#e5e7eb]">
+      <div
+        className="h-1.5 overflow-hidden"
+        style={{
+          borderRadius: "0.75rem",
+          background: "var(--n-2)",
+        }}
+      >
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${percentage}%` }}
-          transition={{
-            duration: 1,
-            ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
-            delay: 0.3,
+          transition={{ duration: 1, ease: springEase, delay: 0.3 }}
+          className="h-full"
+          style={{
+            borderRadius: "0.75rem",
+            background: config.color,
           }}
-          className={cn("h-full rounded-full", config.color)}
         />
       </div>
     </div>
@@ -227,12 +244,13 @@ function AOBadge({ ao }: { ao: string }) {
 
   return (
     <span
-      className={cn(
-        "inline-flex items-center text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border",
-        config.text,
-        config.bgLight,
-        config.border
-      )}
+      className="inline-flex items-center text-2xs font-bold uppercase tracking-wider px-2 py-0.5 border"
+      style={{
+        borderRadius: "2rem",
+        color: config.color,
+        background: config.bgLight,
+        borderColor: config.borderLight,
+      }}
     >
       {ao.toUpperCase()}
     </span>
@@ -240,7 +258,7 @@ function AOBadge({ ao }: { ao: string }) {
 }
 
 // ============================================================================
-// GRADING RESULT DISPLAY
+// GRADING RESULT DISPLAY — Brainwave cards with deep shadows
 // ============================================================================
 
 function GradingResultDisplay({
@@ -263,32 +281,75 @@ function GradingResultDisplay({
   return (
     <motion.div
       className="max-w-7xl mx-auto"
-      initial={{ opacity: 0, y: 14 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
+      transition={{ duration: 0.5, ease: springEase }}
     >
-      {/* Back Button */}
+      {/* Back Button — Brainwave subtle style */}
       <button
         onClick={onBack}
-        className="group flex items-center gap-2 text-[0.875rem] font-medium text-[#9ca3af] hover:text-[#111318] transition-colors mb-8"
+        className="group flex items-center gap-2.5 text-base2 font-inter font-semibold text-n-4 hover:text-n-7 transition-all duration-200 mb-8"
       >
-        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+        <div
+          className="flex items-center justify-center w-8 h-8 transition-all duration-200 group-hover:shadow-bw-subtle"
+          style={{
+            borderRadius: "0.5rem",
+            background: "var(--n-2)",
+            border: "2px solid var(--n-3)",
+          }}
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+        </div>
         <span>Edit Answer</span>
       </button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column - Essay View */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column — Essay View */}
         <div className="lg:col-span-7 xl:col-span-8">
           <div className="sticky top-8">
-            <div className="card-neura overflow-hidden">
-              <div className="border-b border-[#e5e7eb] bg-[#f7f8fa] px-7 py-5">
-                <h3 className="text-[1rem] font-medium font-inter text-[#111318]">
-                  Your Essay
-                </h3>
-                <p className="text-[0.75rem] text-[#9ca3af] mt-1">
-                  Click highlighted text for detailed feedback
-                </p>
+            <div className="card-bw overflow-hidden">
+              {/* Header bar */}
+              <div
+                className="px-7 py-5 flex items-center justify-between"
+                style={{
+                  borderBottom: "1px solid var(--n-3)",
+                  background: "var(--n-2)",
+                }}
+              >
+                <div>
+                  <h3 className="text-base1 font-inter text-n-7">
+                    Your Essay
+                  </h3>
+                  <p className="text-caption1 text-n-4 mt-0.5">
+                    Click highlighted text for detailed feedback
+                  </p>
+                </div>
+                {hasHighlights && (
+                  <div className="flex gap-3">
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className="w-3 h-1.5"
+                        style={{
+                          borderRadius: "1px",
+                          background: "rgba(63, 221, 120, 0.5)",
+                        }}
+                      />
+                      <span className="text-caption2 text-n-4">Earned</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className="w-3 h-1.5"
+                        style={{
+                          borderRadius: "1px",
+                          background: "rgba(199, 80, 80, 0.45)",
+                        }}
+                      />
+                      <span className="text-caption2 text-n-4">Lost</span>
+                    </div>
+                  </div>
+                )}
               </div>
+              {/* Essay content */}
               <div className="p-7">
                 {hasHighlights ? (
                   <EssayViewer
@@ -301,8 +362,14 @@ function GradingResultDisplay({
                     }
                   />
                 ) : (
-                  <div className="p-7 bg-[#f7f8fa] rounded-xl">
-                    <p className="text-[1rem] leading-relaxed text-[#4b5563] whitespace-pre-wrap">
+                  <div
+                    className="p-6"
+                    style={{
+                      borderRadius: "0.75rem",
+                      background: "var(--n-2)",
+                    }}
+                  >
+                    <p className="text-base2 leading-relaxed text-n-5 whitespace-pre-wrap">
                       {essayText}
                     </p>
                   </div>
@@ -312,29 +379,28 @@ function GradingResultDisplay({
           </div>
         </div>
 
-        {/* Right Column - Score Cards (Bento) */}
+        {/* Right Column — Score Cards (Bento) */}
         <motion.div
           className="lg:col-span-5 xl:col-span-4 space-y-5"
           variants={staggerContainer}
           initial="initial"
           animate="animate"
         >
-          {/* Overall Score Card */}
+          {/* Overall Score Card — Brainwave elevated */}
           <motion.div variants={staggerItem}>
-            <div className="card-elevated overflow-hidden">
+            <div className="card-bw-elevated overflow-hidden">
               <div className="p-7">
-                <div className="flex items-center gap-7">
+                <div className="flex items-center gap-6">
                   {/* Score Ring */}
                   <div className="relative flex-shrink-0">
-                    <svg className="w-28 h-28" viewBox="0 0 100 100">
+                    <svg className="w-[7rem] h-[7rem]" viewBox="0 0 100 100">
                       <circle
                         cx="50"
                         cy="50"
                         r="40"
-                        stroke="currentColor"
+                        stroke={getScoreRingTrailColor(result.overallPercentage)}
                         strokeWidth="7"
                         fill="none"
-                        className="text-[#e5e7eb]"
                       />
                       <motion.circle
                         cx="50"
@@ -353,7 +419,7 @@ function GradingResultDisplay({
                         }}
                         transition={{
                           duration: 1.2,
-                          ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
+                          ease: springEase,
                           delay: 0.2,
                         }}
                         strokeLinecap="round"
@@ -367,7 +433,7 @@ function GradingResultDisplay({
                     <div className="absolute inset-0 flex items-center justify-center">
                       <span
                         className={cn(
-                          "text-2xl font-bold font-inter",
+                          "text-h5 font-inter",
                           getScoreColor(result.overallPercentage)
                         )}
                       >
@@ -378,14 +444,14 @@ function GradingResultDisplay({
 
                   {/* Score Details */}
                   <div className="flex-1">
-                    <div className="text-4xl font-light text-[#111318] mb-3 tracking-tight font-inter">
+                    <div className="text-h4 font-inter text-n-7 mb-2 tracking-tight">
                       {result.totalMarks}
-                      <span className="text-lg text-[#cdd1d9] font-normal">
+                      <span className="text-h6 text-n-3 font-normal">
                         /{markScheme.total}
                       </span>
                     </div>
                     <LevelBadge level={result.levelAchieved} />
-                    <p className="text-[0.75rem] text-[#9ca3af] mt-3 leading-relaxed">
+                    <p className="text-caption1 text-n-4 mt-3 leading-relaxed">
                       {LEVEL_DESCRIPTORS[result.levelAchieved]}
                     </p>
                   </div>
@@ -394,15 +460,15 @@ function GradingResultDisplay({
             </div>
           </motion.div>
 
-          {/* AO Breakdown */}
+          {/* AO Breakdown — Brainwave card */}
           <motion.div variants={staggerItem}>
-            <div className="card-elevated overflow-hidden">
+            <div className="card-bw-elevated overflow-hidden">
               <div className="px-7 pt-6 pb-3">
-                <h4 className="text-[0.7rem] font-medium font-inter text-[#9ca3af] uppercase tracking-wider">
+                <h4 className="text-caption2 font-semibold font-inter text-n-4 uppercase tracking-wider">
                   Assessment Objectives
                 </h4>
               </div>
-              <div className="px-7 pb-6 space-y-6">
+              <div className="px-7 pb-6 space-y-5">
                 {markScheme.ao1 > 0 && (
                   <AOScoreBar
                     aoKey="ao1"
@@ -435,43 +501,67 @@ function GradingResultDisplay({
             </div>
           </motion.div>
 
-          {/* Examiner Comment */}
+          {/* Examiner Comment — Brainwave card */}
           <motion.div variants={staggerItem}>
-            <div className="card-elevated overflow-hidden">
+            <div className="card-bw-elevated overflow-hidden">
               <div className="px-7 pt-6 pb-3">
-                <h4 className="text-[0.7rem] font-medium font-inter text-[#9ca3af] uppercase tracking-wider">
+                <h4 className="text-caption2 font-semibold font-inter text-n-4 uppercase tracking-wider">
                   Examiner Feedback
                 </h4>
               </div>
               <div className="px-7 pb-6">
-                <p className="text-[0.875rem] text-[#4b5563] leading-relaxed italic">
+                <p className="text-base2 text-n-5 leading-relaxed italic">
                   &ldquo;{result.examinerComment}&rdquo;
                 </p>
               </div>
             </div>
           </motion.div>
 
-          {/* Feedback Summary */}
+          {/* Feedback Summary — Brainwave bento grid */}
           {hasHighlights && (
             <motion.div variants={staggerItem}>
               <div className="grid grid-cols-2 gap-4">
-                <div className="card-elevated p-5">
-                  <div className="text-2xl font-bold text-[#4a9e72] tracking-tight font-inter">
+                <div className="card-bw-elevated p-5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp
+                      className="w-4 h-4"
+                      style={{ color: "var(--success-dark)" }}
+                    />
+                    <span className="text-caption2 font-semibold text-n-4 uppercase tracking-wider font-inter">
+                      Earned
+                    </span>
+                  </div>
+                  <div
+                    className="text-h5 font-inter tracking-tight"
+                    style={{ color: "var(--success-dark)" }}
+                  >
                     +
                     {result.marksEarned?.reduce(
                       (sum, m) => sum + m.points,
                       0
                     ) || 0}
                   </div>
-                  <div className="text-[0.75rem] text-[#4b5563] font-medium mt-1.5">
+                  <div className="text-caption1 text-n-4 mt-1">
                     Marks Earned
                   </div>
                 </div>
-                <div className="card-elevated p-5">
-                  <div className="text-2xl font-bold text-[#c75050] tracking-tight font-inter">
+                <div className="card-bw-elevated p-5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingDown
+                      className="w-4 h-4"
+                      style={{ color: "var(--error-base)" }}
+                    />
+                    <span className="text-caption2 font-semibold text-n-4 uppercase tracking-wider font-inter">
+                      Issues
+                    </span>
+                  </div>
+                  <div
+                    className="text-h5 font-inter tracking-tight"
+                    style={{ color: "var(--error-base)" }}
+                  >
                     {result.marksLost?.length || 0}
                   </div>
-                  <div className="text-[0.75rem] text-[#4b5563] font-medium mt-1.5">
+                  <div className="text-caption1 text-n-4 mt-1">
                     Issues Found
                   </div>
                 </div>
@@ -479,23 +569,33 @@ function GradingResultDisplay({
             </motion.div>
           )}
 
-          {/* Strengths */}
+          {/* Strengths — Brainwave card */}
           <motion.div variants={staggerItem}>
-            <div className="card-elevated overflow-hidden">
+            <div className="card-bw-elevated overflow-hidden">
               <div className="px-7 pt-6 pb-3">
-                <h4 className="text-[0.7rem] font-medium font-inter text-[#4a9e72] uppercase tracking-wider flex items-center gap-2">
-                  <Check className="w-3 h-3" />
+                <h4
+                  className="text-caption2 font-semibold font-inter uppercase tracking-wider flex items-center gap-2"
+                  style={{ color: "var(--success-dark)" }}
+                >
+                  <Check className="w-3.5 h-3.5" />
                   Strengths
                 </h4>
               </div>
-              <div className="px-7 pb-6 space-y-2.5">
+              <div className="px-7 pb-6 space-y-2">
                 {result.strengths.slice(0, 3).map((strength, index) => (
                   <div
                     key={index}
-                    className="flex gap-3 p-3.5 rounded-xl bg-[#f7f8fa]"
+                    className="flex gap-3 p-3.5"
+                    style={{
+                      borderRadius: "0.75rem",
+                      background: "var(--n-2)",
+                    }}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#4a9e72] mt-1.5 flex-shrink-0" />
-                    <span className="text-[0.8rem] text-[#4b5563] leading-relaxed">
+                    <span
+                      className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
+                      style={{ background: "var(--success-dark)" }}
+                    />
+                    <span className="text-base2 text-n-5 leading-relaxed">
                       {strength}
                     </span>
                   </div>
@@ -504,23 +604,33 @@ function GradingResultDisplay({
             </div>
           </motion.div>
 
-          {/* Improvements */}
+          {/* Improvements — Brainwave card */}
           <motion.div variants={staggerItem}>
-            <div className="card-elevated overflow-hidden">
+            <div className="card-bw-elevated overflow-hidden">
               <div className="px-7 pt-6 pb-3">
-                <h4 className="text-[0.7rem] font-medium font-inter text-[#b89050] uppercase tracking-wider flex items-center gap-2">
-                  <Crosshair className="w-3 h-3" />
+                <h4
+                  className="text-caption2 font-semibold font-inter uppercase tracking-wider flex items-center gap-2"
+                  style={{ color: "var(--away-base)" }}
+                >
+                  <Target className="w-3.5 h-3.5" />
                   Areas to Improve
                 </h4>
               </div>
-              <div className="px-7 pb-6 space-y-2.5">
+              <div className="px-7 pb-6 space-y-2">
                 {result.improvements.slice(0, 3).map((improvement, index) => (
                   <div
                     key={index}
-                    className="flex gap-3 p-3.5 rounded-xl bg-[#f7f8fa]"
+                    className="flex gap-3 p-3.5"
+                    style={{
+                      borderRadius: "0.75rem",
+                      background: "var(--n-2)",
+                    }}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#b89050] mt-1.5 flex-shrink-0" />
-                    <span className="text-[0.8rem] text-[#4b5563] leading-relaxed">
+                    <span
+                      className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
+                      style={{ background: "var(--away-base)" }}
+                    />
+                    <span className="text-base2 text-n-5 leading-relaxed">
                       {improvement}
                     </span>
                   </div>
@@ -535,7 +645,7 @@ function GradingResultDisplay({
 }
 
 // ============================================================================
-// PLAN RESULT DISPLAY
+// PLAN RESULT DISPLAY — Brainwave card-based layout
 // ============================================================================
 
 function PlanResultDisplay({
@@ -550,32 +660,46 @@ function PlanResultDisplay({
   return (
     <motion.div
       className="max-w-4xl mx-auto"
-      initial={{ opacity: 0, y: 14 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
+      transition={{ duration: 0.5, ease: springEase }}
     >
       {/* Back Button */}
       <button
         onClick={onBack}
-        className="group flex items-center gap-2 text-[0.875rem] font-medium text-[#9ca3af] hover:text-[#111318] transition-colors mb-8"
+        className="group flex items-center gap-2.5 text-base2 font-inter font-semibold text-n-4 hover:text-n-7 transition-all duration-200 mb-8"
       >
-        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+        <div
+          className="flex items-center justify-center w-8 h-8 transition-all duration-200 group-hover:shadow-bw-subtle"
+          style={{
+            borderRadius: "0.5rem",
+            background: "var(--n-2)",
+            border: "2px solid var(--n-3)",
+          }}
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+        </div>
         <span>Edit Question</span>
       </button>
 
-      {/* Detail Toggle */}
-      <div className="flex items-center justify-between mb-8 p-5 rounded-2xl bg-[#f7f8fa] border border-[#e5e7eb]">
+      {/* Detail Toggle — Brainwave field style */}
+      <div
+        className="flex items-center justify-between mb-8 p-5"
+        style={{
+          borderRadius: "0.75rem",
+          background: "var(--n-2)",
+          border: "2px solid var(--n-3)",
+        }}
+      >
         <div className="flex items-center gap-3">
           {showDetailedPlan ? (
-            <Eye className="w-5 h-5 text-[#4b5563]" />
+            <Eye className="w-5 h-5 text-n-5" />
           ) : (
-            <EyeOff className="w-5 h-5 text-[#9ca3af]" />
+            <EyeOff className="w-5 h-5 text-n-4" />
           )}
           <div>
-            <p className="text-[0.875rem] font-medium font-inter text-[#111318]">
-              Detailed View
-            </p>
-            <p className="text-[0.75rem] text-[#9ca3af]">
+            <p className="text-base2 font-inter text-n-7">Detailed View</p>
+            <p className="text-caption1 text-n-4">
               Show examples, chains of reasoning, and techniques
             </p>
           </div>
@@ -583,7 +707,7 @@ function PlanResultDisplay({
         <Switch
           checked={showDetailedPlan}
           onCheckedChange={setShowDetailedPlan}
-          className="data-[state=checked]:bg-[#5472b8]"
+          className="data-[state=checked]:bg-primary-1"
         />
       </div>
 
@@ -595,32 +719,52 @@ function PlanResultDisplay({
       >
         {/* Introduction */}
         <motion.div variants={staggerItem}>
-          <div className="card-neura-hover overflow-hidden">
-            <div className="border-b border-[#e5e7eb] bg-[#f7f8fa] px-7 py-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#111318] text-white text-[0.875rem] font-medium font-inter">
-                    1
-                  </span>
-                  <div>
-                    <h3 className="text-[1rem] font-medium font-inter text-[#111318]">
-                      Introduction
-                    </h3>
-                    <p className="text-[0.75rem] text-[#9ca3af] mt-0.5">
-                      Define key terms and state your thesis
-                    </p>
-                  </div>
+          <div className="card-bw-hover overflow-hidden">
+            <div
+              className="px-7 py-5 flex items-center justify-between"
+              style={{
+                borderBottom: "1px solid var(--n-3)",
+                background: "var(--n-2)",
+              }}
+            >
+              <div className="flex items-center gap-4">
+                <span
+                  className="flex items-center justify-center w-10 h-10 text-white text-base2 font-inter"
+                  style={{
+                    borderRadius: "0.75rem",
+                    background: "var(--n-7)",
+                  }}
+                >
+                  1
+                </span>
+                <div>
+                  <h3 className="text-base1 font-inter text-n-7">
+                    Introduction
+                  </h3>
+                  <p className="text-caption1 text-n-4 mt-0.5">
+                    Define key terms and state your thesis
+                  </p>
                 </div>
-                <AOBadge ao="ao1" />
               </div>
+              <AOBadge ao="ao1" />
             </div>
             <div className="p-7">
-              <div className="p-5 rounded-xl bg-[#f7f2ea] border border-[#e4d6ba]">
-                <p className="text-[10px] font-bold text-[#8a6e3a] uppercase tracking-wider mb-2.5 flex items-center gap-1.5 font-inter">
-                  <Lightbulb className="w-3 h-3" />
+              <div
+                className="p-5 border"
+                style={{
+                  borderRadius: "0.75rem",
+                  background: "var(--away-lighter)",
+                  borderColor: "var(--away-light)",
+                }}
+              >
+                <p
+                  className="text-caption2 font-bold uppercase tracking-wider mb-2.5 flex items-center gap-1.5 font-inter"
+                  style={{ color: "#a07a2d" }}
+                >
+                  <Lightbulb className="w-3.5 h-3.5" />
                   What to Write
                 </p>
-                <p className="text-[0.875rem] text-[#4b5563] leading-relaxed">
+                <p className="text-base2 text-n-5 leading-relaxed">
                   {result.introduction?.whatToWrite || result.thesis}
                 </p>
               </div>
@@ -631,32 +775,40 @@ function PlanResultDisplay({
         {/* Arguments */}
         {result.arguments.map((arg, index) => (
           <motion.div key={index} variants={staggerItem}>
-            <div className="card-neura-hover overflow-hidden">
-              <div className="border-b border-[#e5e7eb] bg-[#f7f8fa] px-7 py-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <span
-                      className={cn(
-                        "flex items-center justify-center w-10 h-10 rounded-xl text-white text-[0.875rem] font-medium font-inter",
-                        index === 0 ? "bg-[#4a9e72]" : "bg-[#c75050]"
-                      )}
-                    >
-                      {index + 2}
-                    </span>
-                    <div>
-                      <h3 className="text-[1rem] font-medium font-inter text-[#111318]">
-                        Argument {index === 0 ? "FOR" : "AGAINST"}
-                      </h3>
-                      <p className="text-[0.75rem] text-[#9ca3af] mt-0.5 max-w-md truncate">
-                        {arg.point}
-                      </p>
-                    </div>
+            <div className="card-bw-hover overflow-hidden">
+              <div
+                className="px-7 py-5 flex items-center justify-between"
+                style={{
+                  borderBottom: "1px solid var(--n-3)",
+                  background: "var(--n-2)",
+                }}
+              >
+                <div className="flex items-center gap-4">
+                  <span
+                    className="flex items-center justify-center w-10 h-10 text-white text-base2 font-inter"
+                    style={{
+                      borderRadius: "0.75rem",
+                      background:
+                        index === 0
+                          ? "var(--success-dark)"
+                          : "var(--error-base)",
+                    }}
+                  >
+                    {index + 2}
+                  </span>
+                  <div>
+                    <h3 className="text-base1 font-inter text-n-7">
+                      Argument {index === 0 ? "FOR" : "AGAINST"}
+                    </h3>
+                    <p className="text-caption1 text-n-4 mt-0.5 max-w-md truncate">
+                      {arg.point}
+                    </p>
                   </div>
-                  <div className="flex gap-1.5">
-                    <AOBadge ao="ao1" />
-                    <AOBadge ao="ao2" />
-                    <AOBadge ao="ao3" />
-                  </div>
+                </div>
+                <div className="flex gap-1.5">
+                  <AOBadge ao="ao1" />
+                  <AOBadge ao="ao2" />
+                  <AOBadge ao="ao3" />
                 </div>
               </div>
               <div className="p-7 space-y-5">
@@ -664,13 +816,27 @@ function PlanResultDisplay({
                 {showDetailedPlan &&
                   arg.chainOfReasoning &&
                   arg.chainOfReasoning.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-2 p-5 bg-[#f7f8fa] rounded-xl border border-[#e5e7eb]">
-                      <span className="text-[10px] font-bold text-[#9ca3af] uppercase tracking-wider mr-2 font-inter">
+                    <div
+                      className="flex flex-wrap items-center gap-2 p-5 border"
+                      style={{
+                        borderRadius: "0.75rem",
+                        background: "var(--n-2)",
+                        borderColor: "var(--n-3)",
+                      }}
+                    >
+                      <span className="text-caption2 font-bold text-n-4 uppercase tracking-wider mr-2 font-inter">
                         Chain:
                       </span>
                       {arg.chainOfReasoning.slice(0, 5).map((step, i) => (
                         <span key={i} className="flex items-center gap-2">
-                          <span className="px-3 py-1.5 bg-white rounded-lg text-[0.75rem] text-[#4b5563] font-medium border border-[#e5e7eb]">
+                          <span
+                            className="px-3 py-1.5 text-caption1 text-n-5 font-medium border"
+                            style={{
+                              background: "var(--n-1)",
+                              borderColor: "var(--n-3)",
+                              borderRadius: "0.5rem",
+                            }}
+                          >
                             {step}
                           </span>
                           {arg.chainOfReasoning &&
@@ -679,7 +845,7 @@ function PlanResultDisplay({
                                 arg.chainOfReasoning.length - 1,
                                 4
                               ) && (
-                              <ChevronRight className="w-3 h-3 text-[#cdd1d9]" />
+                              <ChevronRight className="w-3 h-3 text-n-3" />
                             )}
                         </span>
                       ))}
@@ -689,28 +855,55 @@ function PlanResultDisplay({
                 {/* Theory and Example */}
                 {showDetailedPlan ? (
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div className="p-5 rounded-xl bg-[#f0f2f8] border border-[#ccd4ec]">
-                      <p className="text-[10px] font-bold text-[#5472b8] uppercase tracking-wider mb-2.5 flex items-center gap-1.5 font-inter">
-                        <BookOpen className="w-3 h-3" />
+                    <div
+                      className="p-5 border"
+                      style={{
+                        borderRadius: "0.75rem",
+                        background: "var(--information-lighter)",
+                        borderColor: "var(--information-light)",
+                      }}
+                    >
+                      <p
+                        className="text-caption2 font-bold uppercase tracking-wider mb-2.5 flex items-center gap-1.5 font-inter"
+                        style={{ color: "var(--information-base)" }}
+                      >
+                        <BookOpen className="w-3.5 h-3.5" />
                         Theory / Explanation
                       </p>
-                      <p className="text-[0.875rem] text-[#4b5563] leading-relaxed">
+                      <p className="text-base2 text-n-5 leading-relaxed">
                         {arg.explanation}
                       </p>
                     </div>
-                    <div className="p-5 rounded-xl bg-[#eef5f1] border border-[#c2dace]">
-                      <p className="text-[10px] font-bold text-[#4a9e72] uppercase tracking-wider mb-2.5 flex items-center gap-1.5 font-inter">
-                        <GraduationCap className="w-3 h-3" />
+                    <div
+                      className="p-5 border"
+                      style={{
+                        borderRadius: "0.75rem",
+                        background: "var(--success-lighter)",
+                        borderColor: "var(--success-light)",
+                      }}
+                    >
+                      <p
+                        className="text-caption2 font-bold uppercase tracking-wider mb-2.5 flex items-center gap-1.5 font-inter"
+                        style={{ color: "var(--success-dark)" }}
+                      >
+                        <GraduationCap className="w-3.5 h-3.5" />
                         Real-World Example
                       </p>
-                      <p className="text-[0.875rem] text-[#4b5563] leading-relaxed">
+                      <p className="text-base2 text-n-5 leading-relaxed">
                         {arg.example}
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <div className="p-5 rounded-xl bg-[#f7f8fa] border border-[#e5e7eb]">
-                    <p className="text-[0.875rem] font-medium font-inter text-[#111318]">
+                  <div
+                    className="p-5 border"
+                    style={{
+                      borderRadius: "0.75rem",
+                      background: "var(--n-2)",
+                      borderColor: "var(--n-3)",
+                    }}
+                  >
+                    <p className="text-base2 font-inter text-n-7">
                       {arg.point}
                     </p>
                   </div>
@@ -722,33 +915,53 @@ function PlanResultDisplay({
 
         {/* Evaluation */}
         <motion.div variants={staggerItem}>
-          <div className="card-neura-hover overflow-hidden">
-            <div className="border-b border-[#d2cde4] bg-[#f0eef6] px-7 py-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#7b6eae] text-white text-[0.875rem] font-medium font-inter">
-                    {result.arguments.length + 2}
-                  </span>
-                  <div>
-                    <h3 className="text-[1rem] font-medium font-inter text-[#111318]">
-                      Deeper Evaluation
-                    </h3>
-                    <p className="text-[0.75rem] text-[#4b5563] mt-0.5">
-                      Critical analysis and limitations
-                    </p>
-                  </div>
+          <div className="card-bw-hover overflow-hidden">
+            <div
+              className="px-7 py-5 flex items-center justify-between"
+              style={{
+                borderBottom: "1px solid var(--feature-light)",
+                background: "var(--feature-lighter)",
+              }}
+            >
+              <div className="flex items-center gap-4">
+                <span
+                  className="flex items-center justify-center w-10 h-10 text-white text-base2 font-inter"
+                  style={{
+                    borderRadius: "0.75rem",
+                    background: "var(--feature-base)",
+                  }}
+                >
+                  {result.arguments.length + 2}
+                </span>
+                <div>
+                  <h3 className="text-base1 font-inter text-n-7">
+                    Deeper Evaluation
+                  </h3>
+                  <p className="text-caption1 text-n-5 mt-0.5">
+                    Critical analysis and limitations
+                  </p>
                 </div>
-                <div className="flex gap-1.5">
-                  <AOBadge ao="ao3" />
-                  <AOBadge ao="ao4" />
-                </div>
+              </div>
+              <div className="flex gap-1.5">
+                <AOBadge ao="ao3" />
+                <AOBadge ao="ao4" />
               </div>
             </div>
             <div className="p-7 space-y-5">
               {showDetailedPlan && (
-                <div className="p-5 rounded-xl bg-[#f0eef6] border border-[#d2cde4]">
-                  <p className="text-[10px] font-bold text-[#7b6eae] uppercase tracking-wider mb-3 flex items-center gap-1.5 font-inter">
-                    <Crosshair className="w-3 h-3" />
+                <div
+                  className="p-5 border"
+                  style={{
+                    borderRadius: "0.75rem",
+                    background: "var(--feature-lighter)",
+                    borderColor: "var(--feature-light)",
+                  }}
+                >
+                  <p
+                    className="text-caption2 font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5 font-inter"
+                    style={{ color: "var(--feature-base)" }}
+                  >
+                    <Crosshair className="w-3.5 h-3.5" />
                     Evaluation Techniques
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -762,7 +975,13 @@ function PlanResultDisplay({
                     ).map((technique, i) => (
                       <span
                         key={i}
-                        className="px-3 py-1.5 bg-white rounded-lg text-[0.75rem] text-[#7b6eae] font-medium border border-[#d2cde4]"
+                        className="px-3 py-1.5 text-caption1 font-medium border"
+                        style={{
+                          borderRadius: "0.5rem",
+                          background: "var(--n-1)",
+                          borderColor: "var(--feature-light)",
+                          color: "var(--feature-base)",
+                        }}
                       >
                         {technique}
                       </span>
@@ -776,13 +995,21 @@ function PlanResultDisplay({
                 .map((evaluation, index) => (
                   <div
                     key={index}
-                    className="p-5 rounded-xl bg-[#f7f2ea] border border-[#e4d6ba]"
+                    className="p-5 border"
+                    style={{
+                      borderRadius: "0.75rem",
+                      background: "var(--away-lighter)",
+                      borderColor: "var(--away-light)",
+                    }}
                   >
-                    <h5 className="text-[0.875rem] font-medium font-inter text-[#8a6e3a] mb-2">
+                    <h5
+                      className="text-base2 font-inter mb-2"
+                      style={{ color: "#a07a2d" }}
+                    >
                       {evaluation.point}
                     </h5>
                     {showDetailedPlan && (
-                      <p className="text-[0.875rem] text-[#4b5563] leading-relaxed">
+                      <p className="text-base2 text-n-5 leading-relaxed">
                         {evaluation.development}
                       </p>
                     )}
@@ -795,21 +1022,31 @@ function PlanResultDisplay({
         {/* Diagram */}
         {result.diagram && result.diagram !== "none" && (
           <motion.div variants={staggerItem}>
-            <div className="card-neura-hover overflow-hidden">
-              <div className="border-b border-[#c4dce6] bg-[#edf4f7] px-7 py-5">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-[#5aa0be] flex items-center justify-center">
-                    <BarChart3 className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-[0.875rem] font-medium font-inter uppercase tracking-wide text-[#111318]">
-                      Required Diagram
-                    </h3>
-                    <p className="text-[0.75rem] text-[#9ca3af] mt-0.5">
-                      {result.diagramSection?.name ||
-                        result.diagram.replace("-", " ")}
-                    </p>
-                  </div>
+            <div className="card-bw-hover overflow-hidden">
+              <div
+                className="px-7 py-5 flex items-center gap-4"
+                style={{
+                  borderBottom: "1px solid var(--verified-light)",
+                  background: "var(--verified-lighter)",
+                }}
+              >
+                <div
+                  className="w-10 h-10 flex items-center justify-center"
+                  style={{
+                    borderRadius: "0.75rem",
+                    background: "var(--verified-base)",
+                  }}
+                >
+                  <BarChart3 className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-base2 font-inter uppercase tracking-wide text-n-7">
+                    Required Diagram
+                  </h3>
+                  <p className="text-caption1 text-n-4 mt-0.5">
+                    {result.diagramSection?.name ||
+                      result.diagram.replace("-", " ")}
+                  </p>
                 </div>
               </div>
               <div className="p-7">
@@ -819,7 +1056,11 @@ function PlanResultDisplay({
                       <Badge
                         key={i}
                         variant="secondary"
-                        className="text-[0.75rem] font-medium bg-[#f7f8fa] border border-[#e5e7eb]"
+                        className="text-caption1 font-medium border"
+                        style={{
+                          background: "var(--n-2)",
+                          borderColor: "var(--n-3)",
+                        }}
                       >
                         {label}
                       </Badge>
@@ -827,7 +1068,7 @@ function PlanResultDisplay({
                   </div>
                 )}
                 {result.diagramExplanation && (
-                  <p className="text-[0.875rem] text-[#4b5563] leading-relaxed">
+                  <p className="text-base2 text-n-5 leading-relaxed">
                     {result.diagramExplanation}
                   </p>
                 )}
@@ -838,27 +1079,37 @@ function PlanResultDisplay({
 
         {/* Conclusion */}
         <motion.div variants={staggerItem}>
-          <div className="card-neura-hover overflow-hidden">
-            <div className="border-b border-[#c2dace] bg-[#eef5f1] px-7 py-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#4a9e72] text-white text-[0.875rem] font-medium font-inter">
-                    {result.arguments.length + 3}
-                  </span>
-                  <div>
-                    <h3 className="text-[1rem] font-medium font-inter text-[#111318]">
-                      Conclusion
-                    </h3>
-                    <p className="text-[0.75rem] text-[#4b5563] mt-0.5">
-                      Weigh evidence and give your judgement
-                    </p>
-                  </div>
+          <div className="card-bw-hover overflow-hidden">
+            <div
+              className="px-7 py-5 flex items-center justify-between"
+              style={{
+                borderBottom: "1px solid var(--success-light)",
+                background: "var(--success-lighter)",
+              }}
+            >
+              <div className="flex items-center gap-4">
+                <span
+                  className="flex items-center justify-center w-10 h-10 text-white text-base2 font-inter"
+                  style={{
+                    borderRadius: "0.75rem",
+                    background: "var(--success-dark)",
+                  }}
+                >
+                  {result.arguments.length + 3}
+                </span>
+                <div>
+                  <h3 className="text-base1 font-inter text-n-7">
+                    Conclusion
+                  </h3>
+                  <p className="text-caption1 text-n-5 mt-0.5">
+                    Weigh evidence and give your judgement
+                  </p>
                 </div>
-                <AOBadge ao="ao4" />
               </div>
+              <AOBadge ao="ao4" />
             </div>
             <div className="p-7">
-              <p className="text-[0.875rem] text-[#4b5563] leading-relaxed">
+              <p className="text-base2 text-n-5 leading-relaxed">
                 {result.conclusion}
               </p>
             </div>
@@ -870,7 +1121,7 @@ function PlanResultDisplay({
 }
 
 // ============================================================================
-// DIAGRAM UPLOAD COMPONENT
+// DIAGRAM UPLOAD — Brainwave field style
 // ============================================================================
 
 function DiagramUpload({
@@ -901,18 +1152,26 @@ function DiagramUpload({
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <label className="text-[0.875rem] font-medium font-inter text-[#111318]">
+          <label className="text-base2 font-inter text-n-7">
             Diagram Uploaded
           </label>
           <button
             onClick={onRemove}
-            className="flex items-center gap-1.5 text-[0.75rem] text-[#c75050] hover:text-[#963e3e] transition-colors"
+            className="flex items-center gap-1.5 text-caption1 transition-colors"
+            style={{ color: "var(--error-base)" }}
           >
             <Trash2 className="w-3.5 h-3.5" />
             Remove
           </button>
         </div>
-        <div className="rounded-xl overflow-hidden border border-[#e5e7eb] bg-white">
+        <div
+          className="overflow-hidden border"
+          style={{
+            borderRadius: "0.75rem",
+            borderColor: "var(--n-3)",
+            background: "var(--n-1)",
+          }}
+        >
           <img
             src={image}
             alt="Uploaded diagram"
@@ -926,26 +1185,48 @@ function DiagramUpload({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="text-[0.875rem] font-medium font-inter text-[#111318]">
+        <label className="text-base2 font-inter text-n-7">
           Diagram Upload
         </label>
-        <span className="text-[10px] font-medium text-[#9ca3af] bg-[#f7f8fa] px-2 py-0.5 rounded-full border border-[#e5e7eb]">
+        <span
+          className="text-caption2 font-semibold text-n-4 px-2 py-0.5"
+          style={{
+            background: "var(--n-2)",
+            borderRadius: "0.375rem",
+          }}
+        >
           Optional
         </span>
       </div>
       <div
-        className="flex flex-col items-center justify-center p-10 rounded-xl cursor-pointer transition-all border-2 border-dashed border-[#e5e7eb] hover:border-[#cdd1d9] bg-[#f7f8fa] hover:bg-[#f0f1f4] group"
+        className="flex flex-col items-center justify-center p-10 cursor-pointer transition-all duration-200 group"
         onClick={() => fileInputRef.current?.click()}
+        style={{
+          borderRadius: "0.75rem",
+          border: "2px dashed var(--n-3)",
+          background: "var(--n-2)",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = "var(--primary-1)";
+          e.currentTarget.style.background = "rgba(0, 132, 255, 0.03)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = "var(--n-3)";
+          e.currentTarget.style.background = "var(--n-2)";
+        }}
       >
-        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center mb-3 group-hover:bg-[#f7f8fa] transition-colors" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
-          <Upload className="w-5 h-5 text-[#9ca3af] group-hover:text-[#4b5563]" />
+        <div
+          className="w-12 h-12 flex items-center justify-center mb-3 transition-all duration-200"
+          style={{
+            borderRadius: "0.75rem",
+            background: "var(--n-1)",
+            boxShadow: "0 0.125rem 0.25rem rgba(0,0,0,0.06)",
+          }}
+        >
+          <Upload className="w-5 h-5 text-n-4 group-hover:text-primary-1 transition-colors" />
         </div>
-        <span className="text-[0.875rem] font-medium text-[#4b5563] mb-1">
-          Click to upload
-        </span>
-        <span className="text-[0.75rem] text-[#9ca3af]">
-          PNG, JPG up to 10MB
-        </span>
+        <span className="text-base2 text-n-5 mb-1">Click to upload</span>
+        <span className="text-caption1 text-n-4">PNG, JPG up to 10MB</span>
       </div>
       <input
         ref={fileInputRef}
@@ -962,7 +1243,7 @@ function DiagramUpload({
 }
 
 // ============================================================================
-// GRADER INPUT FORM
+// GRADER INPUT FORM — Brainwave field + button patterns
 // ============================================================================
 
 function GraderInputForm({
@@ -994,31 +1275,43 @@ function GraderInputForm({
 }) {
   return (
     <motion.div className="max-w-2xl mx-auto" {...pageTransition}>
-      {/* Header */}
+      {/* Header — Brainwave centered hero */}
       <div className="text-center mb-12">
-        <div className="flex justify-center items-center w-16 h-16 rounded-2xl bg-[#f7f8fa] mx-auto mb-5" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
-          <Pen className="w-6 h-6 text-[#4b5563]" />
+        <div
+          className="flex justify-center items-center w-15 h-15 mx-auto mb-5"
+          style={{
+            borderRadius: "1rem",
+            background: "var(--n-2)",
+            border: "2px solid var(--n-3)",
+            boxShadow:
+              "0 0.125rem 0.125rem rgba(0,0,0,0.07), inset 0 0.25rem 0.125rem #FFFFFF",
+          }}
+        >
+          <Pen className="w-6 h-6 text-n-4" />
         </div>
-        <h2 className="text-[1.25rem] font-medium font-inter-display text-[#111318] tracking-tight mb-2">
+        <h2 className="text-h6 font-inter text-n-7 tracking-tight mb-2">
           Grade Your Answer
         </h2>
-        <p className="text-[0.875rem] text-[#9ca3af]">
+        <p className="text-base2 text-n-4">
           AI-powered feedback aligned with Edexcel mark schemes
         </p>
       </div>
 
-      <div className="card-neura overflow-hidden">
+      <div className="card-bw overflow-hidden">
         <div className="p-8 space-y-7">
           {/* Question Type */}
           <div className="space-y-2.5">
-            <label className="text-[0.875rem] font-medium font-inter text-[#111318]">
+            <label className="text-base2 font-inter text-n-7">
               Question Type
             </label>
             <Select
               value={questionType}
               onValueChange={(v) => setQuestionType(v as QuestionType)}
             >
-              <SelectTrigger className="h-12 rounded-xl bg-[#f7f8fa] border-[#e5e7eb] hover:bg-[#f0f1f4] transition-colors focus:!border-[#5472b8]">
+              <SelectTrigger
+                className="h-13 bg-n-2 border-2 border-n-3 hover:bg-transparent transition-all duration-200 focus:border-primary-1 focus:bg-transparent text-n-7"
+                style={{ borderRadius: "0.75rem" }}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1033,27 +1326,27 @@ function GraderInputForm({
 
           {/* Exam Question */}
           <div className="space-y-2.5">
-            <label className="text-[0.875rem] font-medium font-inter text-[#111318]">
+            <label className="text-base2 font-inter text-n-7">
               Exam Question
             </label>
-            <Textarea
+            <textarea
               placeholder="Paste the exam question here..."
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              className="min-h-[100px] resize-none rounded-xl bg-[#f7f8fa] border-[#e5e7eb] text-[#111318] transition-colors outline-none focus:!border-[#5472b8] focus:bg-white placeholder:text-[#9ca3af]"
+              className="field-bw-textarea min-h-[100px]"
             />
           </div>
 
           {/* Student Answer */}
           <div className="space-y-2.5">
-            <label className="text-[0.875rem] font-medium font-inter text-[#111318]">
+            <label className="text-base2 font-inter text-n-7">
               Student Answer
             </label>
-            <Textarea
+            <textarea
               placeholder="Paste the student's answer here for grading..."
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
-              className="min-h-[200px] resize-none rounded-xl bg-[#f7f8fa] border-[#e5e7eb] text-[#111318] transition-colors outline-none focus:!border-[#5472b8] focus:bg-white placeholder:text-[#9ca3af]"
+              className="field-bw-textarea min-h-[200px]"
             />
           </div>
 
@@ -1068,19 +1361,24 @@ function GraderInputForm({
           {error && (
             <Alert
               variant="destructive"
-              className="rounded-xl border-[#ebc8c8] bg-[#faf2f2]"
+              className="border"
+              style={{
+                borderRadius: "0.75rem",
+                borderColor: "var(--error-light)",
+                background: "var(--error-lighter)",
+              }}
             >
-              <AlertCircle className="h-4 w-4 text-[#c75050]" />
-              <AlertDescription className="text-[#c75050]">
+              <AlertCircle className="h-4 w-4" style={{ color: "var(--error-base)" }} />
+              <AlertDescription style={{ color: "var(--error-base)" }}>
                 {error}
               </AlertDescription>
             </Alert>
           )}
 
-          {/* Actions */}
-          <div className="flex gap-3 pt-3">
+          {/* Actions — Brainwave button pattern */}
+          <div className="flex gap-3 pt-2">
             <button
-              className="btn-neura-blue flex-1 h-12"
+              className="btn-bw-dark flex-1"
               onClick={onSubmit}
               disabled={loading}
             >
@@ -1091,12 +1389,12 @@ function GraderInputForm({
                 </>
               ) : (
                 <>
-                  <Wand2 className="w-4 h-4" />
+                  <Sparkles className="w-4 h-4" />
                   Grade Answer
                 </>
               )}
             </button>
-            <button className="btn-neura-stroke h-12 px-6" onClick={onClear}>
+            <button className="btn-bw-stroke" onClick={onClear}>
               Clear
             </button>
           </div>
@@ -1133,29 +1431,41 @@ function PlannerInputForm({
     <motion.div className="max-w-2xl mx-auto" {...pageTransition}>
       {/* Header */}
       <div className="text-center mb-12">
-        <div className="flex justify-center items-center w-16 h-16 rounded-2xl bg-[#f7f8fa] mx-auto mb-5" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
-          <FileText className="w-6 h-6 text-[#4b5563]" />
+        <div
+          className="flex justify-center items-center w-15 h-15 mx-auto mb-5"
+          style={{
+            borderRadius: "1rem",
+            background: "var(--n-2)",
+            border: "2px solid var(--n-3)",
+            boxShadow:
+              "0 0.125rem 0.125rem rgba(0,0,0,0.07), inset 0 0.25rem 0.125rem #FFFFFF",
+          }}
+        >
+          <FileText className="w-6 h-6 text-n-4" />
         </div>
-        <h2 className="text-[1.25rem] font-medium font-inter-display text-[#111318] tracking-tight mb-2">
+        <h2 className="text-h6 font-inter text-n-7 tracking-tight mb-2">
           Plan Your Essay
         </h2>
-        <p className="text-[0.875rem] text-[#9ca3af]">
+        <p className="text-base2 text-n-4">
           Generate a comprehensive A*-grade essay structure
         </p>
       </div>
 
-      <div className="card-neura overflow-hidden">
+      <div className="card-bw overflow-hidden">
         <div className="p-8 space-y-7">
           {/* Question Type */}
           <div className="space-y-2.5">
-            <label className="text-[0.875rem] font-medium font-inter text-[#111318]">
+            <label className="text-base2 font-inter text-n-7">
               Question Type
             </label>
             <Select
               value={questionType}
               onValueChange={(v) => setQuestionType(v as QuestionType)}
             >
-              <SelectTrigger className="h-12 rounded-xl bg-[#f7f8fa] border-[#e5e7eb] hover:bg-[#f0f1f4] transition-colors focus:!border-[#5472b8]">
+              <SelectTrigger
+                className="h-13 bg-n-2 border-2 border-n-3 hover:bg-transparent transition-all duration-200 focus:border-primary-1 focus:bg-transparent text-n-7"
+                style={{ borderRadius: "0.75rem" }}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1170,14 +1480,14 @@ function PlannerInputForm({
 
           {/* Essay Question */}
           <div className="space-y-2.5">
-            <label className="text-[0.875rem] font-medium font-inter text-[#111318]">
+            <label className="text-base2 font-inter text-n-7">
               Essay Question
             </label>
-            <Textarea
+            <textarea
               placeholder="Type or paste the essay question here..."
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              className="min-h-[140px] resize-none rounded-xl bg-[#f7f8fa] border-[#e5e7eb] text-[#111318] transition-colors outline-none focus:!border-[#5472b8] focus:bg-white placeholder:text-[#9ca3af]"
+              className="field-bw-textarea min-h-[140px]"
             />
           </div>
 
@@ -1185,19 +1495,24 @@ function PlannerInputForm({
           {error && (
             <Alert
               variant="destructive"
-              className="rounded-xl border-[#ebc8c8] bg-[#faf2f2]"
+              className="border"
+              style={{
+                borderRadius: "0.75rem",
+                borderColor: "var(--error-light)",
+                background: "var(--error-lighter)",
+              }}
             >
-              <AlertCircle className="h-4 w-4 text-[#c75050]" />
-              <AlertDescription className="text-[#c75050]">
+              <AlertCircle className="h-4 w-4" style={{ color: "var(--error-base)" }} />
+              <AlertDescription style={{ color: "var(--error-base)" }}>
                 {error}
               </AlertDescription>
             </Alert>
           )}
 
           {/* Actions */}
-          <div className="flex gap-3 pt-3">
+          <div className="flex gap-3 pt-2">
             <button
-              className="btn-neura-blue flex-1 h-12"
+              className="btn-bw-dark flex-1"
               onClick={onSubmit}
               disabled={loading}
             >
@@ -1208,41 +1523,17 @@ function PlannerInputForm({
                 </>
               ) : (
                 <>
-                  <Wand2 className="w-4 h-4" />
+                  <Sparkles className="w-4 h-4" />
                   Generate Plan
                 </>
               )}
             </button>
-            <button className="btn-neura-stroke h-12 px-6" onClick={onClear}>
+            <button className="btn-bw-stroke" onClick={onClear}>
               Clear
             </button>
           </div>
         </div>
       </div>
-    </motion.div>
-  );
-}
-
-// ============================================================================
-// LOADING VIEW
-// ============================================================================
-
-function LoadingView({ message }: { message: string }) {
-  return (
-    <motion.div
-      className="max-w-md mx-auto text-center py-28"
-      initial={{ opacity: 0, scale: 0.96 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-    >
-      <div className="relative w-20 h-20 mx-auto mb-10">
-        <div className="absolute inset-0 rounded-full border-[3px] border-[#e5e7eb]" />
-        <div className="absolute inset-0 rounded-full border-[3px] border-[#5472b8] border-t-transparent animate-spin" />
-      </div>
-      <h3 className="text-[1.125rem] font-medium font-inter-display text-[#111318] mb-2">
-        {message}
-      </h3>
-      <p className="text-[0.875rem] text-[#9ca3af]">Powered by Claude AI</p>
     </motion.div>
   );
 }
@@ -1393,23 +1684,28 @@ export default function HomePage() {
         onClose={() => setSidebarVisible(false)}
       />
 
-      {/* Main Content Area */}
-      <div className="pl-[19rem] pt-8 pb-5 pr-5 transition-all max-lg:pl-5 max-md:pl-4 max-md:pr-4 max-md:pt-3 max-md:pb-4">
-        {/* Header Bar — minimal */}
+      {/* Main Content — Brainwave Layout pl-80 (20rem) pattern */}
+      <div className="pl-80 pt-8 pb-5 pr-5 transition-all max-lg:pl-5 max-md:pl-4 max-md:pr-4 max-md:pt-3 max-md:pb-4">
+        {/* Header Bar */}
         <div className="flex items-center gap-4 mb-5">
           <button
-            className="hidden max-lg:flex items-center justify-center w-10 h-10 rounded-xl hover:bg-white transition-colors"
+            className="hidden max-lg:flex items-center justify-center w-10 h-10 transition-colors"
             onClick={() => setSidebarVisible(true)}
+            style={{
+              borderRadius: "0.75rem",
+              border: "2px solid var(--n-3)",
+              background: "var(--n-1)",
+            }}
           >
-            <PanelLeft className="w-5 h-5 text-[#111318]" />
+            <PanelLeft className="w-5 h-5 text-n-7" />
           </button>
-          <h1 className="text-[1.25rem] font-medium font-inter text-[#111318] tracking-tight max-md:text-[1rem]">
+          <h1 className="text-h6 font-inter text-n-7 tracking-tight max-md:text-base1">
             {currentModeTitle}
           </h1>
         </div>
 
-        {/* Content Wrapper */}
-        <div className="content-wrapper min-h-[calc(100svh-7rem)] max-md:min-h-[calc(100svh-5rem)] max-md:rounded-xl">
+        {/* Content Wrapper — Brainwave container */}
+        <div className="content-wrapper min-h-[calc(100svh-7rem)] max-md:min-h-[calc(100svh-5rem)]">
           <div className="flex-1 overflow-auto scrollbar-none p-9 max-md:p-5">
             <AnimatePresence mode="wait">
               {activeMode === "grader" ? (
@@ -1431,7 +1727,10 @@ export default function HomePage() {
                     />
                   )}
                   {graderView === "loading" && (
-                    <LoadingView message="Analyzing your essay..." />
+                    <GradingLoader
+                      isLoading={true}
+                      message="Analyzing your essay..."
+                    />
                   )}
                   {graderView === "results" && graderResult && (
                     <GradingResultDisplay
@@ -1457,7 +1756,10 @@ export default function HomePage() {
                     />
                   )}
                   {plannerView === "loading" && (
-                    <LoadingView message="Generating essay plan..." />
+                    <GradingLoader
+                      isLoading={true}
+                      message="Generating essay plan..."
+                    />
                   )}
                   {plannerView === "results" && plannerResult && (
                     <PlanResultDisplay
@@ -1470,10 +1772,14 @@ export default function HomePage() {
             </AnimatePresence>
           </div>
 
-          {/* Footer — minimal */}
-          <div className="shrink-0 border-t border-[#e5e7eb] px-9 py-4 max-md:px-5">
-            <p className="text-[0.75rem] text-[#9ca3af] text-center">
-              AI-powered grading · Edexcel IAL Economics · Always verify with official mark schemes
+          {/* Footer — Brainwave minimal */}
+          <div
+            className="shrink-0 px-9 py-4 max-md:px-5"
+            style={{ borderTop: "1px solid var(--n-3)" }}
+          >
+            <p className="text-caption1 text-n-4 text-center">
+              AI-powered grading · Edexcel IAL Economics · Always verify with
+              official mark schemes
             </p>
           </div>
         </div>

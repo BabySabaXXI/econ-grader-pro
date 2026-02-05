@@ -39,39 +39,35 @@ interface ActiveFeedback {
   data: MarkEarned | MarkLost;
 }
 
-// AO Config — mapped to NeuraTalk semantic palette
+// AO Config — Brainwave accent palette
 const AO_CONFIG = {
   ao1: {
     label: "Knowledge",
-    color: "bg-[--information-base]",
-    bgLight: "bg-[--information-lighter]",
-    text: "text-[--information-base]",
-    border: "border-[--information-light]",
+    color: "var(--information-base)",
+    bgLight: "var(--information-lighter)",
+    borderLight: "var(--information-light)",
   },
   ao2: {
     label: "Application",
-    color: "bg-[--success-base]",
-    bgLight: "bg-[--success-lighter]",
-    text: "text-[--success-base]",
-    border: "border-[--success-light]",
+    color: "var(--success-dark)",
+    bgLight: "var(--success-lighter)",
+    borderLight: "var(--success-light)",
   },
   ao3: {
     label: "Analysis",
-    color: "bg-[--feature-base]",
-    bgLight: "bg-[--feature-lighter]",
-    text: "text-[--feature-base]",
-    border: "border-[--feature-light]",
+    color: "var(--feature-base)",
+    bgLight: "var(--feature-lighter)",
+    borderLight: "var(--feature-light)",
   },
   ao4: {
     label: "Evaluation",
-    color: "bg-[--away-base]",
-    bgLight: "bg-[--away-lighter]",
-    text: "text-[--away-base]",
-    border: "border-[--away-light]",
+    color: "var(--away-base)",
+    bgLight: "var(--away-lighter)",
+    borderLight: "var(--away-light)",
   },
 };
 
-// AO Badge Component
+// AO Badge Component — Brainwave pill style
 function AOBadge({ ao, className }: { ao: string; className?: string }) {
   const config = AO_CONFIG[ao as keyof typeof AO_CONFIG];
   if (!config) return null;
@@ -79,12 +75,15 @@ function AOBadge({ ao, className }: { ao: string; className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border",
-        config.text,
-        config.bgLight,
-        config.border,
+        "inline-flex items-center text-2xs font-bold uppercase tracking-wider px-2 py-0.5 border",
         className
       )}
+      style={{
+        borderRadius: "2rem",
+        color: config.color,
+        background: config.bgLight,
+        borderColor: config.borderLight,
+      }}
     >
       {ao.toUpperCase()}
     </span>
@@ -242,70 +241,89 @@ export function EssayViewer({
 
   return (
     <div className={cn("relative space-y-5", className)} ref={containerRef}>
-      {/* Filter Controls */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-[--bg-weak-50] rounded-2xl border border-[--stroke-soft-200]">
+      {/* Filter Controls — Brainwave segmented control style */}
+      <div
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4"
+        style={{
+          borderRadius: "0.75rem",
+          background: "var(--n-2)",
+          border: "2px solid var(--n-3)",
+        }}
+      >
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-label-xs font-inter text-[--text-soft-400] uppercase tracking-wider mr-2">View:</span>
+          <span className="text-caption2 font-semibold font-inter text-n-4 uppercase tracking-wider mr-2">View:</span>
           <button
             onClick={() => setViewMode("all")}
             className={cn(
-              "h-8 px-3.5 text-xs font-medium rounded-full transition-all border",
+              "h-8 px-3.5 text-xs font-semibold transition-all border",
               viewMode === "all"
-                ? "bg-[--strong-950] text-white border-transparent"
-                : "bg-white text-[--text-sub-600] border-[--stroke-soft-200] hover:border-[--stroke-sub-300]"
+                ? "text-white border-transparent"
+                : "text-n-5 border-n-3 hover:border-n-4"
             )}
+            style={{
+              borderRadius: "2rem",
+              background: viewMode === "all" ? "var(--n-7)" : "var(--n-1)",
+            }}
           >
             All
           </button>
           <button
             onClick={() => setViewMode("earned")}
             className={cn(
-              "h-8 px-3.5 text-xs font-medium rounded-full transition-all border inline-flex items-center gap-1.5",
+              "h-8 px-3.5 text-xs font-semibold transition-all border inline-flex items-center gap-1.5",
               viewMode === "earned"
-                ? "bg-[--success-base] text-white border-transparent"
-                : "bg-white text-[--text-sub-600] border-[--stroke-soft-200] hover:border-[--stroke-sub-300]"
+                ? "text-white border-transparent"
+                : "text-n-5 border-n-3 hover:border-n-4"
             )}
+            style={{
+              borderRadius: "2rem",
+              background: viewMode === "earned" ? "var(--success-dark)" : "var(--n-1)",
+            }}
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span className={cn("font-semibold", viewMode !== "earned" && "text-[--success-base]")}>+{totalEarnedPoints}</span>
+            <span className={cn("font-bold", viewMode !== "earned" && "text-[#2fb862]")}>+{totalEarnedPoints}</span>
             <span className="text-xs opacity-70">({earnedCount})</span>
           </button>
           <button
             onClick={() => setViewMode("lost")}
             className={cn(
-              "h-8 px-3.5 text-xs font-medium rounded-full transition-all border inline-flex items-center gap-1.5",
+              "h-8 px-3.5 text-xs font-semibold transition-all border inline-flex items-center gap-1.5",
               viewMode === "lost"
-                ? "bg-[--error-base] text-white border-transparent"
-                : "bg-white text-[--text-sub-600] border-[--stroke-soft-200] hover:border-[--stroke-sub-300]"
+                ? "text-white border-transparent"
+                : "text-n-5 border-n-3 hover:border-n-4"
             )}
+            style={{
+              borderRadius: "2rem",
+              background: viewMode === "lost" ? "var(--error-base)" : "var(--n-1)",
+            }}
           >
             <AlertCircle className="w-3.5 h-3.5" />
-            <span className={cn("font-semibold", viewMode !== "lost" && "text-[--error-base]")}>Issues</span>
+            <span className={cn("font-bold", viewMode !== "lost" && "text-[#c75050]")}>Issues</span>
             <span className="text-xs opacity-70">({lostCount})</span>
           </button>
         </div>
 
         {onToggleDetailedFeedback && (
-          <div className="flex items-center gap-3 pl-4 border-l border-[--stroke-soft-200]">
+          <div className="flex items-center gap-3 pl-4" style={{ borderLeft: "1px solid var(--n-3)" }}>
             {showDetailedFeedback ? (
-              <Eye className="w-4 h-4 text-[--text-sub-600]" />
+              <Eye className="w-4 h-4 text-n-5" />
             ) : (
-              <EyeOff className="w-4 h-4 text-[--text-soft-400]" />
+              <EyeOff className="w-4 h-4 text-n-4" />
             )}
-            <span className="text-label-xs font-inter text-[--text-sub-600]">Details</span>
+            <span className="text-caption2 font-semibold font-inter text-n-5">Details</span>
             <Switch
               checked={showDetailedFeedback}
               onCheckedChange={onToggleDetailedFeedback}
-              className="data-[state=checked]:bg-[--blue-500]"
+              className="data-[state=checked]:bg-primary-1"
             />
           </div>
         )}
       </div>
 
-      {/* Essay Content */}
-      <div className="card-neura overflow-hidden">
+      {/* Essay Content — Brainwave card */}
+      <div className="card-bw overflow-hidden">
         <div className="p-6">
-          <p className="text-[15px] leading-[1.9] text-[--text-sub-600] whitespace-pre-wrap font-[system-ui]">
+          <p className="text-[15px] leading-[1.9] text-n-5 whitespace-pre-wrap font-[system-ui]">
             {visibleSegments.map((segment, index) => {
               if (segment.type === "normal") {
                 return <span key={index}>{segment.text}</span>;
@@ -332,7 +350,13 @@ export function EssayViewer({
                 >
                   {segment.text}
                   {isLost && !showDetailedFeedback && (
-                    <span className="ml-0.5 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold bg-[--error-base] text-white rounded-full align-middle shadow-sm">
+                    <span
+                      className="ml-0.5 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold text-white rounded-full align-middle"
+                      style={{
+                        background: "var(--error-base)",
+                        boxShadow: "0 1px 3px rgba(199, 80, 80, 0.3)",
+                      }}
+                    >
                       !
                     </span>
                   )}
@@ -348,10 +372,26 @@ export function EssayViewer({
         <div className="space-y-5">
           {/* Lost Marks Section */}
           {marksLost.length > 0 && (
-            <div className="rounded-xl border border-[--error-light] bg-gradient-to-br from-[--error-lighter] to-white overflow-hidden">
-              <div className="px-5 py-3.5 border-b border-[--error-light]">
-                <h3 className="text-label-sm font-inter text-[--error-base] flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[--error-base] animate-pulse" />
+            <div
+              className="overflow-hidden border"
+              style={{
+                borderRadius: "1.25rem",
+                borderColor: "var(--error-light)",
+                background: "linear-gradient(135deg, var(--error-lighter), white)",
+              }}
+            >
+              <div
+                className="px-5 py-3.5"
+                style={{ borderBottom: "1px solid var(--error-light)" }}
+              >
+                <h3
+                  className="text-base2 font-semibold font-inter flex items-center gap-2"
+                  style={{ color: "var(--error-base)" }}
+                >
+                  <span
+                    className="w-2 h-2 rounded-full animate-pulse"
+                    style={{ background: "var(--error-base)" }}
+                  />
                   Issues Found ({marksLost.length})
                 </h3>
               </div>
@@ -365,43 +405,81 @@ export function EssayViewer({
                       open={isExpanded}
                       onOpenChange={() => toggleExpanded(itemId)}
                     >
-                      <div className="rounded-xl border border-[--error-light] bg-white overflow-hidden">
+                      <div
+                        className="overflow-hidden border"
+                        style={{
+                          borderRadius: "0.75rem",
+                          borderColor: "var(--error-light)",
+                          background: "white",
+                        }}
+                      >
                         <CollapsibleTrigger asChild>
-                          <button className="w-full p-4 text-left flex items-start gap-3 hover:bg-[--error-lighter]/50 transition-colors">
+                          <button className="w-full p-4 text-left flex items-start gap-3 transition-colors hover:bg-[rgba(199,80,80,0.03)]">
                             <span className="flex-shrink-0 mt-0.5">
                               {isExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-[--error-base]" />
+                                <ChevronDown className="w-4 h-4" style={{ color: "var(--error-base)" }} />
                               ) : (
-                                <ChevronRight className="w-4 h-4 text-[--error-base]" />
+                                <ChevronRight className="w-4 h-4" style={{ color: "var(--error-base)" }} />
                               )}
                             </span>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1.5">
                                 <AOBadge ao={item.ao} />
-                                <span className="inline-flex items-center text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[--error-lighter] text-[--error-base] border border-[--error-light]">
+                                <span
+                                  className="inline-flex items-center text-2xs font-bold uppercase tracking-wider px-2 py-0.5 border"
+                                  style={{
+                                    borderRadius: "2rem",
+                                    background: "var(--error-lighter)",
+                                    color: "var(--error-base)",
+                                    borderColor: "var(--error-light)",
+                                  }}
+                                >
                                   Issue
                                 </span>
                               </div>
-                              <p className="text-p-sm text-[--text-sub-600] italic line-clamp-2">
+                              <p className="text-base2 text-n-5 italic line-clamp-2">
                                 &ldquo;{item.quote}&rdquo;
                               </p>
                             </div>
                           </button>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                          <div className="px-4 pb-4 pt-0 space-y-3 border-t border-[--error-light]">
-                            <div className="pt-3 p-4 rounded-xl bg-gradient-to-br from-[--error-lighter] to-white border border-[--error-light]">
-                              <p className="text-[10px] font-bold text-[--error-base] uppercase tracking-wider mb-2">
+                          <div
+                            className="px-4 pb-4 pt-0 space-y-3"
+                            style={{ borderTop: "1px solid var(--error-light)" }}
+                          >
+                            <div
+                              className="pt-3 p-4 border"
+                              style={{
+                                borderRadius: "0.75rem",
+                                background: "linear-gradient(135deg, var(--error-lighter), white)",
+                                borderColor: "var(--error-light)",
+                              }}
+                            >
+                              <p
+                                className="text-2xs font-bold uppercase tracking-wider mb-2"
+                                style={{ color: "var(--error-base)" }}
+                              >
                                 Issue
                               </p>
-                              <p className="text-p-sm text-[--text-sub-600] leading-relaxed">{item.issue}</p>
+                              <p className="text-base2 text-n-5 leading-relaxed">{item.issue}</p>
                             </div>
-                            <div className="p-4 rounded-xl bg-gradient-to-br from-[--away-lighter] to-white border border-[--away-light]">
-                              <p className="text-[10px] font-bold text-[--away-base] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <div
+                              className="p-4 border"
+                              style={{
+                                borderRadius: "0.75rem",
+                                background: "linear-gradient(135deg, var(--away-lighter), white)",
+                                borderColor: "var(--away-light)",
+                              }}
+                            >
+                              <p
+                                className="text-2xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5"
+                                style={{ color: "var(--away-base)" }}
+                              >
                                 <Lightbulb className="w-3 h-3" />
                                 How to Fix
                               </p>
-                              <p className="text-p-sm text-[--text-sub-600] leading-relaxed">{item.howToFix}</p>
+                              <p className="text-base2 text-n-5 leading-relaxed">{item.howToFix}</p>
                             </div>
                           </div>
                         </CollapsibleContent>
@@ -415,9 +493,22 @@ export function EssayViewer({
 
           {/* Earned Marks Section */}
           {marksEarned.length > 0 && (
-            <div className="rounded-xl border border-[--success-light] bg-gradient-to-br from-[--success-lighter] to-white overflow-hidden">
-              <div className="px-5 py-3.5 border-b border-[--success-light]">
-                <h3 className="text-label-sm font-inter text-[--success-base] flex items-center gap-2">
+            <div
+              className="overflow-hidden border"
+              style={{
+                borderRadius: "1.25rem",
+                borderColor: "var(--success-light)",
+                background: "linear-gradient(135deg, var(--success-lighter), white)",
+              }}
+            >
+              <div
+                className="px-5 py-3.5"
+                style={{ borderBottom: "1px solid var(--success-light)" }}
+              >
+                <h3
+                  className="text-base2 font-semibold font-inter flex items-center gap-2"
+                  style={{ color: "var(--success-dark)" }}
+                >
                   <CheckCircle2 className="w-4 h-4" />
                   Marks Earned (+{totalEarnedPoints} from {marksEarned.length} items)
                 </h3>
@@ -432,36 +523,64 @@ export function EssayViewer({
                       open={isExpanded}
                       onOpenChange={() => toggleExpanded(itemId)}
                     >
-                      <div className="rounded-xl border border-[--success-light] bg-white overflow-hidden">
+                      <div
+                        className="overflow-hidden border"
+                        style={{
+                          borderRadius: "0.75rem",
+                          borderColor: "var(--success-light)",
+                          background: "white",
+                        }}
+                      >
                         <CollapsibleTrigger asChild>
-                          <button className="w-full p-4 text-left flex items-start gap-3 hover:bg-[--success-lighter]/50 transition-colors">
+                          <button className="w-full p-4 text-left flex items-start gap-3 transition-colors hover:bg-[rgba(63,221,120,0.03)]">
                             <span className="flex-shrink-0 mt-0.5">
                               {isExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-[--success-base]" />
+                                <ChevronDown className="w-4 h-4" style={{ color: "var(--success-dark)" }} />
                               ) : (
-                                <ChevronRight className="w-4 h-4 text-[--success-base]" />
+                                <ChevronRight className="w-4 h-4" style={{ color: "var(--success-dark)" }} />
                               )}
                             </span>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1.5">
                                 <AOBadge ao={item.ao} />
-                                <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[--success-lighter] text-[--success-base] border border-[--success-light]">
+                                <span
+                                  className="inline-flex items-center text-2xs font-bold px-2 py-0.5 border"
+                                  style={{
+                                    borderRadius: "2rem",
+                                    background: "var(--success-lighter)",
+                                    color: "var(--success-dark)",
+                                    borderColor: "var(--success-light)",
+                                  }}
+                                >
                                   +{item.points}
                                 </span>
                               </div>
-                              <p className="text-p-sm text-[--text-sub-600] italic line-clamp-2">
+                              <p className="text-base2 text-n-5 italic line-clamp-2">
                                 &ldquo;{item.quote}&rdquo;
                               </p>
                             </div>
                           </button>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                          <div className="px-4 pb-4 pt-0 border-t border-[--success-light]">
-                            <div className="pt-3 p-4 rounded-xl bg-gradient-to-br from-[--success-lighter] to-white border border-[--success-light]">
-                              <p className="text-[10px] font-bold text-[--success-base] uppercase tracking-wider mb-2">
+                          <div
+                            className="px-4 pb-4 pt-0"
+                            style={{ borderTop: "1px solid var(--success-light)" }}
+                          >
+                            <div
+                              className="pt-3 p-4 border"
+                              style={{
+                                borderRadius: "0.75rem",
+                                background: "linear-gradient(135deg, var(--success-lighter), white)",
+                                borderColor: "var(--success-light)",
+                              }}
+                            >
+                              <p
+                                className="text-2xs font-bold uppercase tracking-wider mb-2"
+                                style={{ color: "var(--success-dark)" }}
+                              >
                                 Why This Earned Marks
                               </p>
-                              <p className="text-p-sm text-[--text-sub-600] leading-relaxed">{item.reason}</p>
+                              <p className="text-base2 text-n-5 leading-relaxed">{item.reason}</p>
                             </div>
                           </div>
                         </CollapsibleContent>
@@ -475,22 +594,31 @@ export function EssayViewer({
         </div>
       )}
 
-      {/* Feedback Modal */}
+      {/* Feedback Modal — Brainwave Modal pattern */}
       <Dialog open={!!activeFeedback} onOpenChange={() => setActiveFeedback(null)}>
-        <DialogContent className={cn(
-          "sm:max-w-md rounded-2xl border",
-          activeFeedback?.type === "earned" ? "border-[--success-light]" : "border-[--error-light]"
-        )}>
+        <DialogContent
+          className="sm:max-w-md border"
+          style={{
+            borderRadius: "1.25rem",
+            borderColor: activeFeedback?.type === "earned" ? "var(--success-light)" : "var(--error-light)",
+          }}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <AOBadge ao={activeFeedback?.data.ao || ""} />
               {activeFeedback?.type === "earned" ? (
-                <span className="text-[--success-base] font-semibold flex items-center gap-1.5 text-sm">
+                <span
+                  className="font-semibold flex items-center gap-1.5 text-sm"
+                  style={{ color: "var(--success-dark)" }}
+                >
                   <CheckCircle2 className="w-4 h-4" />
                   +{(activeFeedback?.data as MarkEarned)?.points} marks
                 </span>
               ) : (
-                <span className="text-[--error-base] font-semibold flex items-center gap-1.5 text-sm">
+                <span
+                  className="font-semibold flex items-center gap-1.5 text-sm"
+                  style={{ color: "var(--error-base)" }}
+                >
                   <AlertCircle className="w-4 h-4" />
                   Issue Found
                 </span>
@@ -500,38 +628,75 @@ export function EssayViewer({
 
           <div className="space-y-4 mt-2">
             {/* Quote */}
-            <div className="p-4 rounded-xl bg-[--bg-weak-50] border border-[--stroke-soft-200]">
-              <p className="text-p-sm italic text-[--text-sub-600] leading-relaxed">
+            <div
+              className="p-4 border"
+              style={{
+                borderRadius: "0.75rem",
+                background: "var(--n-2)",
+                borderColor: "var(--n-3)",
+              }}
+            >
+              <p className="text-base2 italic text-n-5 leading-relaxed">
                 &ldquo;{activeFeedback?.data.quote}&rdquo;
               </p>
             </div>
 
             {/* Feedback content */}
             {activeFeedback?.type === "earned" ? (
-              <div className="p-4 rounded-xl bg-gradient-to-br from-[--success-lighter] to-white border border-[--success-light]">
-                <p className="text-[10px] font-bold text-[--success-base] uppercase tracking-wider mb-2">
+              <div
+                className="p-4 border"
+                style={{
+                  borderRadius: "0.75rem",
+                  background: "linear-gradient(135deg, var(--success-lighter), white)",
+                  borderColor: "var(--success-light)",
+                }}
+              >
+                <p
+                  className="text-2xs font-bold uppercase tracking-wider mb-2"
+                  style={{ color: "var(--success-dark)" }}
+                >
                   Why this earned marks
                 </p>
-                <p className="text-p-sm text-[--text-sub-600] leading-relaxed">
+                <p className="text-base2 text-n-5 leading-relaxed">
                   {(activeFeedback?.data as MarkEarned)?.reason}
                 </p>
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="p-4 rounded-xl bg-gradient-to-br from-[--error-lighter] to-white border border-[--error-light]">
-                  <p className="text-[10px] font-bold text-[--error-base] uppercase tracking-wider mb-2">
+                <div
+                  className="p-4 border"
+                  style={{
+                    borderRadius: "0.75rem",
+                    background: "linear-gradient(135deg, var(--error-lighter), white)",
+                    borderColor: "var(--error-light)",
+                  }}
+                >
+                  <p
+                    className="text-2xs font-bold uppercase tracking-wider mb-2"
+                    style={{ color: "var(--error-base)" }}
+                  >
                     Issue
                   </p>
-                  <p className="text-p-sm text-[--text-sub-600] leading-relaxed">
+                  <p className="text-base2 text-n-5 leading-relaxed">
                     {(activeFeedback?.data as MarkLost)?.issue}
                   </p>
                 </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-[--away-lighter] to-white border border-[--away-light]">
-                  <p className="text-[10px] font-bold text-[--away-base] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <div
+                  className="p-4 border"
+                  style={{
+                    borderRadius: "0.75rem",
+                    background: "linear-gradient(135deg, var(--away-lighter), white)",
+                    borderColor: "var(--away-light)",
+                  }}
+                >
+                  <p
+                    className="text-2xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5"
+                    style={{ color: "var(--away-base)" }}
+                  >
                     <Lightbulb className="w-3 h-3" />
                     How to Fix
                   </p>
-                  <p className="text-p-sm text-[--text-sub-600] leading-relaxed">
+                  <p className="text-base2 text-n-5 leading-relaxed">
                     {(activeFeedback?.data as MarkLost)?.howToFix}
                   </p>
                 </div>
@@ -541,14 +706,28 @@ export function EssayViewer({
         </DialogContent>
       </Dialog>
 
-      {/* Legend */}
-      <div className="flex flex-wrap items-center justify-center gap-6 text-p-xs text-[--text-soft-400] pt-2">
+      {/* Legend — Brainwave minimal */}
+      <div className="flex flex-wrap items-center justify-center gap-6 text-caption1 text-n-4 pt-2">
         <div className="flex items-center gap-2">
-          <span className="w-4 h-2 rounded-full bg-[--success-lighter] border border-[--success-light]" />
+          <span
+            className="w-4 h-2 border"
+            style={{
+              borderRadius: "2rem",
+              background: "var(--success-lighter)",
+              borderColor: "var(--success-light)",
+            }}
+          />
           <span>Marks Earned</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-4 h-2 rounded-full bg-[--error-lighter] border border-[--error-light]" />
+          <span
+            className="w-4 h-2 border"
+            style={{
+              borderRadius: "2rem",
+              background: "var(--error-lighter)",
+              borderColor: "var(--error-light)",
+            }}
+          />
           <span>Issues (click for details)</span>
         </div>
       </div>
