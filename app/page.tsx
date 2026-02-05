@@ -14,7 +14,6 @@ import {
   ChevronRight,
   BarChart3,
   Crosshair,
-  Wand2,
   Eye,
   EyeOff,
   BookOpen,
@@ -26,7 +25,6 @@ import {
   TrendingDown,
   Sparkles,
   Target,
-  Zap,
 } from "lucide-react";
 import {
   QUESTION_TYPE_OPTIONS,
@@ -36,7 +34,6 @@ import {
 import { GradingResult, PlanResult, QuestionType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -53,101 +50,78 @@ import { DiagramRenderer } from "@/components/diagrams/DiagramRenderer";
 import type { DiagramTemplate } from "@/lib/diagrams/types";
 
 // ============================================================================
-// ANIMATION VARIANTS — Brainwave-style spring easing
+// ANIMATION
 // ============================================================================
 
 const springEase: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const pageTransition = {
-  initial: { opacity: 0, y: 12 },
+  initial: { opacity: 0, y: 8 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -8 },
-  transition: { duration: 0.45, ease: springEase },
+  exit: { opacity: 0, y: -6 },
+  transition: { duration: 0.35, ease: springEase },
 };
 
 const staggerContainer = {
-  animate: {
-    transition: { staggerChildren: 0.08 },
-  },
+  animate: { transition: { staggerChildren: 0.06 } },
 };
 
 const staggerItem = {
-  initial: { opacity: 0, y: 16 },
+  initial: { opacity: 0, y: 12 },
   animate: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: springEase },
+    transition: { duration: 0.4, ease: springEase },
   },
 };
-
-// ============================================================================
-// VIEW STATES TYPE
-// ============================================================================
 
 type ViewState = "input" | "loading" | "results";
 
 // ============================================================================
-// SCORE COLOR HELPERS — Brainwave accent colors
+// SCORE HELPERS
 // ============================================================================
 
-function getScoreColor(percentage: number): string {
-  if (percentage >= 80) return "text-[#2fb862]";
-  if (percentage >= 60) return "text-[#3E90F0]";
-  if (percentage >= 45) return "text-[#DDA73F]";
-  return "text-[#c75050]";
+function getScoreColor(pct: number): string {
+  if (pct >= 80) return "var(--success-text)";
+  if (pct >= 60) return "var(--info-text)";
+  if (pct >= 45) return "var(--warning-text)";
+  return "var(--error-text)";
 }
 
-function getScoreRingColor(percentage: number): string {
-  if (percentage >= 80) return "stroke-[#3FDD78]";
-  if (percentage >= 60) return "stroke-[#3E90F0]";
-  if (percentage >= 45) return "stroke-[#DDA73F]";
-  return "stroke-[#c75050]";
+function getScoreStroke(pct: number): string {
+  if (pct >= 80) return "#22C55E";
+  if (pct >= 60) return "#3B82F6";
+  if (pct >= 45) return "#F59E0B";
+  return "#EF4444";
 }
 
-function getScoreRingTrailColor(percentage: number): string {
-  if (percentage >= 80) return "rgba(63, 221, 120, 0.12)";
-  if (percentage >= 60) return "rgba(62, 144, 240, 0.12)";
-  if (percentage >= 45) return "rgba(221, 167, 63, 0.12)";
-  return "rgba(199, 80, 80, 0.12)";
+function getScoreTrail(pct: number): string {
+  if (pct >= 80) return "rgba(34,197,94,0.12)";
+  if (pct >= 60) return "rgba(59,130,246,0.12)";
+  if (pct >= 45) return "rgba(245,158,11,0.12)";
+  return "rgba(239,68,68,0.12)";
 }
 
 // ============================================================================
-// LEVEL BADGE — Brainwave pill style
+// LEVEL BADGE
 // ============================================================================
 
 function LevelBadge({ level }: { level: number }) {
   const config: Record<number, { label: string; className: string }> = {
-    5: {
-      label: "Excellent",
-      className: "badge-level-5",
-    },
-    4: {
-      label: "Good",
-      className: "badge-level-4",
-    },
-    3: {
-      label: "Sound",
-      className: "badge-level-3",
-    },
-    2: {
-      label: "Basic",
-      className: "badge-level-2",
-    },
-    1: {
-      label: "Limited",
-      className: "badge-level-1",
-    },
+    5: { label: "Excellent", className: "badge-level-5" },
+    4: { label: "Good", className: "badge-level-4" },
+    3: { label: "Sound", className: "badge-level-3" },
+    2: { label: "Basic", className: "badge-level-2" },
+    1: { label: "Limited", className: "badge-level-1" },
   };
-
   const { label, className } = config[level] || config[1];
-
   return (
     <span
       className={cn(
-        "inline-flex items-center text-caption1 font-semibold font-inter px-3 py-1 border",
+        "inline-flex items-center text-[11px] font-semibold px-2.5 py-0.5 border",
         className
       )}
-      style={{ borderRadius: "2rem" }}
+      style={{ borderRadius: "0.25rem" }}
     >
       Level {level} · {label}
     </span>
@@ -155,34 +129,14 @@ function LevelBadge({ level }: { level: number }) {
 }
 
 // ============================================================================
-// AO CONFIG — Brainwave accent-based palette
+// AO CONFIG
 // ============================================================================
 
 const AO_CONFIG = {
-  ao1: {
-    label: "Knowledge",
-    color: "#3E90F0",
-    bgLight: "var(--information-lighter)",
-    borderLight: "var(--information-light)",
-  },
-  ao2: {
-    label: "Application",
-    color: "#2fb862",
-    bgLight: "var(--success-lighter)",
-    borderLight: "var(--success-light)",
-  },
-  ao3: {
-    label: "Analysis",
-    color: "#8E55EA",
-    bgLight: "var(--feature-lighter)",
-    borderLight: "var(--feature-light)",
-  },
-  ao4: {
-    label: "Evaluation",
-    color: "#DDA73F",
-    bgLight: "var(--away-lighter)",
-    borderLight: "var(--away-light)",
-  },
+  ao1: { label: "Knowledge", color: "#3B82F6", bg: "var(--info-muted)", border: "var(--info-border)" },
+  ao2: { label: "Application", color: "#22C55E", bg: "var(--success-muted)", border: "var(--success-border)" },
+  ao3: { label: "Analysis", color: "#8B5CF6", bg: "var(--purple-muted)", border: "var(--purple-border)" },
+  ao4: { label: "Evaluation", color: "#F59E0B", bg: "var(--warning-muted)", border: "var(--warning-border)" },
 };
 
 function AOScoreBar({
@@ -194,46 +148,39 @@ function AOScoreBar({
   score: number;
   maxScore: number;
 }) {
-  const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
-  const config = AO_CONFIG[aoKey];
-
+  const pct = maxScore > 0 ? (score / maxScore) * 100 : 0;
+  const c = AO_CONFIG[aoKey];
   return (
     <div>
-      <div className="flex items-center justify-between mb-2.5">
-        <div className="flex items-center gap-2.5">
-          <div
-            className="w-2 h-2 rounded-full"
-            style={{ background: config.color }}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ background: c.color }}
           />
           <span
-            className="text-caption2 font-semibold font-inter uppercase tracking-wider"
-            style={{ color: config.color }}
+            className="text-[10px] font-semibold uppercase tracking-wider"
+            style={{ color: c.color }}
           >
             {aoKey.toUpperCase()}
           </span>
-          <span className="text-caption2 text-n-4">{config.label}</span>
+          <span className="text-[10px] text-n-4">{c.label}</span>
         </div>
-        <span className="text-base2 font-semibold font-inter tabular-nums text-n-7">
+        <span className="text-[13px] font-semibold tabular-nums text-n-7">
           {score}
-          <span className="text-n-3 font-normal">/{maxScore}</span>
+          <span className="text-n-4 font-normal">/{maxScore}</span>
         </span>
       </div>
       <div
-        className="h-1.5 overflow-hidden"
-        style={{
-          borderRadius: "0.75rem",
-          background: "var(--n-2)",
-        }}
+        className="h-1 overflow-hidden"
+        style={{ borderRadius: "0.5rem", background: "var(--n-2)" }}
       >
         <motion.div
           initial={{ width: 0 }}
-          animate={{ width: `${percentage}%` }}
-          transition={{ duration: 1, ease: springEase, delay: 0.3 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.8, ease: springEase, delay: 0.3 }}
           className="h-full"
-          style={{
-            borderRadius: "0.75rem",
-            background: config.color,
-          }}
+          style={{ borderRadius: "0.5rem", background: c.color }}
         />
       </div>
     </div>
@@ -241,17 +188,16 @@ function AOScoreBar({
 }
 
 function AOBadge({ ao }: { ao: string }) {
-  const config = AO_CONFIG[ao as keyof typeof AO_CONFIG];
-  if (!config) return null;
-
+  const c = AO_CONFIG[ao as keyof typeof AO_CONFIG];
+  if (!c) return null;
   return (
     <span
-      className="inline-flex items-center text-2xs font-bold uppercase tracking-wider px-2 py-0.5 border"
+      className="inline-flex items-center text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 border"
       style={{
-        borderRadius: "2rem",
-        color: config.color,
-        background: config.bgLight,
-        borderColor: config.borderLight,
+        borderRadius: "0.25rem",
+        color: c.color,
+        background: c.bg,
+        borderColor: c.border,
       }}
     >
       {ao.toUpperCase()}
@@ -260,7 +206,7 @@ function AOBadge({ ao }: { ao: string }) {
 }
 
 // ============================================================================
-// GRADING RESULT DISPLAY — Brainwave cards with deep shadows
+// GRADING RESULT
 // ============================================================================
 
 function GradingResultDisplay({
@@ -282,77 +228,41 @@ function GradingResultDisplay({
 
   return (
     <motion.div
-      className="max-w-7xl mx-auto"
-      initial={{ opacity: 0, y: 16 }}
+      className="max-w-6xl mx-auto"
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: springEase }}
+      transition={{ duration: 0.4, ease: springEase }}
     >
-      {/* Back Button — Brainwave subtle style */}
       <button
         onClick={onBack}
-        className="group flex items-center gap-2.5 text-base2 font-inter font-semibold text-n-4 hover:text-n-7 transition-all duration-200 mb-8"
+        className="group flex items-center gap-2 text-[13px] font-medium text-n-4 hover:text-n-7 transition-all mb-6"
       >
-        <div
-          className="flex items-center justify-center w-8 h-8 transition-all duration-200 group-hover:shadow-bw-subtle"
-          style={{
-            borderRadius: "0.5rem",
-            background: "var(--n-2)",
-            border: "2px solid var(--n-3)",
-          }}
-        >
-          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-        </div>
-        <span>Edit Answer</span>
+        <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+        Edit Answer
       </button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column — Essay View */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {/* Left — Essay */}
         <div className="lg:col-span-7 xl:col-span-8">
-          <div className="sticky top-8">
-            <div className="card-bw overflow-hidden">
-              {/* Header bar */}
+          <div className="sticky top-6">
+            <div className="card-surface overflow-hidden">
               <div
-                className="px-7 py-5 flex items-center justify-between"
+                className="px-5 py-3.5 flex items-center justify-between"
                 style={{
                   borderBottom: "1px solid var(--n-3)",
-                  background: "var(--n-2)",
+                  background: "var(--n-1)",
                 }}
               >
                 <div>
-                  <h3 className="text-base1 font-inter text-n-7">
+                  <h3 className="text-[13px] font-semibold text-n-7">
                     Your Essay
                   </h3>
-                  <p className="text-caption1 text-n-4 mt-0.5">
-                    Click highlighted text for detailed feedback
+                  <p className="text-[11px] text-n-4 mt-0.5">
+                    Click highlighted text for feedback
                   </p>
                 </div>
-                {hasHighlights && (
-                  <div className="flex gap-3">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className="w-3 h-1.5"
-                        style={{
-                          borderRadius: "1px",
-                          background: "rgba(63, 221, 120, 0.5)",
-                        }}
-                      />
-                      <span className="text-caption2 text-n-4">Earned</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className="w-3 h-1.5"
-                        style={{
-                          borderRadius: "1px",
-                          background: "rgba(199, 80, 80, 0.45)",
-                        }}
-                      />
-                      <span className="text-caption2 text-n-4">Lost</span>
-                    </div>
-                  </div>
-                )}
               </div>
-              {/* Essay content */}
-              <div className="p-7">
+              <div className="p-5">
                 {hasHighlights ? (
                   <EssayViewer
                     essay={essayText}
@@ -365,13 +275,13 @@ function GradingResultDisplay({
                   />
                 ) : (
                   <div
-                    className="p-6"
+                    className="p-4"
                     style={{
-                      borderRadius: "0.75rem",
-                      background: "var(--n-2)",
+                      borderRadius: "0.375rem",
+                      background: "var(--n-1)",
                     }}
                   >
-                    <p className="text-base2 leading-relaxed text-n-5 whitespace-pre-wrap">
+                    <p className="text-[14px] leading-[1.85] text-n-5 whitespace-pre-wrap">
                       {essayText}
                     </p>
                   </div>
@@ -381,260 +291,190 @@ function GradingResultDisplay({
           </div>
         </div>
 
-        {/* Right Column — Score Cards (Bento) */}
+        {/* Right — Score Cards */}
         <motion.div
-          className="lg:col-span-5 xl:col-span-4 space-y-5"
+          className="lg:col-span-5 xl:col-span-4 space-y-4"
           variants={staggerContainer}
           initial="initial"
           animate="animate"
         >
-          {/* Overall Score Card — Brainwave elevated */}
+          {/* Score */}
           <motion.div variants={staggerItem}>
-            <div className="card-bw-elevated overflow-hidden">
-              <div className="p-7">
-                <div className="flex items-center gap-6">
-                  {/* Score Ring */}
-                  <div className="relative flex-shrink-0">
-                    <svg className="w-[7rem] h-[7rem]" viewBox="0 0 100 100">
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        stroke={getScoreRingTrailColor(result.overallPercentage)}
-                        strokeWidth="7"
-                        fill="none"
-                      />
-                      <motion.circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        strokeWidth="7"
-                        fill="none"
-                        strokeDasharray={`${2 * Math.PI * 40}`}
-                        initial={{ strokeDashoffset: 2 * Math.PI * 40 }}
-                        animate={{
-                          strokeDashoffset:
-                            2 *
-                            Math.PI *
-                            40 *
-                            (1 - result.overallPercentage / 100),
-                        }}
-                        transition={{
-                          duration: 1.2,
-                          ease: springEase,
-                          delay: 0.2,
-                        }}
-                        strokeLinecap="round"
-                        className={cn(
-                          "origin-center -rotate-90",
-                          getScoreRingColor(result.overallPercentage)
-                        )}
-                        style={{ transformOrigin: "center" }}
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span
-                        className={cn(
-                          "text-h5 font-inter",
-                          getScoreColor(result.overallPercentage)
-                        )}
-                      >
-                        {result.overallPercentage}%
-                      </span>
-                    </div>
+            <div className="card-elevated overflow-hidden p-5">
+              <div className="flex items-center gap-5">
+                <div className="relative flex-shrink-0">
+                  <svg className="w-20 h-20" viewBox="0 0 100 100">
+                    <circle
+                      cx="50" cy="50" r="40"
+                      stroke={getScoreTrail(result.overallPercentage)}
+                      strokeWidth="6" fill="none"
+                    />
+                    <motion.circle
+                      cx="50" cy="50" r="40"
+                      stroke={getScoreStroke(result.overallPercentage)}
+                      strokeWidth="6" fill="none"
+                      strokeDasharray={`${2 * Math.PI * 40}`}
+                      initial={{ strokeDashoffset: 2 * Math.PI * 40 }}
+                      animate={{
+                        strokeDashoffset:
+                          2 * Math.PI * 40 * (1 - result.overallPercentage / 100),
+                      }}
+                      transition={{ duration: 1, ease: springEase, delay: 0.2 }}
+                      strokeLinecap="round"
+                      className="origin-center -rotate-90"
+                      style={{ transformOrigin: "center" }}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span
+                      className="text-lg font-semibold"
+                      style={{ color: getScoreColor(result.overallPercentage) }}
+                    >
+                      {result.overallPercentage}%
+                    </span>
                   </div>
-
-                  {/* Score Details */}
-                  <div className="flex-1">
-                    <div className="text-h4 font-inter text-n-7 mb-2 tracking-tight">
-                      {result.totalMarks}
-                      <span className="text-h6 text-n-3 font-normal">
-                        /{markScheme.total}
-                      </span>
-                    </div>
-                    <LevelBadge level={result.levelAchieved} />
-                    <p className="text-caption1 text-n-4 mt-3 leading-relaxed">
-                      {LEVEL_DESCRIPTORS[result.levelAchieved]}
-                    </p>
+                </div>
+                <div className="flex-1">
+                  <div className="text-2xl font-semibold text-n-7 tracking-tight">
+                    {result.totalMarks}
+                    <span className="text-base text-n-4 font-normal">
+                      /{markScheme.total}
+                    </span>
                   </div>
+                  <LevelBadge level={result.levelAchieved} />
+                  <p className="text-[11px] text-n-4 mt-2 leading-relaxed">
+                    {LEVEL_DESCRIPTORS[result.levelAchieved]}
+                  </p>
                 </div>
               </div>
             </div>
           </motion.div>
 
-          {/* AO Breakdown — Brainwave card */}
+          {/* AO Breakdown */}
           <motion.div variants={staggerItem}>
-            <div className="card-bw-elevated overflow-hidden">
-              <div className="px-7 pt-6 pb-3">
-                <h4 className="text-caption2 font-semibold font-inter text-n-4 uppercase tracking-wider">
+            <div className="card-elevated overflow-hidden">
+              <div className="px-5 pt-4 pb-2">
+                <h4 className="text-[10px] font-semibold text-n-4 uppercase tracking-wider">
                   Assessment Objectives
                 </h4>
               </div>
-              <div className="px-7 pb-6 space-y-5">
+              <div className="px-5 pb-4 space-y-3.5">
                 {markScheme.ao1 > 0 && (
-                  <AOScoreBar
-                    aoKey="ao1"
-                    score={result.aoScores.ao1}
-                    maxScore={markScheme.ao1}
-                  />
+                  <AOScoreBar aoKey="ao1" score={result.aoScores.ao1} maxScore={markScheme.ao1} />
                 )}
                 {markScheme.ao2 > 0 && (
-                  <AOScoreBar
-                    aoKey="ao2"
-                    score={result.aoScores.ao2}
-                    maxScore={markScheme.ao2}
-                  />
+                  <AOScoreBar aoKey="ao2" score={result.aoScores.ao2} maxScore={markScheme.ao2} />
                 )}
                 {markScheme.ao3 > 0 && (
-                  <AOScoreBar
-                    aoKey="ao3"
-                    score={result.aoScores.ao3}
-                    maxScore={markScheme.ao3}
-                  />
+                  <AOScoreBar aoKey="ao3" score={result.aoScores.ao3} maxScore={markScheme.ao3} />
                 )}
                 {markScheme.ao4 > 0 && (
-                  <AOScoreBar
-                    aoKey="ao4"
-                    score={result.aoScores.ao4}
-                    maxScore={markScheme.ao4}
-                  />
+                  <AOScoreBar aoKey="ao4" score={result.aoScores.ao4} maxScore={markScheme.ao4} />
                 )}
               </div>
             </div>
           </motion.div>
 
-          {/* Examiner Comment — Brainwave card */}
+          {/* Examiner */}
           <motion.div variants={staggerItem}>
-            <div className="card-bw-elevated overflow-hidden">
-              <div className="px-7 pt-6 pb-3">
-                <h4 className="text-caption2 font-semibold font-inter text-n-4 uppercase tracking-wider">
+            <div className="card-elevated overflow-hidden">
+              <div className="px-5 pt-4 pb-2">
+                <h4 className="text-[10px] font-semibold text-n-4 uppercase tracking-wider">
                   Examiner Feedback
                 </h4>
               </div>
-              <div className="px-7 pb-6">
-                <p className="text-base2 text-n-5 leading-relaxed italic">
+              <div className="px-5 pb-4">
+                <p className="text-[13px] text-n-5 leading-relaxed italic">
                   &ldquo;{result.examinerComment}&rdquo;
                 </p>
               </div>
             </div>
           </motion.div>
 
-          {/* Feedback Summary — Brainwave bento grid */}
+          {/* Summary counters */}
           {hasHighlights && (
             <motion.div variants={staggerItem}>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="card-bw-elevated p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp
-                      className="w-4 h-4"
-                      style={{ color: "var(--success-dark)" }}
-                    />
-                    <span className="text-caption2 font-semibold text-n-4 uppercase tracking-wider font-inter">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="card-elevated p-4">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <TrendingUp className="w-3.5 h-3.5" style={{ color: "var(--success-text)" }} />
+                    <span className="text-[10px] font-semibold text-n-4 uppercase tracking-wider">
                       Earned
                     </span>
                   </div>
-                  <div
-                    className="text-h5 font-inter tracking-tight"
-                    style={{ color: "var(--success-dark)" }}
-                  >
-                    +
-                    {result.marksEarned?.reduce(
-                      (sum, m) => sum + m.points,
-                      0
-                    ) || 0}
-                  </div>
-                  <div className="text-caption1 text-n-4 mt-1">
-                    Marks Earned
+                  <div className="text-xl font-semibold" style={{ color: "var(--success-text)" }}>
+                    +{result.marksEarned?.reduce((s, m) => s + m.points, 0) || 0}
                   </div>
                 </div>
-                <div className="card-bw-elevated p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingDown
-                      className="w-4 h-4"
-                      style={{ color: "var(--error-base)" }}
-                    />
-                    <span className="text-caption2 font-semibold text-n-4 uppercase tracking-wider font-inter">
+                <div className="card-elevated p-4">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <TrendingDown className="w-3.5 h-3.5" style={{ color: "var(--error-text)" }} />
+                    <span className="text-[10px] font-semibold text-n-4 uppercase tracking-wider">
                       Issues
                     </span>
                   </div>
-                  <div
-                    className="text-h5 font-inter tracking-tight"
-                    style={{ color: "var(--error-base)" }}
-                  >
+                  <div className="text-xl font-semibold" style={{ color: "var(--error-text)" }}>
                     {result.marksLost?.length || 0}
-                  </div>
-                  <div className="text-caption1 text-n-4 mt-1">
-                    Issues Found
                   </div>
                 </div>
               </div>
             </motion.div>
           )}
 
-          {/* Strengths — Brainwave card */}
+          {/* Strengths */}
           <motion.div variants={staggerItem}>
-            <div className="card-bw-elevated overflow-hidden">
-              <div className="px-7 pt-6 pb-3">
+            <div className="card-elevated overflow-hidden">
+              <div className="px-5 pt-4 pb-2">
                 <h4
-                  className="text-caption2 font-semibold font-inter uppercase tracking-wider flex items-center gap-2"
-                  style={{ color: "var(--success-dark)" }}
+                  className="text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1.5"
+                  style={{ color: "var(--success-text)" }}
                 >
-                  <Check className="w-3.5 h-3.5" />
+                  <Check className="w-3 h-3" />
                   Strengths
                 </h4>
               </div>
-              <div className="px-7 pb-6 space-y-2">
-                {result.strengths.slice(0, 3).map((strength, index) => (
+              <div className="px-5 pb-4 space-y-1.5">
+                {result.strengths.slice(0, 3).map((s, i) => (
                   <div
-                    key={index}
-                    className="flex gap-3 p-3.5"
-                    style={{
-                      borderRadius: "0.75rem",
-                      background: "var(--n-2)",
-                    }}
+                    key={i}
+                    className="flex gap-2.5 p-2.5"
+                    style={{ borderRadius: "0.375rem", background: "var(--n-1)" }}
                   >
                     <span
-                      className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
-                      style={{ background: "var(--success-dark)" }}
+                      className="w-1 h-1 rounded-full mt-2 flex-shrink-0"
+                      style={{ background: "var(--success)" }}
                     />
-                    <span className="text-base2 text-n-5 leading-relaxed">
-                      {strength}
-                    </span>
+                    <span className="text-[13px] text-n-5 leading-relaxed">{s}</span>
                   </div>
                 ))}
               </div>
             </div>
           </motion.div>
 
-          {/* Improvements — Brainwave card */}
+          {/* Improvements */}
           <motion.div variants={staggerItem}>
-            <div className="card-bw-elevated overflow-hidden">
-              <div className="px-7 pt-6 pb-3">
+            <div className="card-elevated overflow-hidden">
+              <div className="px-5 pt-4 pb-2">
                 <h4
-                  className="text-caption2 font-semibold font-inter uppercase tracking-wider flex items-center gap-2"
-                  style={{ color: "var(--away-base)" }}
+                  className="text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1.5"
+                  style={{ color: "var(--warning-text)" }}
                 >
-                  <Target className="w-3.5 h-3.5" />
+                  <Target className="w-3 h-3" />
                   Areas to Improve
                 </h4>
               </div>
-              <div className="px-7 pb-6 space-y-2">
-                {result.improvements.slice(0, 3).map((improvement, index) => (
+              <div className="px-5 pb-4 space-y-1.5">
+                {result.improvements.slice(0, 3).map((s, i) => (
                   <div
-                    key={index}
-                    className="flex gap-3 p-3.5"
-                    style={{
-                      borderRadius: "0.75rem",
-                      background: "var(--n-2)",
-                    }}
+                    key={i}
+                    className="flex gap-2.5 p-2.5"
+                    style={{ borderRadius: "0.375rem", background: "var(--n-1)" }}
                   >
                     <span
-                      className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
-                      style={{ background: "var(--away-base)" }}
+                      className="w-1 h-1 rounded-full mt-2 flex-shrink-0"
+                      style={{ background: "var(--warning)" }}
                     />
-                    <span className="text-base2 text-n-5 leading-relaxed">
-                      {improvement}
-                    </span>
+                    <span className="text-[13px] text-n-5 leading-relaxed">{s}</span>
                   </div>
                 ))}
               </div>
@@ -647,7 +487,7 @@ function GradingResultDisplay({
 }
 
 // ============================================================================
-// PLAN RESULT DISPLAY — Brainwave card-based layout
+// PLAN RESULT
 // ============================================================================
 
 function PlanResultDisplay({
@@ -661,7 +501,7 @@ function PlanResultDisplay({
   question?: string;
   questionType?: string;
 }) {
-  const [showDetailedPlan, setShowDetailedPlan] = useState(true);
+  const [showDetailed, setShowDetailed] = useState(true);
   const [generatedDiagram, setGeneratedDiagram] = useState<DiagramTemplate | null>(null);
   const [diagramAnalysis, setDiagramAnalysis] = useState<{
     customTitle?: string;
@@ -672,7 +512,6 @@ function PlanResultDisplay({
   const [diagramLoading, setDiagramLoading] = useState(false);
   const [diagramError, setDiagramError] = useState("");
 
-  // Fetch generated diagram on mount if diagram is recommended
   useEffect(() => {
     if (result.diagram && result.diagram !== "none" && question) {
       setDiagramLoading(true);
@@ -689,7 +528,7 @@ function PlanResultDisplay({
         }),
       })
         .then((res) => {
-          if (!res.ok) throw new Error("Failed to generate diagram");
+          if (!res.ok) throw new Error("Failed");
           return res.json();
         })
         .then((data) => {
@@ -698,122 +537,97 @@ function PlanResultDisplay({
             setDiagramAnalysis(data.analysis || null);
           }
         })
-        .catch((err) => {
-          console.error("Diagram generation failed:", err);
-          setDiagramError("Could not generate diagram");
-        })
+        .catch(() => setDiagramError("Could not generate diagram"))
         .finally(() => setDiagramLoading(false));
     }
   }, [result.diagram, result.thesis, result.diagramExplanation, question, questionType]);
 
   return (
     <motion.div
-      className="max-w-4xl mx-auto"
-      initial={{ opacity: 0, y: 16 }}
+      className="max-w-3xl mx-auto"
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: springEase }}
+      transition={{ duration: 0.4, ease: springEase }}
     >
-      {/* Back Button */}
       <button
         onClick={onBack}
-        className="group flex items-center gap-2.5 text-base2 font-inter font-semibold text-n-4 hover:text-n-7 transition-all duration-200 mb-8"
+        className="group flex items-center gap-2 text-[13px] font-medium text-n-4 hover:text-n-7 transition-all mb-6"
       >
-        <div
-          className="flex items-center justify-center w-8 h-8 transition-all duration-200 group-hover:shadow-bw-subtle"
-          style={{
-            borderRadius: "0.5rem",
-            background: "var(--n-2)",
-            border: "2px solid var(--n-3)",
-          }}
-        >
-          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-        </div>
-        <span>Edit Question</span>
+        <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+        Edit Question
       </button>
 
-      {/* Detail Toggle — Brainwave field style */}
+      {/* Detail toggle */}
       <div
-        className="flex items-center justify-between mb-8 p-5"
+        className="flex items-center justify-between mb-6 p-3.5"
         style={{
-          borderRadius: "0.75rem",
-          background: "var(--n-2)",
-          border: "2px solid var(--n-3)",
+          borderRadius: "0.5rem",
+          background: "var(--n-1)",
+          border: "1px solid var(--n-3)",
         }}
       >
-        <div className="flex items-center gap-3">
-          {showDetailedPlan ? (
-            <Eye className="w-5 h-5 text-n-5" />
+        <div className="flex items-center gap-2.5">
+          {showDetailed ? (
+            <Eye className="w-4 h-4 text-n-5" />
           ) : (
-            <EyeOff className="w-5 h-5 text-n-4" />
+            <EyeOff className="w-4 h-4 text-n-4" />
           )}
           <div>
-            <p className="text-base2 font-inter text-n-7">Detailed View</p>
-            <p className="text-caption1 text-n-4">
-              Show examples, chains of reasoning, and techniques
-            </p>
+            <p className="text-[13px] font-medium text-n-7">Detailed View</p>
+            <p className="text-[11px] text-n-4">Examples, chains, techniques</p>
           </div>
         </div>
         <Switch
-          checked={showDetailedPlan}
-          onCheckedChange={setShowDetailedPlan}
-          className="data-[state=checked]:bg-primary-1"
+          checked={showDetailed}
+          onCheckedChange={setShowDetailed}
+          className="data-[state=checked]:bg-[var(--primary-1)]"
         />
       </div>
 
       <motion.div
-        className="space-y-5"
+        className="space-y-4"
         variants={staggerContainer}
         initial="initial"
         animate="animate"
       >
         {/* Introduction */}
         <motion.div variants={staggerItem}>
-          <div className="card-bw-hover overflow-hidden">
+          <div className="card-surface overflow-hidden">
             <div
-              className="px-7 py-5 flex items-center justify-between"
-              style={{
-                borderBottom: "1px solid var(--n-3)",
-                background: "var(--n-2)",
-              }}
+              className="px-5 py-3.5 flex items-center justify-between"
+              style={{ borderBottom: "1px solid var(--n-3)", background: "var(--n-1)" }}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <span
-                  className="flex items-center justify-center w-10 h-10 text-white text-base2 font-inter"
-                  style={{
-                    borderRadius: "0.75rem",
-                    background: "var(--n-7)",
-                  }}
+                  className="flex items-center justify-center w-7 h-7 text-white text-[11px] font-semibold"
+                  style={{ borderRadius: "0.375rem", background: "var(--n-7)" }}
                 >
                   1
                 </span>
                 <div>
-                  <h3 className="text-base1 font-inter text-n-7">
-                    Introduction
-                  </h3>
-                  <p className="text-caption1 text-n-4 mt-0.5">
-                    Define key terms and state your thesis
-                  </p>
+                  <h3 className="text-[13px] font-semibold text-n-7">Introduction</h3>
+                  <p className="text-[11px] text-n-4">Define key terms & thesis</p>
                 </div>
               </div>
               <AOBadge ao="ao1" />
             </div>
-            <div className="p-7">
+            <div className="p-5">
               <div
-                className="p-5 border"
+                className="p-4"
                 style={{
-                  borderRadius: "0.75rem",
-                  background: "var(--away-lighter)",
-                  borderColor: "var(--away-light)",
+                  borderRadius: "0.375rem",
+                  background: "var(--warning-muted)",
+                  border: "1px solid var(--warning-border)",
                 }}
               >
                 <p
-                  className="text-caption2 font-bold uppercase tracking-wider mb-2.5 flex items-center gap-1.5 font-inter"
-                  style={{ color: "#a07a2d" }}
+                  className="text-[10px] font-semibold uppercase tracking-wider mb-1.5 flex items-center gap-1"
+                  style={{ color: "var(--warning-text)" }}
                 >
-                  <Lightbulb className="w-3.5 h-3.5" />
+                  <Lightbulb className="w-3 h-3" />
                   What to Write
                 </p>
-                <p className="text-base2 text-n-5 leading-relaxed">
+                <p className="text-[13px] text-n-5 leading-relaxed">
                   {result.introduction?.whatToWrite || result.thesis}
                 </p>
               </div>
@@ -824,137 +638,111 @@ function PlanResultDisplay({
         {/* Arguments */}
         {result.arguments.map((arg, index) => (
           <motion.div key={index} variants={staggerItem}>
-            <div className="card-bw-hover overflow-hidden">
+            <div className="card-surface overflow-hidden">
               <div
-                className="px-7 py-5 flex items-center justify-between"
-                style={{
-                  borderBottom: "1px solid var(--n-3)",
-                  background: "var(--n-2)",
-                }}
+                className="px-5 py-3.5 flex items-center justify-between"
+                style={{ borderBottom: "1px solid var(--n-3)", background: "var(--n-1)" }}
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   <span
-                    className="flex items-center justify-center w-10 h-10 text-white text-base2 font-inter"
+                    className="flex items-center justify-center w-7 h-7 text-white text-[11px] font-semibold"
                     style={{
-                      borderRadius: "0.75rem",
-                      background:
-                        index === 0
-                          ? "var(--success-dark)"
-                          : "var(--error-base)",
+                      borderRadius: "0.375rem",
+                      background: index === 0 ? "var(--success-text)" : "var(--error-text)",
                     }}
                   >
                     {index + 2}
                   </span>
                   <div>
-                    <h3 className="text-base1 font-inter text-n-7">
+                    <h3 className="text-[13px] font-semibold text-n-7">
                       Argument {index === 0 ? "FOR" : "AGAINST"}
                     </h3>
-                    <p className="text-caption1 text-n-4 mt-0.5 max-w-md truncate">
-                      {arg.point}
-                    </p>
+                    <p className="text-[11px] text-n-4 max-w-sm truncate">{arg.point}</p>
                   </div>
                 </div>
-                <div className="flex gap-1.5">
+                <div className="flex gap-1">
                   <AOBadge ao="ao1" />
                   <AOBadge ao="ao2" />
                   <AOBadge ao="ao3" />
                 </div>
               </div>
-              <div className="p-7 space-y-5">
-                {/* Chain of Reasoning */}
-                {showDetailedPlan &&
-                  arg.chainOfReasoning &&
-                  arg.chainOfReasoning.length > 0 && (
-                    <div
-                      className="flex flex-wrap items-center gap-2 p-5 border"
-                      style={{
-                        borderRadius: "0.75rem",
-                        background: "var(--n-2)",
-                        borderColor: "var(--n-3)",
-                      }}
-                    >
-                      <span className="text-caption2 font-bold text-n-4 uppercase tracking-wider mr-2 font-inter">
-                        Chain:
-                      </span>
-                      {arg.chainOfReasoning.slice(0, 5).map((step, i) => (
-                        <span key={i} className="flex items-center gap-2">
-                          <span
-                            className="px-3 py-1.5 text-caption1 text-n-5 font-medium border"
-                            style={{
-                              background: "var(--n-1)",
-                              borderColor: "var(--n-3)",
-                              borderRadius: "0.5rem",
-                            }}
-                          >
-                            {step}
-                          </span>
-                          {arg.chainOfReasoning &&
-                            i <
-                              Math.min(
-                                arg.chainOfReasoning.length - 1,
-                                4
-                              ) && (
-                              <ChevronRight className="w-3 h-3 text-n-3" />
-                            )}
+              <div className="p-5 space-y-3">
+                {/* Chain */}
+                {showDetailed && arg.chainOfReasoning && arg.chainOfReasoning.length > 0 && (
+                  <div
+                    className="flex flex-wrap items-center gap-1.5 p-3"
+                    style={{
+                      borderRadius: "0.375rem",
+                      background: "var(--n-1)",
+                      border: "1px solid var(--n-3)",
+                    }}
+                  >
+                    <span className="text-[10px] font-semibold text-n-4 uppercase tracking-wider mr-1">
+                      Chain:
+                    </span>
+                    {arg.chainOfReasoning.slice(0, 5).map((step, i) => (
+                      <span key={i} className="flex items-center gap-1.5">
+                        <span
+                          className="px-2 py-1 text-[11px] text-n-5 bg-white border border-n-3"
+                          style={{ borderRadius: "0.25rem" }}
+                        >
+                          {step}
                         </span>
-                      ))}
-                    </div>
-                  )}
+                        {arg.chainOfReasoning && i < Math.min(arg.chainOfReasoning.length - 1, 4) && (
+                          <ChevronRight className="w-2.5 h-2.5 text-n-3" />
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
-                {/* Theory and Example */}
-                {showDetailedPlan ? (
-                  <div className="grid md:grid-cols-2 gap-4">
+                {showDetailed ? (
+                  <div className="grid md:grid-cols-2 gap-3">
                     <div
-                      className="p-5 border"
+                      className="p-3.5"
                       style={{
-                        borderRadius: "0.75rem",
-                        background: "var(--information-lighter)",
-                        borderColor: "var(--information-light)",
+                        borderRadius: "0.375rem",
+                        background: "var(--info-muted)",
+                        border: "1px solid var(--info-border)",
                       }}
                     >
                       <p
-                        className="text-caption2 font-bold uppercase tracking-wider mb-2.5 flex items-center gap-1.5 font-inter"
-                        style={{ color: "var(--information-base)" }}
+                        className="text-[10px] font-semibold uppercase tracking-wider mb-1.5 flex items-center gap-1"
+                        style={{ color: "var(--info-text)" }}
                       >
-                        <BookOpen className="w-3.5 h-3.5" />
-                        Theory / Explanation
+                        <BookOpen className="w-3 h-3" />
+                        Theory
                       </p>
-                      <p className="text-base2 text-n-5 leading-relaxed">
-                        {arg.explanation}
-                      </p>
+                      <p className="text-[13px] text-n-5 leading-relaxed">{arg.explanation}</p>
                     </div>
                     <div
-                      className="p-5 border"
+                      className="p-3.5"
                       style={{
-                        borderRadius: "0.75rem",
-                        background: "var(--success-lighter)",
-                        borderColor: "var(--success-light)",
+                        borderRadius: "0.375rem",
+                        background: "var(--success-muted)",
+                        border: "1px solid var(--success-border)",
                       }}
                     >
                       <p
-                        className="text-caption2 font-bold uppercase tracking-wider mb-2.5 flex items-center gap-1.5 font-inter"
-                        style={{ color: "var(--success-dark)" }}
+                        className="text-[10px] font-semibold uppercase tracking-wider mb-1.5 flex items-center gap-1"
+                        style={{ color: "var(--success-text)" }}
                       >
-                        <GraduationCap className="w-3.5 h-3.5" />
-                        Real-World Example
+                        <GraduationCap className="w-3 h-3" />
+                        Example
                       </p>
-                      <p className="text-base2 text-n-5 leading-relaxed">
-                        {arg.example}
-                      </p>
+                      <p className="text-[13px] text-n-5 leading-relaxed">{arg.example}</p>
                     </div>
                   </div>
                 ) : (
                   <div
-                    className="p-5 border"
+                    className="p-3.5"
                     style={{
-                      borderRadius: "0.75rem",
-                      background: "var(--n-2)",
-                      borderColor: "var(--n-3)",
+                      borderRadius: "0.375rem",
+                      background: "var(--n-1)",
+                      border: "1px solid var(--n-3)",
                     }}
                   >
-                    <p className="text-base2 font-inter text-n-7">
-                      {arg.point}
-                    </p>
+                    <p className="text-[13px] font-medium text-n-7">{arg.point}</p>
                   </div>
                 )}
               </div>
@@ -964,56 +752,49 @@ function PlanResultDisplay({
 
         {/* Evaluation */}
         <motion.div variants={staggerItem}>
-          <div className="card-bw-hover overflow-hidden">
+          <div className="card-surface overflow-hidden">
             <div
-              className="px-7 py-5 flex items-center justify-between"
+              className="px-5 py-3.5 flex items-center justify-between"
               style={{
-                borderBottom: "1px solid var(--feature-light)",
-                background: "var(--feature-lighter)",
+                borderBottom: "1px solid var(--purple-border)",
+                background: "var(--purple-muted)",
               }}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <span
-                  className="flex items-center justify-center w-10 h-10 text-white text-base2 font-inter"
-                  style={{
-                    borderRadius: "0.75rem",
-                    background: "var(--feature-base)",
-                  }}
+                  className="flex items-center justify-center w-7 h-7 text-white text-[11px] font-semibold"
+                  style={{ borderRadius: "0.375rem", background: "var(--purple)" }}
                 >
                   {result.arguments.length + 2}
                 </span>
                 <div>
-                  <h3 className="text-base1 font-inter text-n-7">
-                    Deeper Evaluation
-                  </h3>
-                  <p className="text-caption1 text-n-5 mt-0.5">
-                    Critical analysis and limitations
-                  </p>
+                  <h3 className="text-[13px] font-semibold text-n-7">Deeper Evaluation</h3>
+                  <p className="text-[11px] text-n-5">Critical analysis & limitations</p>
                 </div>
               </div>
-              <div className="flex gap-1.5">
+              <div className="flex gap-1">
                 <AOBadge ao="ao3" />
                 <AOBadge ao="ao4" />
               </div>
             </div>
-            <div className="p-7 space-y-5">
-              {showDetailedPlan && (
+            <div className="p-5 space-y-3">
+              {showDetailed && (
                 <div
-                  className="p-5 border"
+                  className="p-3.5"
                   style={{
-                    borderRadius: "0.75rem",
-                    background: "var(--feature-lighter)",
-                    borderColor: "var(--feature-light)",
+                    borderRadius: "0.375rem",
+                    background: "var(--purple-muted)",
+                    border: "1px solid var(--purple-border)",
                   }}
                 >
                   <p
-                    className="text-caption2 font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5 font-inter"
-                    style={{ color: "var(--feature-base)" }}
+                    className="text-[10px] font-semibold uppercase tracking-wider mb-2 flex items-center gap-1"
+                    style={{ color: "var(--purple-text)" }}
                   >
-                    <Crosshair className="w-3.5 h-3.5" />
+                    <Crosshair className="w-3 h-3" />
                     Evaluation Techniques
                   </p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {(
                       result.deeperEvaluation?.techniques || [
                         "Short run vs long run",
@@ -1021,107 +802,89 @@ function PlanResultDisplay({
                         "Magnitude/significance",
                         "Challenging assumptions",
                       ]
-                    ).map((technique, i) => (
+                    ).map((t, i) => (
                       <span
                         key={i}
-                        className="px-3 py-1.5 text-caption1 font-medium border"
+                        className="px-2 py-1 text-[11px] font-medium bg-white border"
                         style={{
-                          borderRadius: "0.5rem",
-                          background: "var(--n-1)",
-                          borderColor: "var(--feature-light)",
-                          color: "var(--feature-base)",
+                          borderRadius: "0.25rem",
+                          borderColor: "var(--purple-border)",
+                          color: "var(--purple-text)",
                         }}
                       >
-                        {technique}
+                        {t}
                       </span>
                     ))}
                   </div>
                 </div>
               )}
 
-              {result.evaluations
-                .slice(0, showDetailedPlan ? 3 : 2)
-                .map((evaluation, index) => (
-                  <div
-                    key={index}
-                    className="p-5 border"
-                    style={{
-                      borderRadius: "0.75rem",
-                      background: "var(--away-lighter)",
-                      borderColor: "var(--away-light)",
-                    }}
+              {result.evaluations.slice(0, showDetailed ? 3 : 2).map((ev, i) => (
+                <div
+                  key={i}
+                  className="p-3.5"
+                  style={{
+                    borderRadius: "0.375rem",
+                    background: "var(--warning-muted)",
+                    border: "1px solid var(--warning-border)",
+                  }}
+                >
+                  <h5
+                    className="text-[13px] font-medium mb-1"
+                    style={{ color: "var(--warning-text)" }}
                   >
-                    <h5
-                      className="text-base2 font-inter mb-2"
-                      style={{ color: "#a07a2d" }}
-                    >
-                      {evaluation.point}
-                    </h5>
-                    {showDetailedPlan && (
-                      <p className="text-base2 text-n-5 leading-relaxed">
-                        {evaluation.development}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                    {ev.point}
+                  </h5>
+                  {showDetailed && (
+                    <p className="text-[13px] text-n-5 leading-relaxed">{ev.development}</p>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </motion.div>
 
-        {/* Diagram — AI-Generated SVG */}
+        {/* Diagram */}
         {result.diagram && result.diagram !== "none" && (
           <motion.div variants={staggerItem}>
-            <div className="card-bw-hover overflow-hidden">
+            <div className="card-surface overflow-hidden">
               <div
-                className="px-7 py-5 flex items-center gap-4"
+                className="px-5 py-3.5 flex items-center gap-3"
                 style={{
-                  borderBottom: "1px solid var(--verified-light)",
-                  background: "var(--verified-lighter)",
+                  borderBottom: "1px solid var(--info-border)",
+                  background: "var(--info-muted)",
                 }}
               >
                 <div
-                  className="w-10 h-10 flex items-center justify-center"
-                  style={{
-                    borderRadius: "0.75rem",
-                    background: "var(--verified-base)",
-                  }}
+                  className="w-7 h-7 flex items-center justify-center"
+                  style={{ borderRadius: "0.375rem", background: "var(--info)" }}
                 >
-                  <BarChart3 className="w-5 h-5 text-white" />
+                  <BarChart3 className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-base2 font-inter uppercase tracking-wide text-n-7">
+                  <h3 className="text-[13px] font-semibold text-n-7">
                     {diagramAnalysis?.customTitle || "Required Diagram"}
                   </h3>
-                  <p className="text-caption1 text-n-4 mt-0.5">
-                    {result.diagramSection?.name ||
-                      result.diagram.replace("-", " ")}
+                  <p className="text-[11px] text-n-4">
+                    {result.diagramSection?.name || result.diagram.replace("-", " ")}
                   </p>
                 </div>
               </div>
-              <div className="p-7">
-                {/* SVG Diagram Rendering */}
+              <div className="p-5">
                 {diagramLoading && (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="flex flex-col items-center gap-3">
-                      <Loader2
-                        className="w-6 h-6 animate-spin"
-                        style={{ color: "var(--verified-base)" }}
-                      />
-                      <span className="text-caption1 text-n-4">
-                        Generating diagram...
-                      </span>
-                    </div>
+                  <div className="flex items-center justify-center py-10">
+                    <Loader2 className="w-5 h-5 animate-spin text-n-4" />
+                    <span className="text-[11px] text-n-4 ml-2">Generating diagram...</span>
                   </div>
                 )}
 
                 {generatedDiagram && !diagramLoading && (
-                  <div className="mb-6">
+                  <div className="mb-4">
                     <div
-                      className="flex justify-center p-6 bg-white border"
+                      className="flex justify-center p-5 bg-white border"
                       style={{
-                        borderRadius: "0.75rem",
+                        borderRadius: "0.5rem",
                         borderColor: "var(--n-3)",
-                        boxShadow: "inset 0 1px 3px rgba(0,0,0,0.04)",
                       }}
                     >
                       <DiagramRenderer
@@ -1129,55 +892,49 @@ function PlanResultDisplay({
                         showLabels={true}
                         showAreas={true}
                         showPoints={true}
-                        width={420}
-                        height={420}
+                        width={400}
+                        height={400}
                         className="max-w-full"
                       />
                     </div>
 
-                    {/* Diagram Annotations */}
-                    {diagramAnalysis?.annotations &&
-                      diagramAnalysis.annotations.length > 0 && (
-                        <div className="mt-4 space-y-2">
-                          {diagramAnalysis.annotations.map((note, i) => (
-                            <div
-                              key={i}
-                              className="flex items-start gap-2.5 text-base2 text-n-5"
+                    {diagramAnalysis?.annotations && diagramAnalysis.annotations.length > 0 && (
+                      <div className="mt-3 space-y-1.5">
+                        {diagramAnalysis.annotations.map((note, i) => (
+                          <div key={i} className="flex items-start gap-2 text-[13px] text-n-5">
+                            <span
+                              className="w-4 h-4 flex items-center justify-center shrink-0 mt-0.5 text-[9px] font-semibold border"
+                              style={{
+                                borderRadius: "50%",
+                                background: "var(--info-muted)",
+                                borderColor: "var(--info-border)",
+                                color: "var(--info-text)",
+                              }}
                             >
-                              <span
-                                className="w-5 h-5 flex items-center justify-center shrink-0 mt-0.5 text-2xs font-bold border"
-                                style={{
-                                  borderRadius: "50%",
-                                  background: "var(--verified-lighter)",
-                                  borderColor: "var(--verified-light)",
-                                  color: "var(--verified-base)",
-                                }}
-                              >
-                                {i + 1}
-                              </span>
-                              <span className="leading-relaxed">{note}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                              {i + 1}
+                            </span>
+                            <span className="leading-relaxed">{note}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
-                    {/* Exam Relevance */}
                     {diagramAnalysis?.examRelevance && (
                       <div
-                        className="mt-4 p-4 border"
+                        className="mt-3 p-3"
                         style={{
-                          borderRadius: "0.75rem",
-                          background: "var(--information-lighter)",
-                          borderColor: "var(--information-light)",
+                          borderRadius: "0.375rem",
+                          background: "var(--info-muted)",
+                          border: "1px solid var(--info-border)",
                         }}
                       >
                         <p
-                          className="text-caption2 font-bold uppercase tracking-wider mb-1"
-                          style={{ color: "var(--information-base)" }}
+                          className="text-[10px] font-semibold uppercase tracking-wider mb-1"
+                          style={{ color: "var(--info-text)" }}
                         >
                           Exam Tip
                         </p>
-                        <p className="text-base2 text-n-5 leading-relaxed">
+                        <p className="text-[13px] text-n-5 leading-relaxed">
                           {diagramAnalysis.examRelevance}
                         </p>
                       </div>
@@ -1187,32 +944,28 @@ function PlanResultDisplay({
 
                 {diagramError && !diagramLoading && (
                   <div
-                    className="mb-5 p-4 border"
+                    className="mb-4 p-3"
                     style={{
-                      borderRadius: "0.75rem",
-                      background: "var(--error-lighter)",
-                      borderColor: "var(--error-light)",
+                      borderRadius: "0.375rem",
+                      background: "var(--error-muted)",
+                      border: "1px solid var(--error-border)",
                     }}
                   >
-                    <p
-                      className="text-base2"
-                      style={{ color: "var(--error-base)" }}
-                    >
+                    <p className="text-[13px]" style={{ color: "var(--error-text)" }}>
                       {diagramError}
                     </p>
                   </div>
                 )}
 
-                {/* Key Labels */}
-                {showDetailedPlan && result.diagramSection?.keyLabels && (
-                  <div className="flex flex-wrap gap-2 mb-5">
+                {showDetailed && result.diagramSection?.keyLabels && (
+                  <div className="flex flex-wrap gap-1.5 mb-3">
                     {result.diagramSection.keyLabels.map((label, i) => (
                       <Badge
                         key={i}
                         variant="secondary"
-                        className="text-caption1 font-medium border"
+                        className="text-[11px] font-medium border"
                         style={{
-                          background: "var(--n-2)",
+                          background: "var(--n-1)",
                           borderColor: "var(--n-3)",
                         }}
                       >
@@ -1222,23 +975,16 @@ function PlanResultDisplay({
                   </div>
                 )}
 
-                {/* Diagram Explanation */}
                 {result.diagramExplanation && (
-                  <p className="text-base2 text-n-5 leading-relaxed">
+                  <p className="text-[13px] text-n-5 leading-relaxed">
                     {result.diagramExplanation}
                   </p>
                 )}
 
-                {/* AI Analysis Reasoning */}
-                {showDetailedPlan && diagramAnalysis?.reasoning && (
-                  <div
-                    className="mt-4 pt-4"
-                    style={{ borderTop: "1px solid var(--n-3)" }}
-                  >
-                    <p className="text-caption2 font-semibold text-n-4 mb-1.5">
-                      AI Analysis
-                    </p>
-                    <p className="text-base2 text-n-5 leading-relaxed">
+                {showDetailed && diagramAnalysis?.reasoning && (
+                  <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--n-3)" }}>
+                    <p className="text-[10px] font-semibold text-n-4 mb-1">AI Analysis</p>
+                    <p className="text-[13px] text-n-5 leading-relaxed">
                       {diagramAnalysis.reasoning}
                     </p>
                   </div>
@@ -1250,39 +996,30 @@ function PlanResultDisplay({
 
         {/* Conclusion */}
         <motion.div variants={staggerItem}>
-          <div className="card-bw-hover overflow-hidden">
+          <div className="card-surface overflow-hidden">
             <div
-              className="px-7 py-5 flex items-center justify-between"
+              className="px-5 py-3.5 flex items-center justify-between"
               style={{
-                borderBottom: "1px solid var(--success-light)",
-                background: "var(--success-lighter)",
+                borderBottom: "1px solid var(--success-border)",
+                background: "var(--success-muted)",
               }}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <span
-                  className="flex items-center justify-center w-10 h-10 text-white text-base2 font-inter"
-                  style={{
-                    borderRadius: "0.75rem",
-                    background: "var(--success-dark)",
-                  }}
+                  className="flex items-center justify-center w-7 h-7 text-white text-[11px] font-semibold"
+                  style={{ borderRadius: "0.375rem", background: "var(--success-text)" }}
                 >
                   {result.arguments.length + 3}
                 </span>
                 <div>
-                  <h3 className="text-base1 font-inter text-n-7">
-                    Conclusion
-                  </h3>
-                  <p className="text-caption1 text-n-5 mt-0.5">
-                    Weigh evidence and give your judgement
-                  </p>
+                  <h3 className="text-[13px] font-semibold text-n-7">Conclusion</h3>
+                  <p className="text-[11px] text-n-5">Weigh evidence & judgement</p>
                 </div>
               </div>
               <AOBadge ao="ao4" />
             </div>
-            <div className="p-7">
-              <p className="text-base2 text-n-5 leading-relaxed">
-                {result.conclusion}
-              </p>
+            <div className="p-5">
+              <p className="text-[13px] text-n-5 leading-relaxed">{result.conclusion}</p>
             </div>
           </div>
         </motion.div>
@@ -1292,7 +1029,7 @@ function PlanResultDisplay({
 }
 
 // ============================================================================
-// DIAGRAM UPLOAD — Brainwave field style
+// DIAGRAM UPLOAD
 // ============================================================================
 
 function DiagramUpload({
@@ -1321,83 +1058,63 @@ function DiagramUpload({
 
   if (image) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label className="text-base2 font-inter text-n-7">
-            Diagram Uploaded
-          </label>
+          <label className="text-[13px] font-medium text-n-7">Diagram Uploaded</label>
           <button
             onClick={onRemove}
-            className="flex items-center gap-1.5 text-caption1 transition-colors"
-            style={{ color: "var(--error-base)" }}
+            className="flex items-center gap-1 text-[11px] transition-colors"
+            style={{ color: "var(--error-text)" }}
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-3 h-3" />
             Remove
           </button>
         </div>
         <div
-          className="overflow-hidden border"
+          className="overflow-hidden"
           style={{
-            borderRadius: "0.75rem",
-            borderColor: "var(--n-3)",
+            borderRadius: "0.5rem",
+            border: "1px solid var(--n-3)",
             background: "var(--n-1)",
           }}
         >
-          <img
-            src={image}
-            alt="Uploaded diagram"
-            className="w-full max-h-48 object-contain"
-          />
+          <img src={image} alt="Uploaded diagram" className="w-full max-h-44 object-contain" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className="text-base2 font-inter text-n-7">
-          Diagram Upload
-        </label>
+        <label className="text-[13px] font-medium text-n-7">Diagram</label>
         <span
-          className="text-caption2 font-semibold text-n-4 px-2 py-0.5"
-          style={{
-            background: "var(--n-2)",
-            borderRadius: "0.375rem",
-          }}
+          className="text-[10px] font-medium text-n-4 px-1.5 py-0.5"
+          style={{ background: "var(--n-2)", borderRadius: "0.25rem" }}
         >
           Optional
         </span>
       </div>
       <div
-        className="flex flex-col items-center justify-center p-10 cursor-pointer transition-all duration-200 group"
+        className="flex flex-col items-center justify-center p-8 cursor-pointer transition-all group"
         onClick={() => fileInputRef.current?.click()}
         style={{
-          borderRadius: "0.75rem",
-          border: "2px dashed var(--n-3)",
-          background: "var(--n-2)",
+          borderRadius: "0.5rem",
+          border: "1.5px dashed var(--n-3)",
+          background: "var(--n-1)",
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.borderColor = "var(--primary-1)";
-          e.currentTarget.style.background = "rgba(0, 132, 255, 0.03)";
+          e.currentTarget.style.background = "var(--primary-muted)";
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.borderColor = "var(--n-3)";
-          e.currentTarget.style.background = "var(--n-2)";
+          e.currentTarget.style.background = "var(--n-1)";
         }}
       >
-        <div
-          className="w-12 h-12 flex items-center justify-center mb-3 transition-all duration-200"
-          style={{
-            borderRadius: "0.75rem",
-            background: "var(--n-1)",
-            boxShadow: "0 0.125rem 0.25rem rgba(0,0,0,0.06)",
-          }}
-        >
-          <Upload className="w-5 h-5 text-n-4 group-hover:text-primary-1 transition-colors" />
-        </div>
-        <span className="text-base2 text-n-5 mb-1">Click to upload</span>
-        <span className="text-caption1 text-n-4">PNG, JPG up to 10MB</span>
+        <Upload className="w-5 h-5 text-n-4 group-hover:text-primary-1 transition-colors mb-2" />
+        <span className="text-[13px] text-n-5">Click to upload</span>
+        <span className="text-[11px] text-n-4">PNG, JPG up to 10MB</span>
       </div>
       <input
         ref={fileInputRef}
@@ -1414,160 +1131,103 @@ function DiagramUpload({
 }
 
 // ============================================================================
-// GRADER INPUT FORM — Brainwave field + button patterns
+// GRADER INPUT FORM
 // ============================================================================
 
 function GraderInputForm({
-  question,
-  setQuestion,
-  answer,
-  setAnswer,
-  questionType,
-  setQuestionType,
-  diagram,
-  setDiagram,
-  onSubmit,
-  loading,
-  error,
-  onClear,
+  question, setQuestion, answer, setAnswer,
+  questionType, setQuestionType,
+  diagram, setDiagram,
+  onSubmit, loading, error, onClear,
 }: {
-  question: string;
-  setQuestion: (v: string) => void;
-  answer: string;
-  setAnswer: (v: string) => void;
-  questionType: QuestionType;
-  setQuestionType: (v: QuestionType) => void;
-  diagram: string | null;
-  setDiagram: (v: string | null) => void;
-  onSubmit: () => void;
-  loading: boolean;
-  error: string;
-  onClear: () => void;
+  question: string; setQuestion: (v: string) => void;
+  answer: string; setAnswer: (v: string) => void;
+  questionType: QuestionType; setQuestionType: (v: QuestionType) => void;
+  diagram: string | null; setDiagram: (v: string | null) => void;
+  onSubmit: () => void; loading: boolean; error: string; onClear: () => void;
 }) {
   return (
-    <motion.div className="max-w-2xl mx-auto" {...pageTransition}>
-      {/* Header — Brainwave centered hero */}
-      <div className="text-center mb-12">
+    <motion.div className="max-w-xl mx-auto" {...pageTransition}>
+      <div className="text-center mb-8">
         <div
-          className="flex justify-center items-center w-15 h-15 mx-auto mb-5"
+          className="flex justify-center items-center w-10 h-10 mx-auto mb-3"
           style={{
-            borderRadius: "1rem",
+            borderRadius: "0.5rem",
             background: "var(--n-2)",
-            border: "2px solid var(--n-3)",
-            boxShadow:
-              "0 0.125rem 0.125rem rgba(0,0,0,0.07), inset 0 0.25rem 0.125rem #FFFFFF",
+            border: "1px solid var(--n-3)",
           }}
         >
-          <Pen className="w-6 h-6 text-n-4" />
+          <Pen className="w-4.5 h-4.5 text-n-5" />
         </div>
-        <h2 className="text-h6 font-inter text-n-7 tracking-tight mb-2">
+        <h2 className="text-base font-semibold text-n-7 tracking-[-0.01em] mb-1">
           Grade Your Answer
         </h2>
-        <p className="text-base2 text-n-4">
-          AI-powered feedback aligned with Edexcel mark schemes
-        </p>
+        <p className="text-[13px] text-n-4">AI feedback aligned with Edexcel mark schemes</p>
       </div>
 
-      <div className="card-bw overflow-hidden">
-        <div className="p-8 space-y-7">
-          {/* Question Type */}
-          <div className="space-y-2.5">
-            <label className="text-base2 font-inter text-n-7">
-              Question Type
-            </label>
-            <Select
-              value={questionType}
-              onValueChange={(v) => setQuestionType(v as QuestionType)}
-            >
-              <SelectTrigger
-                className="h-13 bg-n-2 border-2 border-n-3 hover:bg-transparent transition-all duration-200 focus:border-primary-1 focus:bg-transparent text-n-7"
-                style={{ borderRadius: "0.75rem" }}
-              >
+      <div className="card-surface overflow-hidden">
+        <div className="p-6 space-y-5">
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium text-n-7">Question Type</label>
+            <Select value={questionType} onValueChange={(v) => setQuestionType(v as QuestionType)}>
+              <SelectTrigger className="field-bw" style={{ borderRadius: "0.5rem" }}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {QUESTION_TYPE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
+                {QUESTION_TYPE_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Exam Question */}
-          <div className="space-y-2.5">
-            <label className="text-base2 font-inter text-n-7">
-              Exam Question
-            </label>
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium text-n-7">Exam Question</label>
             <textarea
               placeholder="Paste the exam question here..."
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              className="field-bw-textarea min-h-[100px]"
+              className="field-bw-textarea min-h-[90px]"
             />
           </div>
 
-          {/* Student Answer */}
-          <div className="space-y-2.5">
-            <label className="text-base2 font-inter text-n-7">
-              Student Answer
-            </label>
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium text-n-7">Student Answer</label>
             <textarea
-              placeholder="Paste the student's answer here for grading..."
+              placeholder="Paste the student's answer here..."
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
-              className="field-bw-textarea min-h-[200px]"
+              className="field-bw-textarea min-h-[180px]"
             />
           </div>
 
-          {/* Diagram Upload */}
-          <DiagramUpload
-            image={diagram}
-            onUpload={setDiagram}
-            onRemove={() => setDiagram(null)}
-          />
+          <DiagramUpload image={diagram} onUpload={setDiagram} onRemove={() => setDiagram(null)} />
 
-          {/* Error */}
           {error && (
             <Alert
               variant="destructive"
-              className="border"
               style={{
-                borderRadius: "0.75rem",
-                borderColor: "var(--error-light)",
-                background: "var(--error-lighter)",
+                borderRadius: "0.375rem",
+                borderColor: "var(--error-border)",
+                background: "var(--error-muted)",
               }}
             >
-              <AlertCircle className="h-4 w-4" style={{ color: "var(--error-base)" }} />
-              <AlertDescription style={{ color: "var(--error-base)" }}>
+              <AlertCircle className="h-3.5 w-3.5" style={{ color: "var(--error-text)" }} />
+              <AlertDescription className="text-[13px]" style={{ color: "var(--error-text)" }}>
                 {error}
               </AlertDescription>
             </Alert>
           )}
 
-          {/* Actions — Brainwave button pattern */}
-          <div className="flex gap-3 pt-2">
-            <button
-              className="btn-bw-dark flex-1"
-              onClick={onSubmit}
-              disabled={loading}
-            >
+          <div className="flex gap-2.5 pt-1">
+            <button className="btn-bw-dark flex-1" onClick={onSubmit} disabled={loading}>
               {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Analyzing...
-                </>
+                <><Loader2 className="w-4 h-4 animate-spin" />Analyzing...</>
               ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  Grade Answer
-                </>
+                <><Sparkles className="w-4 h-4" />Grade Answer</>
               )}
             </button>
-            <button className="btn-bw-stroke" onClick={onClear}>
-              Clear
-            </button>
+            <button className="btn-bw-stroke" onClick={onClear}>Clear</button>
           </div>
         </div>
       </div>
@@ -1580,128 +1240,83 @@ function GraderInputForm({
 // ============================================================================
 
 function PlannerInputForm({
-  question,
-  setQuestion,
-  questionType,
-  setQuestionType,
-  onSubmit,
-  loading,
-  error,
-  onClear,
+  question, setQuestion, questionType, setQuestionType,
+  onSubmit, loading, error, onClear,
 }: {
-  question: string;
-  setQuestion: (v: string) => void;
-  questionType: QuestionType;
-  setQuestionType: (v: QuestionType) => void;
-  onSubmit: () => void;
-  loading: boolean;
-  error: string;
-  onClear: () => void;
+  question: string; setQuestion: (v: string) => void;
+  questionType: QuestionType; setQuestionType: (v: QuestionType) => void;
+  onSubmit: () => void; loading: boolean; error: string; onClear: () => void;
 }) {
   return (
-    <motion.div className="max-w-2xl mx-auto" {...pageTransition}>
-      {/* Header */}
-      <div className="text-center mb-12">
+    <motion.div className="max-w-xl mx-auto" {...pageTransition}>
+      <div className="text-center mb-8">
         <div
-          className="flex justify-center items-center w-15 h-15 mx-auto mb-5"
+          className="flex justify-center items-center w-10 h-10 mx-auto mb-3"
           style={{
-            borderRadius: "1rem",
+            borderRadius: "0.5rem",
             background: "var(--n-2)",
-            border: "2px solid var(--n-3)",
-            boxShadow:
-              "0 0.125rem 0.125rem rgba(0,0,0,0.07), inset 0 0.25rem 0.125rem #FFFFFF",
+            border: "1px solid var(--n-3)",
           }}
         >
-          <FileText className="w-6 h-6 text-n-4" />
+          <FileText className="w-4.5 h-4.5 text-n-5" />
         </div>
-        <h2 className="text-h6 font-inter text-n-7 tracking-tight mb-2">
+        <h2 className="text-base font-semibold text-n-7 tracking-[-0.01em] mb-1">
           Plan Your Essay
         </h2>
-        <p className="text-base2 text-n-4">
-          Generate a comprehensive A*-grade essay structure
-        </p>
+        <p className="text-[13px] text-n-4">Generate a comprehensive A*-grade structure</p>
       </div>
 
-      <div className="card-bw overflow-hidden">
-        <div className="p-8 space-y-7">
-          {/* Question Type */}
-          <div className="space-y-2.5">
-            <label className="text-base2 font-inter text-n-7">
-              Question Type
-            </label>
-            <Select
-              value={questionType}
-              onValueChange={(v) => setQuestionType(v as QuestionType)}
-            >
-              <SelectTrigger
-                className="h-13 bg-n-2 border-2 border-n-3 hover:bg-transparent transition-all duration-200 focus:border-primary-1 focus:bg-transparent text-n-7"
-                style={{ borderRadius: "0.75rem" }}
-              >
+      <div className="card-surface overflow-hidden">
+        <div className="p-6 space-y-5">
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium text-n-7">Question Type</label>
+            <Select value={questionType} onValueChange={(v) => setQuestionType(v as QuestionType)}>
+              <SelectTrigger className="field-bw" style={{ borderRadius: "0.5rem" }}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {QUESTION_TYPE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
+                {QUESTION_TYPE_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Essay Question */}
-          <div className="space-y-2.5">
-            <label className="text-base2 font-inter text-n-7">
-              Essay Question
-            </label>
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium text-n-7">Essay Question</label>
             <textarea
-              placeholder="Type or paste the essay question here..."
+              placeholder="Type or paste the essay question..."
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              className="field-bw-textarea min-h-[140px]"
+              className="field-bw-textarea min-h-[120px]"
             />
           </div>
 
-          {/* Error */}
           {error && (
             <Alert
               variant="destructive"
-              className="border"
               style={{
-                borderRadius: "0.75rem",
-                borderColor: "var(--error-light)",
-                background: "var(--error-lighter)",
+                borderRadius: "0.375rem",
+                borderColor: "var(--error-border)",
+                background: "var(--error-muted)",
               }}
             >
-              <AlertCircle className="h-4 w-4" style={{ color: "var(--error-base)" }} />
-              <AlertDescription style={{ color: "var(--error-base)" }}>
+              <AlertCircle className="h-3.5 w-3.5" style={{ color: "var(--error-text)" }} />
+              <AlertDescription className="text-[13px]" style={{ color: "var(--error-text)" }}>
                 {error}
               </AlertDescription>
             </Alert>
           )}
 
-          {/* Actions */}
-          <div className="flex gap-3 pt-2">
-            <button
-              className="btn-bw-dark flex-1"
-              onClick={onSubmit}
-              disabled={loading}
-            >
+          <div className="flex gap-2.5 pt-1">
+            <button className="btn-bw-dark flex-1" onClick={onSubmit} disabled={loading}>
               {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Generating...
-                </>
+                <><Loader2 className="w-4 h-4 animate-spin" />Generating...</>
               ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  Generate Plan
-                </>
+                <><Sparkles className="w-4 h-4" />Generate Plan</>
               )}
             </button>
-            <button className="btn-bw-stroke" onClick={onClear}>
-              Clear
-            </button>
+            <button className="btn-bw-stroke" onClick={onClear}>Clear</button>
           </div>
         </div>
       </div>
@@ -1710,32 +1325,24 @@ function PlannerInputForm({
 }
 
 // ============================================================================
-// MAIN PAGE
+// MAIN
 // ============================================================================
 
 export default function HomePage() {
-  const [activeMode, setActiveMode] = useState<"grader" | "planner">(
-    "grader"
-  );
+  const [activeMode, setActiveMode] = useState<"grader" | "planner">("grader");
   const [sidebarVisible, setSidebarVisible] = useState(false);
 
-  // Grader state
   const [graderQuestion, setGraderQuestion] = useState("");
   const [graderAnswer, setGraderAnswer] = useState("");
-  const [graderQuestionType, setGraderQuestionType] =
-    useState<QuestionType>("evaluate-20");
+  const [graderQuestionType, setGraderQuestionType] = useState<QuestionType>("evaluate-20");
   const [graderDiagram, setGraderDiagram] = useState<string | null>(null);
-  const [graderResult, setGraderResult] = useState<GradingResult | null>(
-    null
-  );
+  const [graderResult, setGraderResult] = useState<GradingResult | null>(null);
   const [graderLoading, setGraderLoading] = useState(false);
   const [graderError, setGraderError] = useState("");
   const [graderView, setGraderView] = useState<ViewState>("input");
 
-  // Planner state
   const [plannerQuestion, setPlannerQuestion] = useState("");
-  const [plannerQuestionType, setPlannerQuestionType] =
-    useState<QuestionType>("evaluate-20");
+  const [plannerQuestionType, setPlannerQuestionType] = useState<QuestionType>("evaluate-20");
   const [plannerResult, setPlannerResult] = useState<PlanResult | null>(null);
   const [plannerLoading, setPlannerLoading] = useState(false);
   const [plannerError, setPlannerError] = useState("");
@@ -1746,13 +1353,11 @@ export default function HomePage() {
       setGraderError("Please enter both a question and your answer.");
       return;
     }
-
     setGraderLoading(true);
     setGraderError("");
     setGraderView("loading");
-
     try {
-      const response = await fetch("/api/grade", {
+      const res = await fetch("/api/grade", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1762,21 +1367,14 @@ export default function HomePage() {
           diagramImage: graderDiagram || undefined,
         }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to grade answer");
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error || "Failed to grade");
       }
-
-      const result = await response.json();
-      setGraderResult(result);
+      setGraderResult(await res.json());
       setGraderView("results");
-    } catch (error) {
-      setGraderError(
-        error instanceof Error
-          ? error.message
-          : "An unexpected error occurred"
-      );
+    } catch (e) {
+      setGraderError(e instanceof Error ? e.message : "An error occurred");
       setGraderView("input");
     } finally {
       setGraderLoading(false);
@@ -1788,13 +1386,11 @@ export default function HomePage() {
       setPlannerError("Please enter a question.");
       return;
     }
-
     setPlannerLoading(true);
     setPlannerError("");
     setPlannerView("loading");
-
     try {
-      const response = await fetch("/api/plan", {
+      const res = await fetch("/api/plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1803,21 +1399,14 @@ export default function HomePage() {
           includeDiagram: true,
         }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to generate plan");
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error || "Failed to generate plan");
       }
-
-      const result = await response.json();
-      setPlannerResult(result);
+      setPlannerResult(await res.json());
       setPlannerView("results");
-    } catch (error) {
-      setPlannerError(
-        error instanceof Error
-          ? error.message
-          : "An unexpected error occurred"
-      );
+    } catch (e) {
+      setPlannerError(e instanceof Error ? e.message : "An error occurred");
       setPlannerView("input");
     } finally {
       setPlannerLoading(false);
@@ -1825,90 +1414,67 @@ export default function HomePage() {
   };
 
   const clearGrader = () => {
-    setGraderQuestion("");
-    setGraderAnswer("");
-    setGraderDiagram(null);
-    setGraderResult(null);
-    setGraderError("");
-    setGraderView("input");
+    setGraderQuestion(""); setGraderAnswer(""); setGraderDiagram(null);
+    setGraderResult(null); setGraderError(""); setGraderView("input");
   };
 
   const clearPlanner = () => {
-    setPlannerQuestion("");
-    setPlannerResult(null);
-    setPlannerError("");
-    setPlannerView("input");
+    setPlannerQuestion(""); setPlannerResult(null);
+    setPlannerError(""); setPlannerView("input");
   };
-
-  const currentModeTitle =
-    activeMode === "grader" ? "Exam Grader" : "Essay Planner";
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Sidebar */}
       <Sidebar
         activeMode={activeMode}
-        onModeChange={(mode) => {
-          setActiveMode(mode);
-        }}
+        onModeChange={setActiveMode}
         visible={sidebarVisible}
         onClose={() => setSidebarVisible(false)}
       />
 
-      {/* Main Content — Brainwave Layout pl-80 (20rem) pattern */}
-      <div className="pl-80 pt-8 pb-5 pr-5 transition-all max-lg:pl-5 max-md:pl-4 max-md:pr-4 max-md:pt-3 max-md:pb-4">
-        {/* Header Bar */}
-        <div className="flex items-center gap-4 mb-5">
+      {/* Main — 16.5rem sidebar width */}
+      <div className="pl-[16.5rem] pt-6 pb-4 pr-4 transition-all max-lg:pl-4 max-md:pl-3 max-md:pr-3 max-md:pt-3 max-md:pb-3">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-4">
           <button
-            className="hidden max-lg:flex items-center justify-center w-10 h-10 transition-colors"
+            className="hidden max-lg:flex items-center justify-center w-8 h-8 transition-colors"
             onClick={() => setSidebarVisible(true)}
             style={{
-              borderRadius: "0.75rem",
-              border: "2px solid var(--n-3)",
-              background: "var(--n-1)",
+              borderRadius: "0.375rem",
+              border: "1px solid var(--n-3)",
+              background: "white",
             }}
           >
-            <PanelLeft className="w-5 h-5 text-n-7" />
+            <PanelLeft className="w-4 h-4 text-n-7" />
           </button>
-          <h1 className="text-h6 font-inter text-n-7 tracking-tight max-md:text-base1">
-            {currentModeTitle}
+          <h1 className="text-[15px] font-semibold text-n-7 tracking-[-0.01em]">
+            {activeMode === "grader" ? "Exam Grader" : "Essay Planner"}
           </h1>
         </div>
 
-        {/* Content Wrapper — Brainwave container */}
-        <div className="content-wrapper min-h-[calc(100svh-7rem)] max-md:min-h-[calc(100svh-5rem)]">
-          <div className="flex-1 overflow-auto scrollbar-none p-9 max-md:p-5">
+        {/* Content */}
+        <div className="content-wrapper min-h-[calc(100svh-6rem)] max-md:min-h-[calc(100svh-4.5rem)]">
+          <div className="flex-1 overflow-auto scrollbar-none p-7 max-md:p-4">
             <AnimatePresence mode="wait">
               {activeMode === "grader" ? (
                 <div key="grader">
                   {graderView === "input" && (
                     <GraderInputForm
-                      question={graderQuestion}
-                      setQuestion={setGraderQuestion}
-                      answer={graderAnswer}
-                      setAnswer={setGraderAnswer}
-                      questionType={graderQuestionType}
-                      setQuestionType={setGraderQuestionType}
-                      diagram={graderDiagram}
-                      setDiagram={setGraderDiagram}
-                      onSubmit={handleGrade}
-                      loading={graderLoading}
-                      error={graderError}
-                      onClear={clearGrader}
+                      question={graderQuestion} setQuestion={setGraderQuestion}
+                      answer={graderAnswer} setAnswer={setGraderAnswer}
+                      questionType={graderQuestionType} setQuestionType={setGraderQuestionType}
+                      diagram={graderDiagram} setDiagram={setGraderDiagram}
+                      onSubmit={handleGrade} loading={graderLoading}
+                      error={graderError} onClear={clearGrader}
                     />
                   )}
                   {graderView === "loading" && (
-                    <GradingLoader
-                      isLoading={true}
-                      message="Analyzing your essay..."
-                    />
+                    <GradingLoader isLoading={true} message="Analyzing your essay..." />
                   )}
                   {graderView === "results" && graderResult && (
                     <GradingResultDisplay
-                      result={graderResult}
-                      questionType={graderQuestionType}
-                      essayText={graderAnswer}
-                      onBack={() => setGraderView("input")}
+                      result={graderResult} questionType={graderQuestionType}
+                      essayText={graderAnswer} onBack={() => setGraderView("input")}
                     />
                   )}
                 </div>
@@ -1916,28 +1482,19 @@ export default function HomePage() {
                 <div key="planner">
                   {plannerView === "input" && (
                     <PlannerInputForm
-                      question={plannerQuestion}
-                      setQuestion={setPlannerQuestion}
-                      questionType={plannerQuestionType}
-                      setQuestionType={setPlannerQuestionType}
-                      onSubmit={handlePlan}
-                      loading={plannerLoading}
-                      error={plannerError}
-                      onClear={clearPlanner}
+                      question={plannerQuestion} setQuestion={setPlannerQuestion}
+                      questionType={plannerQuestionType} setQuestionType={setPlannerQuestionType}
+                      onSubmit={handlePlan} loading={plannerLoading}
+                      error={plannerError} onClear={clearPlanner}
                     />
                   )}
                   {plannerView === "loading" && (
-                    <GradingLoader
-                      isLoading={true}
-                      message="Generating essay plan..."
-                    />
+                    <GradingLoader isLoading={true} message="Generating essay plan..." />
                   )}
                   {plannerView === "results" && plannerResult && (
                     <PlanResultDisplay
-                      result={plannerResult}
-                      onBack={() => setPlannerView("input")}
-                      question={plannerQuestion}
-                      questionType={plannerQuestionType}
+                      result={plannerResult} onBack={() => setPlannerView("input")}
+                      question={plannerQuestion} questionType={plannerQuestionType}
                     />
                   )}
                 </div>
@@ -1945,14 +1502,9 @@ export default function HomePage() {
             </AnimatePresence>
           </div>
 
-          {/* Footer — Brainwave minimal */}
-          <div
-            className="shrink-0 px-9 py-4 max-md:px-5"
-            style={{ borderTop: "1px solid var(--n-3)" }}
-          >
-            <p className="text-caption1 text-n-4 text-center">
-              AI-powered grading · Edexcel IAL Economics · Always verify with
-              official mark schemes
+          <div className="shrink-0 px-7 py-3 max-md:px-4" style={{ borderTop: "1px solid var(--n-3)" }}>
+            <p className="text-[11px] text-n-4 text-center">
+              AI-powered grading · Edexcel IAL Economics · Always verify with official mark schemes
             </p>
           </div>
         </div>

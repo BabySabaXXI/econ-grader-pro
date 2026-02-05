@@ -4,95 +4,98 @@
 
 @layer base {
   :root {
-    /* ========================================
-       Brainwave-Inspired Design System
-       Premium, muted palette with Brainwave's
-       exact shadow/spacing/radius patterns
-       ======================================== */
+    /* ============================================================
+       Premium Design System — Muted, Elegant, Award-Winning
+       Inspired by Linear, Vercel, Raycast, Framer
+       ============================================================ */
 
-    /* Brainwave Neutral Scale (n-1 to n-7) */
-    --n-1: #FEFEFE;
-    --n-2: #F3F5F7;
-    --n-3: #E8ECEF;
-    --n-4: #6C7275;
-    --n-5: #343839;
-    --n-6: #232627;
-    --n-7: #141718;
+    /* Neutral Scale — warm undertone for elegance */
+    --n-1: #FAFAF9;
+    --n-2: #F2F1EF;
+    --n-3: #E6E4E1;
+    --n-4: #A09E9B;
+    --n-5: #6B6966;
+    --n-6: #2E2C2A;
+    --n-7: #1A1918;
 
-    /* Primary — Brainwave Blue */
-    --primary-1: #0084FF;
-    --primary-2: #3FDD78;
+    /* Primary — Deep indigo instead of harsh blue */
+    --primary-1: #6366F1;
+    --primary-2: #818CF8;
+    --primary-muted: rgba(99, 102, 241, 0.08);
+    --primary-ring: rgba(99, 102, 241, 0.12);
 
-    /* Accents — Brainwave Palette */
-    --accent-1: #D84C10;
-    --accent-2: #3E90F0;
-    --accent-3: #8E55EA;
-    --accent-4: #8C6584;
-    --accent-5: #DDA73F;
+    /* Accent — Muted professional tones */
+    --accent-1: #F59E0B;
+    --accent-2: #3B82F6;
+    --accent-3: #8B5CF6;
+    --accent-4: #EC4899;
+    --accent-5: #10B981;
 
-    /* Status colors — muted professional */
-    --error-base: #c75050;
-    --error-light: #ebc8c8;
-    --error-lighter: #faf2f2;
-    --warning-base: #c48840;
-    --warning-light: #ebd8c0;
-    --warning-lighter: #faf5ee;
-    --success-base: #3FDD78;
-    --success-dark: #2fb862;
-    --success-light: #c2f0d4;
-    --success-lighter: #edfaf2;
-    --information-base: #3E90F0;
-    --information-light: #bdd4f7;
-    --information-lighter: #edf4fd;
-    --feature-base: #8E55EA;
-    --feature-light: #d4c0f5;
-    --feature-lighter: #f2ecfb;
-    --away-base: #DDA73F;
-    --away-light: #f0ddb0;
-    --away-lighter: #faf5e8;
-    --verified-base: #5aa0be;
-    --verified-light: #c4dce6;
-    --verified-lighter: #edf4f7;
+    /* Status — Desaturated, premium feel */
+    --success: #22C55E;
+    --success-muted: rgba(34, 197, 94, 0.10);
+    --success-border: rgba(34, 197, 94, 0.20);
+    --success-text: #15803D;
+
+    --error: #EF4444;
+    --error-muted: rgba(239, 68, 68, 0.08);
+    --error-border: rgba(239, 68, 68, 0.18);
+    --error-text: #DC2626;
+
+    --warning: #F59E0B;
+    --warning-muted: rgba(245, 158, 11, 0.08);
+    --warning-border: rgba(245, 158, 11, 0.18);
+    --warning-text: #B45309;
+
+    --info: #3B82F6;
+    --info-muted: rgba(59, 130, 246, 0.08);
+    --info-border: rgba(59, 130, 246, 0.18);
+    --info-text: #2563EB;
+
+    --purple: #8B5CF6;
+    --purple-muted: rgba(139, 92, 246, 0.08);
+    --purple-border: rgba(139, 92, 246, 0.18);
+    --purple-text: #7C3AED;
 
     /* Overlay */
-    --overlay: rgba(20, 23, 24, 0.5);
+    --overlay: rgba(26, 25, 24, 0.6);
 
-    /* ========================================
+    /* ============================================================
        shadcn/ui Token Bridge
-       ======================================== */
-    --background: 210 20% 96%;
-    --foreground: 195 14% 9%;
+       ============================================================ */
+    --background: 40 6% 97%;
+    --foreground: 30 5% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 195 14% 9%;
+    --card-foreground: 30 5% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 195 14% 9%;
-    --primary: 195 14% 9%;
+    --popover-foreground: 30 5% 10%;
+    --primary: 239 84% 67%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 20% 96%;
-    --secondary-foreground: 195 14% 9%;
-    --muted: 210 14% 95%;
-    --muted-foreground: 192 4% 44%;
-    --accent: 210 14% 95%;
-    --accent-foreground: 195 14% 9%;
-    --destructive: 0 55% 55%;
+    --secondary: 40 6% 94%;
+    --secondary-foreground: 30 5% 10%;
+    --muted: 40 6% 94%;
+    --muted-foreground: 30 3% 52%;
+    --accent: 40 6% 94%;
+    --accent-foreground: 30 5% 10%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 210 18% 91%;
-    --input: 210 18% 91%;
-    --ring: 210 100% 50%;
-    --radius: 0.75rem;
+    --border: 37 8% 89%;
+    --input: 37 8% 89%;
+    --ring: 239 84% 67%;
+    --radius: 0.625rem;
 
     /* Chart colors */
-    --chart-1: 210 100% 50%;
-    --chart-2: 145 84% 56%;
-    --chart-3: 265 72% 63%;
-    --chart-4: 38 70% 55%;
+    --chart-1: 239 84% 67%;
+    --chart-2: 142 71% 45%;
+    --chart-3: 258 90% 66%;
+    --chart-4: 38 92% 50%;
     --chart-5: 195 35% 55%;
 
-    /* AO Colors — vibrant but refined */
-    --ao1: 215 86% 60%;
-    --ao2: 145 76% 55%;
-    --ao3: 265 72% 63%;
-    --ao4: 38 70% 55%;
+    /* AO Colors — elegant, distinguishable */
+    --ao1: 217 91% 60%;
+    --ao2: 142 71% 45%;
+    --ao3: 258 90% 66%;
+    --ao4: 38 92% 50%;
   }
 
   * {
@@ -109,127 +112,113 @@
 
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
   }
 
   ::selection {
-    background: rgba(0, 132, 255, 0.12);
+    background: var(--primary-ring);
     color: var(--n-7);
   }
 }
 
 @layer components {
-  /* ========================================
-     Layout — Brainwave Container System
-     ======================================== */
+  /* ============================================================
+     Layout Container — Clean, frameless card
+     ============================================================ */
 
   .content-wrapper {
     @apply flex flex-col bg-white overflow-hidden;
-    border-radius: 1.25rem;
+    border-radius: 1rem;
     border: 1px solid var(--n-3);
     box-shadow:
       0 0 0 1px rgba(0, 0, 0, 0.02),
-      0 1px 2px rgba(0, 0, 0, 0.03),
-      0 0.5rem 1.5rem -0.25rem rgba(0, 0, 0, 0.06);
+      0 1px 3px rgba(0, 0, 0, 0.04),
+      0 8px 24px -8px rgba(0, 0, 0, 0.06);
   }
 
-  /* ========================================
-     Button Styles — Brainwave Pattern
-     h-13 (52px) large, h-10 (40px) medium, h-9 small
-     Border: 2px, rounded-xl, transitions
-     ======================================== */
+  /* ============================================================
+     Buttons — Refined, subtle depth
+     ============================================================ */
 
   .btn-bw {
     @apply inline-flex items-center justify-center gap-2
-           px-5.5 text-sm font-semibold
-           transition-all duration-200 cursor-pointer
-           disabled:opacity-20 disabled:pointer-events-none;
-    height: 3.25rem;
-    border: 2px solid transparent;
-    border-radius: 0.75rem;
-  }
-
-  .btn-bw-blue {
-    @apply btn-bw text-white;
-    background: var(--primary-1);
-    border-color: var(--primary-1);
-  }
-  .btn-bw-blue:hover {
-    background: #006acc;
-    border-color: #006acc;
-    box-shadow: 0 0.25rem 1rem rgba(0, 132, 255, 0.25);
-    transform: translateY(-1px);
-  }
-  .btn-bw-blue:active {
-    transform: translateY(0);
-    box-shadow: none;
+           px-5 text-sm font-medium tracking-[-0.01em]
+           transition-all duration-150 cursor-pointer
+           disabled:opacity-40 disabled:pointer-events-none;
+    height: 2.75rem;
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
   }
 
   .btn-bw-dark {
     @apply btn-bw text-white;
     background: var(--n-7);
-    border-color: var(--n-7);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
   .btn-bw-dark:hover {
     background: var(--n-6);
-    border-color: var(--n-6);
-    box-shadow: 0 0.25rem 1rem rgba(20, 23, 24, 0.2);
-    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transform: translateY(-0.5px);
+  }
+  .btn-bw-dark:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+  }
+
+  .btn-bw-primary {
+    @apply btn-bw text-white;
+    background: var(--primary-1);
+    box-shadow: 0 1px 2px rgba(99, 102, 241, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+  .btn-bw-primary:hover {
+    background: #5558E6;
+    box-shadow: 0 3px 12px rgba(99, 102, 241, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    transform: translateY(-0.5px);
   }
 
   .btn-bw-stroke {
     @apply btn-bw;
-    background: var(--n-1);
+    background: white;
     border-color: var(--n-3);
-    color: var(--n-7);
+    color: var(--n-6);
   }
   .btn-bw-stroke:hover {
     border-color: var(--n-4);
-    box-shadow:
-      0 0 0 0 transparent,
-      0 0.125rem 0.25rem rgba(0, 0, 0, 0.06);
-    transform: translateY(-1px);
+    background: var(--n-1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   }
 
-  .btn-bw-white {
-    @apply btn-bw;
-    background: var(--n-1);
-    color: var(--n-7);
-    border-color: transparent;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+  .btn-bw-ghost {
+    @apply btn-bw text-n-5;
+    background: transparent;
   }
-  .btn-bw-white:hover {
-    box-shadow:
-      0 0.125rem 0.5rem rgba(0, 0, 0, 0.12),
-      0 0.5rem 1.5rem rgba(0, 0, 0, 0.08);
-    transform: translateY(-1px);
+  .btn-bw-ghost:hover {
+    background: var(--n-2);
+    color: var(--n-7);
   }
 
   .btn-bw-medium {
-    height: 2.5rem;
+    height: 2.375rem;
     @apply px-4 text-sm;
-    border-radius: 0.625rem;
   }
 
   .btn-bw-small {
-    height: 2.25rem;
-    @apply px-3.5 text-xs;
-    border-radius: 0.5rem;
+    height: 2rem;
+    @apply px-3 text-xs;
+    border-radius: 0.375rem;
   }
 
-  /* ========================================
-     Field Styles — Brainwave Pattern
-     h-13 (52px), 2px border, rounded-xl
-     bg transitions on focus
-     ======================================== */
+  /* ============================================================
+     Fields — Clean, minimal
+     ============================================================ */
 
   .field-bw {
-    @apply w-full outline-none transition-all duration-200;
-    height: 3.25rem;
-    padding: 0 1rem;
-    border: 2px solid var(--n-3);
-    border-radius: 0.75rem;
-    background: var(--n-2);
+    @apply w-full outline-none transition-all duration-150;
+    height: 2.75rem;
+    padding: 0 0.875rem;
+    border: 1px solid var(--n-3);
+    border-radius: 0.5rem;
+    background: white;
     color: var(--n-7);
     font-size: 0.875rem;
   }
@@ -238,251 +227,234 @@
   }
   .field-bw:focus {
     border-color: var(--primary-1);
-    background: transparent;
-    box-shadow: 0 0 0 3px rgba(0, 132, 255, 0.08);
+    box-shadow: 0 0 0 3px var(--primary-ring);
   }
 
   .field-bw-textarea {
-    @apply w-full outline-none transition-all duration-200 resize-none;
-    padding: 1rem;
-    border: 2px solid var(--n-3);
-    border-radius: 0.75rem;
-    background: var(--n-2);
+    @apply w-full outline-none transition-all duration-150 resize-none;
+    padding: 0.75rem 0.875rem;
+    border: 1px solid var(--n-3);
+    border-radius: 0.5rem;
+    background: white;
     color: var(--n-7);
     font-size: 0.875rem;
-    line-height: 1.6;
+    line-height: 1.65;
   }
   .field-bw-textarea::placeholder {
     color: var(--n-4);
   }
   .field-bw-textarea:focus {
     border-color: var(--primary-1);
-    background: transparent;
-    box-shadow: 0 0 0 3px rgba(0, 132, 255, 0.08);
+    box-shadow: 0 0 0 3px var(--primary-ring);
   }
 
-  /* ========================================
-     Card Styles — Brainwave Shadow System
-     ======================================== */
+  /* ============================================================
+     Cards — Layered shadow system for depth hierarchy
+     ============================================================ */
 
-  /* Standard card — subtle depth */
-  .card-bw {
-    @apply bg-white transition-all duration-200;
-    border-radius: 1.25rem;
+  .card-surface {
+    @apply bg-white transition-all duration-150;
+    border-radius: 0.75rem;
     border: 1px solid var(--n-3);
-    box-shadow:
-      0 0 1rem 0.25rem rgba(0, 0, 0, 0.02),
-      0 0.25rem 0.5rem -0.125rem rgba(0, 0, 0, 0.04);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   }
 
-  /* Hover card — elevation on hover */
-  .card-bw-hover {
-    @apply card-bw;
-  }
-  .card-bw-hover:hover {
-    border-color: rgba(0, 0, 0, 0.08);
+  .card-elevated {
+    @apply bg-white transition-all duration-150;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.06);
     box-shadow:
-      0 0 1rem 0.25rem rgba(0, 0, 0, 0.04),
-      0 2rem 2rem -1rem rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
+      0 1px 2px rgba(0, 0, 0, 0.04),
+      0 4px 16px -4px rgba(0, 0, 0, 0.08);
   }
 
-  /* Elevated card — prominent depth (Brainwave dropdown shadow) */
-  .card-bw-elevated {
+  .card-elevated-hover {
+    @apply card-elevated;
+  }
+  .card-elevated-hover:hover {
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.04),
+      0 8px 24px -6px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+  }
+
+  .card-floating {
     @apply bg-white;
-    border-radius: 1.25rem;
+    border-radius: 0.75rem;
     border: 1px solid rgba(0, 0, 0, 0.04);
     box-shadow:
-      0 0 1rem 0.25rem rgba(0, 0, 0, 0.04),
-      0 2rem 2rem -1rem rgba(0, 0, 0, 0.1);
+      0 4px 6px rgba(0, 0, 0, 0.04),
+      0 12px 32px -8px rgba(0, 0, 0, 0.12);
   }
 
-  /* Deep card — profile/hero level shadow */
-  .card-bw-deep {
-    @apply bg-white;
-    border-radius: 1.25rem;
-    border: 1px solid rgba(0, 0, 0, 0.03);
-    box-shadow:
-      0 0.75rem 2.5rem -0.75rem rgba(0, 0, 0, 0.15);
-  }
-
-  /* ========================================
-     Level Badge System — refined
-     ======================================== */
+  /* ============================================================
+     Level Badge System — Elegant pills
+     ============================================================ */
 
   .badge-level-5 {
-    background: var(--success-lighter);
-    color: var(--success-dark);
-    border-color: var(--success-light);
+    background: var(--success-muted);
+    color: var(--success-text);
+    border-color: var(--success-border);
   }
   .badge-level-4 {
-    background: var(--information-lighter);
-    color: #2a6bc5;
-    border-color: var(--information-light);
+    background: var(--info-muted);
+    color: var(--info-text);
+    border-color: var(--info-border);
   }
   .badge-level-3 {
-    background: var(--away-lighter);
-    color: #a07a2d;
-    border-color: var(--away-light);
+    background: var(--warning-muted);
+    color: var(--warning-text);
+    border-color: var(--warning-border);
   }
   .badge-level-2 {
-    background: var(--warning-lighter);
-    color: #9a6830;
-    border-color: var(--warning-light);
+    background: rgba(245, 158, 11, 0.06);
+    color: #92400E;
+    border-color: rgba(245, 158, 11, 0.14);
   }
   .badge-level-1 {
-    background: var(--error-lighter);
-    color: #963e3e;
-    border-color: var(--error-light);
+    background: var(--error-muted);
+    color: var(--error-text);
+    border-color: var(--error-border);
   }
 
-  /* ========================================
+  /* ============================================================
      AO Color System
-     ======================================== */
+     ============================================================ */
 
-  .ao-ao1 { color: var(--information-base); }
-  .ao-ao2 { color: var(--success-dark); }
-  .ao-ao3 { color: var(--feature-base); }
-  .ao-ao4 { color: var(--away-base); }
+  .ao-ao1 { color: var(--info-text); }
+  .ao-ao2 { color: var(--success-text); }
+  .ao-ao3 { color: var(--purple-text); }
+  .ao-ao4 { color: var(--warning-text); }
 
-  .ao-bg-ao1 { background: var(--information-lighter); border-color: var(--information-light); }
-  .ao-bg-ao2 { background: var(--success-lighter); border-color: var(--success-light); }
-  .ao-bg-ao3 { background: var(--feature-lighter); border-color: var(--feature-light); }
-  .ao-bg-ao4 { background: var(--away-lighter); border-color: var(--away-light); }
+  .ao-bg-ao1 { background: var(--info-muted); border-color: var(--info-border); }
+  .ao-bg-ao2 { background: var(--success-muted); border-color: var(--success-border); }
+  .ao-bg-ao3 { background: var(--purple-muted); border-color: var(--purple-border); }
+  .ao-bg-ao4 { background: var(--warning-muted); border-color: var(--warning-border); }
 
-  /* ========================================
-     Highlight System — CRITICAL: red/green
-     These must remain functional for the
-     essay grading red highlight feature
-     ======================================== */
+  /* ============================================================
+     Highlight System — Refined, accessible
+     Green for earned, Red for issues
+     ============================================================ */
 
   .highlight-earned {
-    @apply rounded-sm px-0.5 py-0.5 cursor-pointer transition-all duration-200;
-    background: rgba(63, 221, 120, 0.14);
-    color: #1a8a4a;
-    border-bottom: 2px solid rgba(63, 221, 120, 0.5);
+    @apply rounded-sm cursor-pointer transition-all duration-150;
+    padding: 1px 3px;
+    background: rgba(34, 197, 94, 0.12);
+    color: #166534;
+    border-bottom: 2px solid rgba(34, 197, 94, 0.4);
+    text-decoration: none;
   }
   .highlight-earned:hover {
-    background: rgba(63, 221, 120, 0.25);
-    box-shadow: 0 0 0 2px rgba(63, 221, 120, 0.12);
+    background: rgba(34, 197, 94, 0.20);
+    border-bottom-color: rgba(34, 197, 94, 0.6);
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.08);
   }
 
   .highlight-lost {
-    @apply rounded-sm cursor-pointer transition-all duration-200;
-    padding: 2px 4px !important;
-    background-color: rgba(220, 60, 60, 0.15) !important;
-    color: #b83232 !important;
-    border-bottom: 2px solid rgba(220, 60, 60, 0.55) !important;
-    text-decoration-color: rgba(220, 60, 60, 0.55);
+    @apply rounded-sm cursor-pointer transition-all duration-150;
+    padding: 1px 3px !important;
+    background-color: rgba(239, 68, 68, 0.10) !important;
+    color: #DC2626 !important;
+    border-bottom: 2px solid rgba(239, 68, 68, 0.40) !important;
+    text-decoration: none;
   }
   .highlight-lost:hover {
-    background-color: rgba(220, 60, 60, 0.25) !important;
-    border-bottom-color: rgba(220, 60, 60, 0.8) !important;
-    box-shadow: 0 0 0 2px rgba(220, 60, 60, 0.1);
+    background-color: rgba(239, 68, 68, 0.18) !important;
+    border-bottom-color: rgba(239, 68, 68, 0.65) !important;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.06);
   }
 
-  /* ========================================
-     Sidebar Navigation — Brainwave Pattern
-     Colored icon backgrounds, hover shadows
-     ======================================== */
+  /* ============================================================
+     Sidebar
+     ============================================================ */
 
   .sidebar-nav-item {
-    @apply relative flex items-center gap-3.5 w-full px-4 text-left
-           text-sm font-semibold transition-all duration-200;
-    height: 3rem;
-    border-radius: 0.75rem;
+    @apply relative flex items-center gap-3 w-full px-3 text-left
+           text-sm font-medium transition-all duration-150;
+    height: 2.5rem;
+    border-radius: 0.5rem;
     color: var(--n-4);
-    border: 2px solid transparent;
   }
   .sidebar-nav-item:hover {
     color: var(--n-7);
     background: var(--n-2);
-    border-color: transparent;
   }
   .sidebar-nav-item-active {
     color: var(--n-7);
-    background: var(--n-1);
-    border-color: var(--n-3);
-    box-shadow:
-      0 0.125rem 0.125rem rgba(0, 0, 0, 0.07),
-      inset 0 0.25rem 0.125rem #FFFFFF;
+    background: var(--n-2);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   }
-
-  /* ========================================
-     Brainwave Menu Item
-     Each has icon-bg + title + arrow
-     Hover: border transparent, shadow elevation
-     ======================================== */
 
   .menu-item-bw {
-    @apply flex items-center gap-4 w-full px-4 text-left transition-all duration-200;
-    height: 3.75rem;
-    border-radius: 0.75rem;
-    border: 2px solid var(--n-3);
-    background: var(--n-1);
-    color: var(--n-7);
+    @apply flex items-center gap-3.5 w-full px-3.5 text-left transition-all duration-150;
+    height: 2.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--n-5);
   }
   .menu-item-bw:hover {
-    border-color: transparent;
-    box-shadow:
-      0 0 1rem 0.25rem rgba(0, 0, 0, 0.04),
-      0 2rem 2rem -1rem rgba(0, 0, 0, 0.12);
-    transform: translateY(-1px);
+    background: var(--n-2);
+    color: var(--n-7);
+  }
+  .menu-item-bw-active {
+    background: var(--n-2);
+    color: var(--n-7);
+    border-color: var(--n-3);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   }
 
-  /* ========================================
-     Brainwave Tab System (segmented control)
-     ======================================== */
+  /* ============================================================
+     Tabs — Clean segmented control
+     ============================================================ */
 
   .tab-bw-list {
-    @apply flex gap-1 p-1;
+    @apply flex gap-0.5 p-0.5;
     background: var(--n-2);
-    border-radius: 0.75rem;
+    border-radius: 0.5rem;
   }
 
   .tab-bw-trigger {
     @apply flex-1 flex items-center justify-center gap-2
-           text-sm font-semibold transition-all duration-200 cursor-pointer;
-    height: 2.5rem;
-    border-radius: 0.625rem;
+           text-sm font-medium transition-all duration-150 cursor-pointer;
+    height: 2.25rem;
+    border-radius: 0.375rem;
     color: var(--n-4);
   }
   .tab-bw-trigger:hover {
-    color: var(--n-7);
+    color: var(--n-6);
   }
   .tab-bw-trigger-active {
     color: var(--n-7);
-    background: var(--n-1);
-    box-shadow:
-      0 0.125rem 0.125rem rgba(0, 0, 0, 0.07),
-      inset 0 0.25rem 0.125rem #FFFFFF;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   }
 }
 
-/* ========================================
-   Thinner icons — Brainwave/Apple feel
-   ======================================== */
+/* ============================================================
+   Thinner icons
+   ============================================================ */
 
 .lucide {
-  stroke-width: 1.6;
+  stroke-width: 1.7;
 }
 
-/* ========================================
+/* ============================================================
    Keyframe Animations
-   ======================================== */
+   ============================================================ */
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
+  from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
 }
 
@@ -499,7 +471,7 @@
 
 @keyframes pulseRing {
   0% { transform: scale(1); opacity: 0.2; }
-  50% { transform: scale(1.05); opacity: 0.1; }
+  50% { transform: scale(1.04); opacity: 0.1; }
   100% { transform: scale(1); opacity: 0.2; }
 }
 
@@ -510,16 +482,26 @@
 
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-4px); }
 }
 
-/* ========================================
-   Scrollbar — minimal Brainwave style
-   ======================================== */
+@keyframes pulse-gentle {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes scan-line {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+/* ============================================================
+   Scrollbar — whisper-thin
+   ============================================================ */
 
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 3px;
+  height: 3px;
 }
 
 ::-webkit-scrollbar-track {
@@ -528,7 +510,7 @@
 
 ::-webkit-scrollbar-thumb {
   background: var(--n-3);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
