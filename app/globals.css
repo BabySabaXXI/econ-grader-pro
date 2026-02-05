@@ -5,94 +5,94 @@
 @layer base {
   :root {
     /* ========================================
-       Brainwave-Inspired Design System
-       Premium, muted palette with Brainwave's
-       exact shadow/spacing/radius patterns
+       Japandi / Scandinavian Design System
+       Warm neutrals, natural tones, minimal
+       and intentional with quiet elegance
        ======================================== */
 
-    /* Brainwave Neutral Scale (n-1 to n-7) */
-    --n-1: #FEFEFE;
-    --n-2: #F3F5F7;
-    --n-3: #E8ECEF;
-    --n-4: #6C7275;
-    --n-5: #343839;
-    --n-6: #232627;
-    --n-7: #141718;
+    /* Neutral Scale — Warm stone/sand base */
+    --n-1: #FAFAF8;
+    --n-2: #F4F3F0;
+    --n-3: #E8E6E1;
+    --n-4: #9C9890;
+    --n-5: #5C5852;
+    --n-6: #3A3733;
+    --n-7: #1C1B18;
 
-    /* Primary — Brainwave Blue */
-    --primary-1: #0084FF;
-    --primary-2: #3FDD78;
+    /* Primary — Deep indigo/navy, muted */
+    --primary-1: #4A5568;
+    --primary-2: #718096;
 
-    /* Accents — Brainwave Palette */
-    --accent-1: #D84C10;
-    --accent-2: #3E90F0;
-    --accent-3: #8E55EA;
-    --accent-4: #8C6584;
-    --accent-5: #DDA73F;
+    /* Accent — Earthy, natural tones */
+    --accent-sage: #7C8B6F;
+    --accent-terracotta: #C07B5F;
+    --accent-clay: #B8926A;
+    --accent-stone: #8B8680;
+    --accent-indigo: #6B7FA3;
 
-    /* Status colors — muted professional */
-    --error-base: #c75050;
-    --error-light: #ebc8c8;
-    --error-lighter: #faf2f2;
-    --warning-base: #c48840;
-    --warning-light: #ebd8c0;
-    --warning-lighter: #faf5ee;
-    --success-base: #3FDD78;
-    --success-dark: #2fb862;
-    --success-light: #c2f0d4;
-    --success-lighter: #edfaf2;
-    --information-base: #3E90F0;
-    --information-light: #bdd4f7;
-    --information-lighter: #edf4fd;
-    --feature-base: #8E55EA;
-    --feature-light: #d4c0f5;
-    --feature-lighter: #f2ecfb;
-    --away-base: #DDA73F;
-    --away-light: #f0ddb0;
-    --away-lighter: #faf5e8;
-    --verified-base: #5aa0be;
-    --verified-light: #c4dce6;
-    --verified-lighter: #edf4f7;
+    /* Status colors — Muted and natural */
+    --error-base: #B35B5B;
+    --error-light: #E0C5C5;
+    --error-lighter: #F7F0F0;
+    --warning-base: #B8926A;
+    --warning-light: #E0D4C4;
+    --warning-lighter: #F8F5F0;
+    --success-base: #7C8B6F;
+    --success-dark: #5F6D53;
+    --success-light: #C8D4BE;
+    --success-lighter: #F0F4EC;
+    --information-base: #6B7FA3;
+    --information-light: #C0CBDB;
+    --information-lighter: #EEF1F6;
+    --feature-base: #8B7BA8;
+    --feature-light: #CEC5DB;
+    --feature-lighter: #F2EFF6;
+    --away-base: #B8926A;
+    --away-light: #E0D4C4;
+    --away-lighter: #F8F5F0;
+    --verified-base: #6B8F8B;
+    --verified-light: #BED3D0;
+    --verified-lighter: #EDF3F2;
 
     /* Overlay */
-    --overlay: rgba(20, 23, 24, 0.5);
+    --overlay: rgba(28, 27, 24, 0.45);
 
     /* ========================================
        shadcn/ui Token Bridge
        ======================================== */
-    --background: 210 20% 96%;
-    --foreground: 195 14% 9%;
-    --card: 0 0% 100%;
-    --card-foreground: 195 14% 9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 195 14% 9%;
-    --primary: 195 14% 9%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 20% 96%;
-    --secondary-foreground: 195 14% 9%;
-    --muted: 210 14% 95%;
-    --muted-foreground: 192 4% 44%;
-    --accent: 210 14% 95%;
-    --accent-foreground: 195 14% 9%;
-    --destructive: 0 55% 55%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 210 18% 91%;
-    --input: 210 18% 91%;
-    --ring: 210 100% 50%;
-    --radius: 0.75rem;
+    --background: 48 20% 96%;
+    --foreground: 40 8% 10%;
+    --card: 48 20% 99%;
+    --card-foreground: 40 8% 10%;
+    --popover: 48 20% 99%;
+    --popover-foreground: 40 8% 10%;
+    --primary: 40 8% 10%;
+    --primary-foreground: 48 20% 99%;
+    --secondary: 45 12% 95%;
+    --secondary-foreground: 40 8% 10%;
+    --muted: 45 10% 94%;
+    --muted-foreground: 30 4% 55%;
+    --accent: 45 10% 94%;
+    --accent-foreground: 40 8% 10%;
+    --destructive: 0 35% 53%;
+    --destructive-foreground: 48 20% 99%;
+    --border: 40 14% 89%;
+    --input: 40 14% 89%;
+    --ring: 216 12% 40%;
+    --radius: 0.625rem;
 
     /* Chart colors */
-    --chart-1: 210 100% 50%;
-    --chart-2: 145 84% 56%;
-    --chart-3: 265 72% 63%;
-    --chart-4: 38 70% 55%;
-    --chart-5: 195 35% 55%;
+    --chart-1: 216 22% 53%;
+    --chart-2: 93 12% 48%;
+    --chart-3: 259 15% 56%;
+    --chart-4: 30 33% 56%;
+    --chart-5: 168 12% 48%;
 
-    /* AO Colors — vibrant but refined */
-    --ao1: 215 86% 60%;
-    --ao2: 145 76% 55%;
-    --ao3: 265 72% 63%;
-    --ao4: 38 70% 55%;
+    /* AO Colors */
+    --ao1: 216 22% 53%;
+    --ao2: 93 12% 48%;
+    --ao3: 259 17% 56%;
+    --ao4: 30 33% 56%;
   }
 
   * {
@@ -113,201 +113,189 @@
   }
 
   ::selection {
-    background: rgba(0, 132, 255, 0.12);
+    background: rgba(74, 85, 104, 0.10);
     color: var(--n-7);
   }
 }
 
 @layer components {
   /* ========================================
-     Layout — Brainwave Container System
+     Layout — Content Container
+     Clean, paper-like container with very
+     subtle border and gentle shadow
      ======================================== */
 
   .content-wrapper {
-    @apply flex flex-col bg-white overflow-hidden;
-    border-radius: 1.25rem;
+    @apply flex flex-col overflow-hidden;
+    background: var(--n-1);
+    border-radius: 1rem;
     border: 1px solid var(--n-3);
     box-shadow:
-      0 0 0 1px rgba(0, 0, 0, 0.02),
-      0 1px 2px rgba(0, 0, 0, 0.03),
-      0 0.5rem 1.5rem -0.25rem rgba(0, 0, 0, 0.06);
+      0 1px 2px rgba(0, 0, 0, 0.02),
+      0 4px 16px -4px rgba(0, 0, 0, 0.04);
   }
 
   /* ========================================
-     Button Styles — Brainwave Pattern
-     h-13 (52px) large, h-10 (40px) medium, h-9 small
-     Border: 2px, rounded-xl, transitions
+     Button Styles — Japandi: understated,
+     precise, with subtle depth cues
      ======================================== */
 
-  .btn-bw {
-    @apply inline-flex items-center justify-center gap-2
-           px-5.5 text-sm font-semibold
-           transition-all duration-200 cursor-pointer
-           disabled:opacity-20 disabled:pointer-events-none;
-    height: 3.25rem;
-    border: 2px solid transparent;
-    border-radius: 0.75rem;
+  .btn-jp {
+    @apply inline-flex items-center justify-center gap-2.5
+           px-5 text-sm font-medium tracking-[-0.01em]
+           transition-all duration-300 cursor-pointer
+           disabled:opacity-25 disabled:pointer-events-none;
+    height: 2.75rem;
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
   }
 
-  .btn-bw-blue {
-    @apply btn-bw text-white;
-    background: var(--primary-1);
-    border-color: var(--primary-1);
+  .btn-jp-dark {
+    @apply btn-jp text-white;
+    background: var(--n-7);
+    border-color: var(--n-7);
   }
-  .btn-bw-blue:hover {
-    background: #006acc;
-    border-color: #006acc;
-    box-shadow: 0 0.25rem 1rem rgba(0, 132, 255, 0.25);
-    transform: translateY(-1px);
+  .btn-jp-dark:hover {
+    background: var(--n-6);
+    border-color: var(--n-6);
+    box-shadow: 0 2px 8px rgba(28, 27, 24, 0.15);
+    transform: translateY(-0.5px);
   }
-  .btn-bw-blue:active {
+  .btn-jp-dark:active {
     transform: translateY(0);
     box-shadow: none;
   }
 
-  .btn-bw-dark {
-    @apply btn-bw text-white;
-    background: var(--n-7);
-    border-color: var(--n-7);
+  .btn-jp-primary {
+    @apply btn-jp text-white;
+    background: var(--primary-1);
+    border-color: var(--primary-1);
   }
-  .btn-bw-dark:hover {
-    background: var(--n-6);
-    border-color: var(--n-6);
-    box-shadow: 0 0.25rem 1rem rgba(20, 23, 24, 0.2);
-    transform: translateY(-1px);
+  .btn-jp-primary:hover {
+    background: #3D4756;
+    border-color: #3D4756;
+    box-shadow: 0 2px 8px rgba(74, 85, 104, 0.2);
+    transform: translateY(-0.5px);
   }
 
-  .btn-bw-stroke {
-    @apply btn-bw;
-    background: var(--n-1);
+  .btn-jp-outline {
+    @apply btn-jp;
+    background: transparent;
     border-color: var(--n-3);
-    color: var(--n-7);
+    color: var(--n-5);
   }
-  .btn-bw-stroke:hover {
+  .btn-jp-outline:hover {
     border-color: var(--n-4);
-    box-shadow:
-      0 0 0 0 transparent,
-      0 0.125rem 0.25rem rgba(0, 0, 0, 0.06);
-    transform: translateY(-1px);
+    background: var(--n-2);
+    transform: translateY(-0.5px);
   }
 
-  .btn-bw-white {
-    @apply btn-bw;
-    background: var(--n-1);
-    color: var(--n-7);
-    border-color: transparent;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+  .btn-jp-ghost {
+    @apply btn-jp;
+    background: transparent;
+    color: var(--n-5);
   }
-  .btn-bw-white:hover {
-    box-shadow:
-      0 0.125rem 0.5rem rgba(0, 0, 0, 0.12),
-      0 0.5rem 1.5rem rgba(0, 0, 0, 0.08);
-    transform: translateY(-1px);
+  .btn-jp-ghost:hover {
+    background: var(--n-2);
   }
 
-  .btn-bw-medium {
-    height: 2.5rem;
-    @apply px-4 text-sm;
-    border-radius: 0.625rem;
-  }
-
-  .btn-bw-small {
+  .btn-jp-sm {
     height: 2.25rem;
     @apply px-3.5 text-xs;
-    border-radius: 0.5rem;
+    border-radius: 0.375rem;
   }
 
   /* ========================================
-     Field Styles — Brainwave Pattern
-     h-13 (52px), 2px border, rounded-xl
-     bg transitions on focus
+     Field Styles — Clean, minimal input
+     Thin border, gentle focus ring
      ======================================== */
 
-  .field-bw {
-    @apply w-full outline-none transition-all duration-200;
-    height: 3.25rem;
-    padding: 0 1rem;
-    border: 2px solid var(--n-3);
-    border-radius: 0.75rem;
-    background: var(--n-2);
-    color: var(--n-7);
-    font-size: 0.875rem;
-  }
-  .field-bw::placeholder {
-    color: var(--n-4);
-  }
-  .field-bw:focus {
-    border-color: var(--primary-1);
-    background: transparent;
-    box-shadow: 0 0 0 3px rgba(0, 132, 255, 0.08);
-  }
-
-  .field-bw-textarea {
-    @apply w-full outline-none transition-all duration-200 resize-none;
-    padding: 1rem;
-    border: 2px solid var(--n-3);
-    border-radius: 0.75rem;
-    background: var(--n-2);
-    color: var(--n-7);
-    font-size: 0.875rem;
-    line-height: 1.6;
-  }
-  .field-bw-textarea::placeholder {
-    color: var(--n-4);
-  }
-  .field-bw-textarea:focus {
-    border-color: var(--primary-1);
-    background: transparent;
-    box-shadow: 0 0 0 3px rgba(0, 132, 255, 0.08);
-  }
-
-  /* ========================================
-     Card Styles — Brainwave Shadow System
-     ======================================== */
-
-  /* Standard card — subtle depth */
-  .card-bw {
-    @apply bg-white transition-all duration-200;
-    border-radius: 1.25rem;
+  .field-jp {
+    @apply w-full outline-none transition-all duration-300;
+    height: 2.75rem;
+    padding: 0 0.875rem;
     border: 1px solid var(--n-3);
-    box-shadow:
-      0 0 1rem 0.25rem rgba(0, 0, 0, 0.02),
-      0 0.25rem 0.5rem -0.125rem rgba(0, 0, 0, 0.04);
+    border-radius: 0.5rem;
+    background: var(--n-1);
+    color: var(--n-7);
+    font-size: 0.875rem;
+    letter-spacing: -0.01em;
+  }
+  .field-jp::placeholder {
+    color: var(--n-4);
+  }
+  .field-jp:hover {
+    border-color: var(--n-4);
+  }
+  .field-jp:focus {
+    border-color: var(--primary-1);
+    box-shadow: 0 0 0 3px rgba(74, 85, 104, 0.06);
   }
 
-  /* Hover card — elevation on hover */
-  .card-bw-hover {
-    @apply card-bw;
+  .field-jp-textarea {
+    @apply w-full outline-none transition-all duration-300 resize-none;
+    padding: 0.875rem;
+    border: 1px solid var(--n-3);
+    border-radius: 0.5rem;
+    background: var(--n-1);
+    color: var(--n-7);
+    font-size: 0.875rem;
+    line-height: 1.7;
+    letter-spacing: -0.01em;
   }
-  .card-bw-hover:hover {
-    border-color: rgba(0, 0, 0, 0.08);
-    box-shadow:
-      0 0 1rem 0.25rem rgba(0, 0, 0, 0.04),
-      0 2rem 2rem -1rem rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
+  .field-jp-textarea::placeholder {
+    color: var(--n-4);
+  }
+  .field-jp-textarea:hover {
+    border-color: var(--n-4);
+  }
+  .field-jp-textarea:focus {
+    border-color: var(--primary-1);
+    box-shadow: 0 0 0 3px rgba(74, 85, 104, 0.06);
   }
 
-  /* Elevated card — prominent depth (Brainwave dropdown shadow) */
-  .card-bw-elevated {
-    @apply bg-white;
-    border-radius: 1.25rem;
+  /* ========================================
+     Card Styles — Paper-like, minimal shadow
+     Japandi aesthetic: barely-there elevation
+     ======================================== */
+
+  .card-jp {
+    @apply transition-all duration-300;
+    background: var(--n-1);
+    border-radius: 0.75rem;
+    border: 1px solid var(--n-3);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  }
+
+  .card-jp-hover {
+    @apply card-jp;
+  }
+  .card-jp-hover:hover {
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow:
+      0 4px 12px -2px rgba(0, 0, 0, 0.06),
+      0 1px 2px rgba(0, 0, 0, 0.02);
+    transform: translateY(-1px);
+  }
+
+  .card-jp-elevated {
+    background: var(--n-1);
+    border-radius: 0.75rem;
     border: 1px solid rgba(0, 0, 0, 0.04);
     box-shadow:
-      0 0 1rem 0.25rem rgba(0, 0, 0, 0.04),
-      0 2rem 2rem -1rem rgba(0, 0, 0, 0.1);
+      0 1px 2px rgba(0, 0, 0, 0.02),
+      0 8px 24px -8px rgba(0, 0, 0, 0.08);
   }
 
-  /* Deep card — profile/hero level shadow */
-  .card-bw-deep {
-    @apply bg-white;
-    border-radius: 1.25rem;
+  .card-jp-deep {
+    background: var(--n-1);
+    border-radius: 0.75rem;
     border: 1px solid rgba(0, 0, 0, 0.03);
-    box-shadow:
-      0 0.75rem 2.5rem -0.75rem rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.1);
   }
 
   /* ========================================
-     Level Badge System — refined
+     Level Badge System — Soft, rounded pills
      ======================================== */
 
   .badge-level-5 {
@@ -317,22 +305,22 @@
   }
   .badge-level-4 {
     background: var(--information-lighter);
-    color: #2a6bc5;
+    color: #506585;
     border-color: var(--information-light);
   }
   .badge-level-3 {
     background: var(--away-lighter);
-    color: #a07a2d;
+    color: #8B6E45;
     border-color: var(--away-light);
   }
   .badge-level-2 {
     background: var(--warning-lighter);
-    color: #9a6830;
+    color: #8B6E45;
     border-color: var(--warning-light);
   }
   .badge-level-1 {
     background: var(--error-lighter);
-    color: #963e3e;
+    color: #8B4A4A;
     border-color: var(--error-light);
   }
 
@@ -351,138 +339,101 @@
   .ao-bg-ao4 { background: var(--away-lighter); border-color: var(--away-light); }
 
   /* ========================================
-     Highlight System — CRITICAL: red/green
-     These must remain functional for the
-     essay grading red highlight feature
+     Highlight System — CRITICAL for grading
+     Subtle, refined highlight colors
      ======================================== */
 
   .highlight-earned {
-    @apply rounded-sm px-0.5 py-0.5 cursor-pointer transition-all duration-200;
-    background: rgba(63, 221, 120, 0.14);
-    color: #1a8a4a;
-    border-bottom: 2px solid rgba(63, 221, 120, 0.5);
+    @apply rounded-sm px-0.5 py-0.5 cursor-pointer transition-all duration-300;
+    background: rgba(124, 139, 111, 0.12);
+    color: #4A5A3F;
+    border-bottom: 1.5px solid rgba(124, 139, 111, 0.4);
   }
   .highlight-earned:hover {
-    background: rgba(63, 221, 120, 0.25);
-    box-shadow: 0 0 0 2px rgba(63, 221, 120, 0.12);
+    background: rgba(124, 139, 111, 0.2);
+    box-shadow: 0 0 0 2px rgba(124, 139, 111, 0.08);
   }
 
   .highlight-lost {
-    @apply rounded-sm cursor-pointer transition-all duration-200;
+    @apply rounded-sm cursor-pointer transition-all duration-300;
     padding: 2px 4px !important;
-    background-color: rgba(220, 60, 60, 0.15) !important;
-    color: #b83232 !important;
-    border-bottom: 2px solid rgba(220, 60, 60, 0.55) !important;
-    text-decoration-color: rgba(220, 60, 60, 0.55);
+    background-color: rgba(179, 91, 91, 0.1) !important;
+    color: #8B4A4A !important;
+    border-bottom: 1.5px solid rgba(179, 91, 91, 0.4) !important;
   }
   .highlight-lost:hover {
-    background-color: rgba(220, 60, 60, 0.25) !important;
-    border-bottom-color: rgba(220, 60, 60, 0.8) !important;
-    box-shadow: 0 0 0 2px rgba(220, 60, 60, 0.1);
+    background-color: rgba(179, 91, 91, 0.18) !important;
+    border-bottom-color: rgba(179, 91, 91, 0.6) !important;
+    box-shadow: 0 0 0 2px rgba(179, 91, 91, 0.06);
   }
 
   /* ========================================
-     Sidebar Navigation — Brainwave Pattern
-     Colored icon backgrounds, hover shadows
+     Sidebar — Fixed panel, clean borders
      ======================================== */
 
   .sidebar-nav-item {
-    @apply relative flex items-center gap-3.5 w-full px-4 text-left
-           text-sm font-semibold transition-all duration-200;
-    height: 3rem;
-    border-radius: 0.75rem;
+    @apply relative flex items-center gap-3 w-full px-3.5 text-left
+           text-sm font-medium transition-all duration-200;
+    height: 2.75rem;
+    border-radius: 0.5rem;
     color: var(--n-4);
-    border: 2px solid transparent;
   }
   .sidebar-nav-item:hover {
-    color: var(--n-7);
+    color: var(--n-5);
     background: var(--n-2);
-    border-color: transparent;
   }
   .sidebar-nav-item-active {
     color: var(--n-7);
-    background: var(--n-1);
-    border-color: var(--n-3);
-    box-shadow:
-      0 0.125rem 0.125rem rgba(0, 0, 0, 0.07),
-      inset 0 0.25rem 0.125rem #FFFFFF;
-  }
-
-  /* ========================================
-     Brainwave Menu Item
-     Each has icon-bg + title + arrow
-     Hover: border transparent, shadow elevation
-     ======================================== */
-
-  .menu-item-bw {
-    @apply flex items-center gap-4 w-full px-4 text-left transition-all duration-200;
-    height: 3.75rem;
-    border-radius: 0.75rem;
-    border: 2px solid var(--n-3);
-    background: var(--n-1);
-    color: var(--n-7);
-  }
-  .menu-item-bw:hover {
-    border-color: transparent;
-    box-shadow:
-      0 0 1rem 0.25rem rgba(0, 0, 0, 0.04),
-      0 2rem 2rem -1rem rgba(0, 0, 0, 0.12);
-    transform: translateY(-1px);
-  }
-
-  /* ========================================
-     Brainwave Tab System (segmented control)
-     ======================================== */
-
-  .tab-bw-list {
-    @apply flex gap-1 p-1;
     background: var(--n-2);
-    border-radius: 0.75rem;
+    box-shadow: inset 0 0 0 1px var(--n-3);
   }
 
-  .tab-bw-trigger {
-    @apply flex-1 flex items-center justify-center gap-2
-           text-sm font-semibold transition-all duration-200 cursor-pointer;
-    height: 2.5rem;
-    border-radius: 0.625rem;
-    color: var(--n-4);
+  /* ========================================
+     Menu Item — Clean list items
+     ======================================== */
+
+  .menu-item-jp {
+    @apply flex items-center gap-3.5 w-full px-3.5 text-left transition-all duration-200;
+    height: 3rem;
+    border-radius: 0.5rem;
+    border: 1px solid transparent;
+    color: var(--n-5);
   }
-  .tab-bw-trigger:hover {
+  .menu-item-jp:hover {
+    background: var(--n-2);
     color: var(--n-7);
   }
-  .tab-bw-trigger-active {
+  .menu-item-jp-active {
+    background: var(--n-2);
+    border-color: var(--n-3);
     color: var(--n-7);
-    background: var(--n-1);
-    box-shadow:
-      0 0.125rem 0.125rem rgba(0, 0, 0, 0.07),
-      inset 0 0.25rem 0.125rem #FFFFFF;
   }
 }
 
 /* ========================================
-   Thinner icons — Brainwave/Apple feel
+   Thinner icons — Refined line weight
    ======================================== */
 
 .lucide {
-  stroke-width: 1.6;
+  stroke-width: 1.5;
 }
 
 /* ========================================
-   Keyframe Animations
+   Keyframe Animations — Subtle, natural
    ======================================== */
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
+  from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
 }
 
@@ -498,28 +449,38 @@
 }
 
 @keyframes pulseRing {
-  0% { transform: scale(1); opacity: 0.2; }
-  50% { transform: scale(1.05); opacity: 0.1; }
-  100% { transform: scale(1); opacity: 0.2; }
+  0% { transform: scale(1); opacity: 0.15; }
+  50% { transform: scale(1.03); opacity: 0.08; }
+  100% { transform: scale(1); opacity: 0.15; }
 }
 
 @keyframes loaderDots {
   0% { opacity: 1; }
-  50%, 100% { opacity: 0.15; }
+  50%, 100% { opacity: 0.12; }
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes gentlePulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.02); }
 }
 
 /* ========================================
-   Scrollbar — minimal Brainwave style
+   Scrollbar — Near-invisible, refined
    ======================================== */
 
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 3px;
+  height: 3px;
 }
 
 ::-webkit-scrollbar-track {
@@ -528,7 +489,7 @@
 
 ::-webkit-scrollbar-thumb {
   background: var(--n-3);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {

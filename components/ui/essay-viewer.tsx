@@ -39,7 +39,7 @@ interface ActiveFeedback {
   data: MarkEarned | MarkLost;
 }
 
-// AO Config — Brainwave accent palette
+// AO Config — Japandi accent palette
 const AO_CONFIG = {
   ao1: {
     label: "Knowledge",
@@ -67,7 +67,7 @@ const AO_CONFIG = {
   },
 };
 
-// AO Badge Component — Brainwave pill style
+// AO Badge Component — Japandi pill style
 function AOBadge({ ao, className }: { ao: string; className?: string }) {
   const config = AO_CONFIG[ao as keyof typeof AO_CONFIG];
   if (!config) return null;
@@ -241,7 +241,7 @@ export function EssayViewer({
 
   return (
     <div className={cn("relative space-y-5", className)} ref={containerRef}>
-      {/* Filter Controls — Brainwave segmented control style */}
+      {/* Filter Controls */}
       <div
         className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4"
         style={{
@@ -320,8 +320,8 @@ export function EssayViewer({
         )}
       </div>
 
-      {/* Essay Content — Brainwave card */}
-      <div className="card-bw overflow-hidden">
+      {/* Essay Content */}
+      <div className="card-jp overflow-hidden">
         <div className="p-6">
           <p className="text-[15px] leading-[1.9] text-n-5 whitespace-pre-wrap font-[system-ui]">
             {visibleSegments.map((segment, index) => {
@@ -594,7 +594,7 @@ export function EssayViewer({
         </div>
       )}
 
-      {/* Feedback Modal — Brainwave Modal pattern */}
+      {/* Feedback Modal */}
       <Dialog open={!!activeFeedback} onOpenChange={() => setActiveFeedback(null)}>
         <DialogContent
           className="sm:max-w-md border"
@@ -706,7 +706,7 @@ export function EssayViewer({
         </DialogContent>
       </Dialog>
 
-      {/* Legend — Brainwave minimal */}
+      {/* Legend */}
       <div className="flex flex-wrap items-center justify-center gap-6 text-caption1 text-n-4 pt-2">
         <div className="flex items-center gap-2">
           <span

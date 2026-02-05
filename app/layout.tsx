@@ -67,7 +67,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${satoshi.variable} ${inter.variable} ${interDisplay.variable} font-satoshi text-p-sm antialiased`}
+        className={`${satoshi.variable} ${inter.variable} ${interDisplay.variable} font-satoshi text-body2 antialiased`}
       >
         {children}
       </body>
