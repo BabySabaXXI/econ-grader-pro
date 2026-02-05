@@ -19,16 +19,16 @@
     --n-6: #2E3545;
     --n-7: #161B26;
 
-    /* Primary — Professional muted blue */
-    --primary-1: #3B6FAE;
-    --primary-2: #5B8ECC;
+    /* Primary — Professional muted blue (darker) */
+    --primary-1: #305D93;
+    --primary-2: #4A7AB5;
 
     /* Accent — Blue-toned palette */
     --accent-teal: #4A8B7F;
     --accent-coral: #BF6B6B;
     --accent-amber: #B89A5C;
-    --accent-slate: #6E7A8A;
-    --accent-blue: #5A7CB5;
+    --accent-slate: #5E6B7D;
+    --accent-blue: #4D6FA5;
 
     /* Status colors — Professional, muted */
     --error-base: #BF6B6B;
@@ -41,7 +41,7 @@
     --success-dark: #3A7266;
     --success-light: #BBDAD4;
     --success-lighter: #EDF6F4;
-    --information-base: #5A7CB5;
+    --information-base: #4D6FA5;
     --information-light: #B8CADF;
     --information-lighter: #ECF1F7;
     --feature-base: #7B6BA0;
@@ -78,7 +78,7 @@
     --destructive-foreground: 220 25% 99%;
     --border: 220 16% 90%;
     --input: 220 16% 90%;
-    --ring: 213 40% 46%;
+    --ring: 213 42% 38%;
     --radius: 0.625rem;
 
     /* Chart colors — Blue-toned */
@@ -113,7 +113,7 @@
   }
 
   ::selection {
-    background: rgba(59, 111, 174, 0.12);
+    background: rgba(48, 93, 147, 0.12);
     color: var(--n-7);
   }
 }
@@ -173,7 +173,7 @@
   .btn-jp-primary:hover {
     background: #325F99;
     border-color: #325F99;
-    box-shadow: 0 2px 8px rgba(59, 111, 174, 0.25);
+    box-shadow: 0 2px 8px rgba(48, 93, 147, 0.25);
     transform: translateY(-0.5px);
   }
 
@@ -228,7 +228,7 @@
   }
   .field-jp:focus {
     border-color: var(--primary-1);
-    box-shadow: 0 0 0 3px rgba(59, 111, 174, 0.1);
+    box-shadow: 0 0 0 3px rgba(48, 93, 147, 0.1);
   }
 
   .field-jp-textarea {
@@ -250,7 +250,7 @@
   }
   .field-jp-textarea:focus {
     border-color: var(--primary-1);
-    box-shadow: 0 0 0 3px rgba(59, 111, 174, 0.1);
+    box-shadow: 0 0 0 3px rgba(48, 93, 147, 0.1);
   }
 
   /* ========================================
@@ -270,7 +270,7 @@
     @apply card-jp;
   }
   .card-jp-hover:hover {
-    border-color: rgba(59, 111, 174, 0.15);
+    border-color: rgba(48, 93, 147, 0.15);
     box-shadow:
       0 4px 12px -2px rgba(22, 27, 38, 0.08),
       0 1px 3px rgba(22, 27, 38, 0.04);

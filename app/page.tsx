@@ -106,7 +106,7 @@ function getScoreRingColor(percentage: number): string {
 
 function getScoreRingTrailColor(percentage: number): string {
   if (percentage >= 80) return "rgba(74, 139, 127, 0.12)";
-  if (percentage >= 60) return "rgba(90, 124, 181, 0.12)";
+  if (percentage >= 60) return "rgba(77, 111, 165, 0.12)";
   if (percentage >= 45) return "rgba(184, 154, 92, 0.12)";
   return "rgba(191, 107, 107, 0.12)";
 }
@@ -146,7 +146,7 @@ function LevelBadge({ level }: { level: number }) {
 const AO_CONFIG = {
   ao1: {
     label: "Knowledge",
-    color: "#5A7CB5",
+    color: "#4D6FA5",
     bgLight: "var(--information-lighter)",
     borderLight: "var(--information-light)",
   },
@@ -797,8 +797,8 @@ function PlanResultDisplay({
                 </div>
               </div>
               <div className="p-6 space-y-4">
-                {/* Chain of Reasoning */}
-                {showDetailedPlan && arg.chainOfReasoning && arg.chainOfReasoning.length > 0 && (
+                {/* Chain of Reasoning — always visible */}
+                {arg.chainOfReasoning && arg.chainOfReasoning.length > 0 && (
                   <div
                     className="flex flex-wrap items-center gap-2 p-4 border"
                     style={{
@@ -1163,10 +1163,98 @@ function PlanResultDisplay({
               </div>
               <AOBadge ao="ao4" />
             </div>
-            <div className="p-6">
-              <p className="text-base2 text-n-5 leading-relaxed">
-                {result.conclusion}
-              </p>
+            <div className="p-6 space-y-4">
+              {/* Chain of Reasoning — always shown */}
+              {result.conclusionSection?.chainOfReasoning && result.conclusionSection.chainOfReasoning.length > 0 && (
+                <div
+                  className="flex flex-wrap items-center gap-2 p-4 border"
+                  style={{
+                    borderRadius: "0.5rem",
+                    background: "var(--n-2)",
+                    borderColor: "var(--n-3)",
+                  }}
+                >
+                  <span className="text-caption2 font-medium text-n-4 uppercase tracking-wider mr-1 font-inter">
+                    Chain:
+                  </span>
+                  {result.conclusionSection.chainOfReasoning.slice(0, 5).map((step, i) => (
+                    <span key={i} className="flex items-center gap-1.5">
+                      <span
+                        className="px-2.5 py-1 text-caption2 text-n-5 font-medium border"
+                        style={{
+                          background: "var(--n-1)",
+                          borderColor: "var(--n-3)",
+                          borderRadius: "0.375rem",
+                        }}
+                      >
+                        {step}
+                      </span>
+                      {result.conclusionSection?.chainOfReasoning && i < Math.min(result.conclusionSection.chainOfReasoning.length - 1, 4) && (
+                        <ChevronRight className="w-2.5 h-2.5 text-n-4" />
+                      )}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Non-detail: brief summary only */}
+              {!showDetailedPlan && (
+                <div
+                  className="p-4 border"
+                  style={{
+                    borderRadius: "0.5rem",
+                    background: "var(--n-2)",
+                    borderColor: "var(--n-3)",
+                  }}
+                >
+                  <p className="text-base2 font-inter text-n-7">
+                    {result.conclusionSection?.whatToWrite || result.conclusion.split(". ").slice(0, 2).join(". ") + "."}
+                  </p>
+                </div>
+              )}
+
+              {/* Detail: full conclusion */}
+              {showDetailedPlan && (
+                <div
+                  className="p-4 border"
+                  style={{
+                    borderRadius: "0.5rem",
+                    background: "var(--success-lighter)",
+                    borderColor: "var(--success-light)",
+                  }}
+                >
+                  <p
+                    className="text-caption2 font-medium uppercase tracking-wider mb-2 flex items-center gap-1.5 font-inter"
+                    style={{ color: "var(--success-dark)" }}
+                  >
+                    <Lightbulb className="w-3 h-3" />
+                    What to Write
+                  </p>
+                  <p className="text-base2 text-n-5 leading-relaxed">
+                    {result.conclusion}
+                  </p>
+                </div>
+              )}
+
+              {/* Tips — detail only */}
+              {showDetailedPlan && result.conclusionSection?.tips && result.conclusionSection.tips.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {result.conclusionSection.tips.map((tip, i) => (
+                    <span
+                      key={i}
+                      className="px-2.5 py-1 text-caption2 font-medium border"
+                      style={{
+                        borderRadius: "0.375rem",
+                        background: "var(--n-1)",
+                        borderColor: "var(--n-3)",
+                        color: "var(--n-5)",
+                      }}
+                    >
+                      {tip}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
@@ -1339,12 +1427,9 @@ function GraderInputForm({
         >
           <Pen className="w-5 h-5 text-n-5" />
         </div>
-        <h2 className="text-h5 font-inter text-n-7 tracking-tight mb-1.5">
+        <h2 className="text-h5 font-inter text-n-7 tracking-tight">
           Grade Your Answer
         </h2>
-        <p className="text-base2 text-n-4">
-          AI-powered feedback aligned with Edexcel mark schemes
-        </p>
       </div>
 
       <div className="card-jp overflow-hidden">
@@ -1481,12 +1566,9 @@ function PlannerInputForm({
         >
           <FileText className="w-5 h-5 text-n-5" />
         </div>
-        <h2 className="text-h5 font-inter text-n-7 tracking-tight mb-1.5">
+        <h2 className="text-h5 font-inter text-n-7 tracking-tight">
           Plan Your Essay
         </h2>
-        <p className="text-base2 text-n-4">
-          Generate a comprehensive A*-grade essay structure
-        </p>
       </div>
 
       <div className="card-jp overflow-hidden">
@@ -1793,7 +1875,7 @@ export default function HomePage() {
             style={{ borderTop: "1px solid var(--n-3)" }}
           >
             <p className="text-caption2 text-n-4 text-center">
-              AI-powered grading · Edexcel IAL Economics · Always verify with official mark schemes
+              Edexcel IAL Economics · Always verify with official mark schemes
             </p>
           </div>
         </div>

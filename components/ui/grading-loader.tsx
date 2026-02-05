@@ -42,7 +42,7 @@ function SkeletonLine({
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(90deg, transparent, rgba(59, 111, 174, 0.08), transparent)",
+            "linear-gradient(90deg, transparent, rgba(48, 93, 147, 0.08), transparent)",
           animation: "skeletonShimmer 1.8s ease-in-out infinite",
           animationDelay: `${delay * 0.5}s`,
         }}
@@ -132,7 +132,7 @@ export function GradingLoader({
                   className="absolute inset-0"
                   style={{
                     background:
-                      "linear-gradient(90deg, transparent, rgba(59, 111, 174, 0.06), transparent)",
+                      "linear-gradient(90deg, transparent, rgba(48, 93, 147, 0.06), transparent)",
                     animation: "skeletonShimmer 1.8s ease-in-out infinite",
                   }}
                 />
@@ -158,7 +158,7 @@ export function GradingLoader({
                   className="absolute inset-0"
                   style={{
                     background:
-                      "linear-gradient(90deg, transparent, rgba(59, 111, 174, 0.06), transparent)",
+                      "linear-gradient(90deg, transparent, rgba(48, 93, 147, 0.06), transparent)",
                     animation: "skeletonShimmer 1.8s ease-in-out infinite",
                     animationDelay: "0.3s",
                   }}
@@ -203,7 +203,7 @@ export function GradingLoader({
                   className="absolute inset-0 pointer-events-none"
                   style={{
                     background:
-                      "linear-gradient(90deg, transparent, rgba(59, 111, 174, 0.03), transparent)",
+                      "linear-gradient(90deg, transparent, rgba(48, 93, 147, 0.03), transparent)",
                     animation: "skeletonShimmer 2.2s ease-in-out infinite",
                     animationDelay: "0.4s",
                   }}
@@ -246,7 +246,7 @@ export function GradingLoader({
                       className="absolute inset-0 pointer-events-none"
                       style={{
                         background:
-                          "linear-gradient(90deg, transparent, rgba(59, 111, 174, 0.03), transparent)",
+                          "linear-gradient(90deg, transparent, rgba(48, 93, 147, 0.03), transparent)",
                         animation: "skeletonShimmer 2.2s ease-in-out infinite",
                         animationDelay: `${0.5 + i * 0.3}s`,
                       }}
@@ -307,7 +307,7 @@ export function GradingLoader({
               transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
               style={{
                 background:
-                  "linear-gradient(180deg, rgba(59, 111, 174, 0.04) 0%, transparent 50%, rgba(59, 111, 174, 0.02) 100%)",
+                  "linear-gradient(180deg, rgba(48, 93, 147, 0.04) 0%, transparent 50%, rgba(48, 93, 147, 0.02) 100%)",
               }}
             />
           </div>

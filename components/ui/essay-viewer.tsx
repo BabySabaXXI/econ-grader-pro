@@ -39,7 +39,90 @@ interface ActiveFeedback {
   data: MarkEarned | MarkLost;
 }
 
-// AO Config — Japandi accent palette
+// ============================================================================
+// ROBUST QUOTE MATCHING ENGINE
+// ============================================================================
+
+/**
+ * Normalize special characters for matching:
+ * smart quotes → straight, em/en dash → hyphen, ellipsis → dots
+ */
+function normalizeChars(text: string): string {
+  return text
+    .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"')
+    .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'")
+    .replace(/[\u2013\u2014]/g, "-")
+    .replace(/\u2026/g, "...");
+}
+
+/**
+ * Find a quote in the essay using flexible whitespace matching.
+ *
+ * Strategy:
+ * 1. Try exact case-insensitive substring match (fast path)
+ * 2. Try regex match where any whitespace in quote matches any whitespace
+ *    sequence in essay (handles newline vs space mismatches)
+ * 3. If quote is very short (<15 chars), skip to avoid false positives
+ *
+ * Returns the matched range in the ORIGINAL essay text, or null.
+ */
+function findQuoteInEssay(
+  essay: string,
+  rawQuote: string
+): { start: number; end: number } | null {
+  if (!rawQuote || rawQuote.length < 8) return null;
+
+  const quote = normalizeChars(rawQuote).trim();
+  const essayNorm = normalizeChars(essay);
+
+  if (!quote) return null;
+
+  // 1. Fast path: exact case-insensitive substring match
+  const exactIdx = essayNorm.toLowerCase().indexOf(quote.toLowerCase());
+  if (exactIdx !== -1) {
+    return { start: exactIdx, end: exactIdx + quote.length };
+  }
+
+  // 2. Regex match: split quote on whitespace, match any whitespace between words
+  const words = quote.split(/\s+/).filter(Boolean);
+  if (words.length < 2) return null; // single word won't be useful
+
+  // Escape each word for regex, join with \s+ to allow flexible whitespace
+  const escaped = words.map((w) =>
+    w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  );
+
+  try {
+    const regex = new RegExp(escaped.join("\\s+"), "i");
+    const match = regex.exec(essayNorm);
+    if (match) {
+      return { start: match.index, end: match.index + match[0].length };
+    }
+  } catch {
+    // Regex construction failed (shouldn't happen with escaped input)
+  }
+
+  // 3. Partial match: try the first N words if the full quote is long
+  if (words.length > 6) {
+    const partialEscaped = escaped.slice(0, 6);
+    try {
+      const regex = new RegExp(partialEscaped.join("\\s+"), "i");
+      const match = regex.exec(essayNorm);
+      if (match) {
+        return { start: match.index, end: match.index + match[0].length };
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return null;
+}
+
+// ============================================================================
+// AO CONFIG
+// ============================================================================
+
 const AO_CONFIG = {
   ao1: {
     label: "Knowledge",
@@ -67,7 +150,6 @@ const AO_CONFIG = {
   },
 };
 
-// AO Badge Component — Japandi pill style
 function AOBadge({ ao, className }: { ao: string; className?: string }) {
   const config = AO_CONFIG[ao as keyof typeof AO_CONFIG];
   if (!config) return null;
@@ -90,6 +172,10 @@ function AOBadge({ ao, className }: { ao: string; className?: string }) {
   );
 }
 
+// ============================================================================
+// ESSAY VIEWER COMPONENT
+// ============================================================================
+
 export function EssayViewer({
   essay,
   marksEarned,
@@ -104,7 +190,7 @@ export function EssayViewer({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const toggleExpanded = (id: string) => {
-    setExpandedItems(prev => {
+    setExpandedItems((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(id)) {
         newSet.delete(id);
@@ -115,97 +201,85 @@ export function EssayViewer({
     });
   };
 
-  // Find all highlight positions and create segments
+  // ========================================================================
+  // HIGHLIGHT MATCHING — Robust, whitespace-flexible
+  // ========================================================================
+
   const highlightedSegments = useMemo(() => {
     const segments: HighlightSegment[] = [];
-    const highlights: Array<{
+
+    // Collect all successful matches
+    const matches: Array<{
       start: number;
       end: number;
       type: "earned" | "lost";
       data: MarkEarned | MarkLost;
     }> = [];
 
-    // Find positions of earned marks
-    marksEarned.forEach((mark) => {
-      if (!mark.quote) return;
-      const quote = mark.quote.toLowerCase();
-      const essayLower = essay.toLowerCase();
-      let searchStart = 0;
-      let index = essayLower.indexOf(quote, searchStart);
-
-      while (index !== -1) {
-        highlights.push({
-          start: index,
-          end: index + mark.quote.length,
-          type: "earned",
-          data: mark,
-        });
-        searchStart = index + 1;
-        index = essayLower.indexOf(quote, searchStart);
-      }
-    });
-
-    // Find positions of lost marks
-    marksLost.forEach((mark) => {
-      if (!mark.quote) return;
-      const quote = mark.quote.toLowerCase();
-      const essayLower = essay.toLowerCase();
-      let searchStart = 0;
-      let index = essayLower.indexOf(quote, searchStart);
-
-      while (index !== -1) {
-        highlights.push({
-          start: index,
-          end: index + mark.quote.length,
-          type: "lost",
-          data: mark,
-        });
-        searchStart = index + 1;
-        index = essayLower.indexOf(quote, searchStart);
-      }
-    });
-
-    // Sort by start position
-    highlights.sort((a, b) => a.start - b.start);
-
-    // Remove overlapping highlights (keep first occurrence)
-    const nonOverlapping: typeof highlights = [];
-    let lastEnd = 0;
-    for (const h of highlights) {
-      if (h.start >= lastEnd) {
-        nonOverlapping.push(h);
-        lastEnd = h.end;
+    // Find earned marks (only first match per quote)
+    for (const mark of marksEarned) {
+      const found = findQuoteInEssay(essay, mark.quote);
+      if (found) {
+        matches.push({ ...found, type: "earned", data: mark });
       }
     }
+
+    // Find lost marks (only first match per quote)
+    for (const mark of marksLost) {
+      const found = findQuoteInEssay(essay, mark.quote);
+      if (found) {
+        matches.push({ ...found, type: "lost", data: mark });
+      }
+    }
+
+    // Sort by start position, then by length (longer first)
+    matches.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
+
+    // Remove overlapping matches — keep longer or first
+    const resolved: typeof matches = [];
+    for (const m of matches) {
+      const overlaps = resolved.some(
+        (r) => m.start < r.end && m.end > r.start
+      );
+      if (!overlaps) {
+        resolved.push(m);
+      }
+    }
+
+    // Re-sort after dedup (should already be sorted, but be safe)
+    resolved.sort((a, b) => a.start - b.start);
 
     // Build segments
-    let currentPos = 0;
-    for (const highlight of nonOverlapping) {
-      if (highlight.start > currentPos) {
+    let cursor = 0;
+    for (const match of resolved) {
+      // Normal text before this highlight
+      if (match.start > cursor) {
         segments.push({
-          text: essay.slice(currentPos, highlight.start),
+          text: essay.slice(cursor, match.start),
           type: "normal",
-          startIndex: currentPos,
-          endIndex: highlight.start,
+          startIndex: cursor,
+          endIndex: match.start,
         });
       }
 
+      // Highlighted text
       segments.push({
-        text: essay.slice(highlight.start, highlight.end),
-        type: highlight.type,
-        data: highlight.data,
-        startIndex: highlight.start,
-        endIndex: highlight.end,
+        text: essay.slice(match.start, match.end),
+        type: match.type,
+        data: match.data,
+        startIndex: match.start,
+        endIndex: match.end,
       });
 
-      currentPos = highlight.end;
+      cursor = match.end;
     }
 
-    if (currentPos < essay.length) {
+    // Remaining text after last highlight
+    if (cursor < essay.length) {
       segments.push({
-        text: essay.slice(currentPos),
+        text: essay.slice(cursor),
         type: "normal",
-        startIndex: currentPos,
+        startIndex: cursor,
         endIndex: essay.length,
       });
     }
@@ -251,7 +325,9 @@ export function EssayViewer({
         }}
       >
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-caption2 font-semibold font-inter text-n-4 uppercase tracking-wider mr-2">View:</span>
+          <span className="text-caption2 font-semibold font-inter text-n-4 uppercase tracking-wider mr-2">
+            View:
+          </span>
           <button
             onClick={() => setViewMode("all")}
             className={cn(
@@ -277,11 +353,19 @@ export function EssayViewer({
             )}
             style={{
               borderRadius: "2rem",
-              background: viewMode === "earned" ? "var(--success-dark)" : "var(--n-1)",
+              background:
+                viewMode === "earned" ? "var(--success-dark)" : "var(--n-1)",
             }}
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span className={cn("font-bold", viewMode !== "earned" && "text-[#3A7266]")}>+{totalEarnedPoints}</span>
+            <span
+              className={cn(
+                "font-bold",
+                viewMode !== "earned" && "text-[#3A7266]"
+              )}
+            >
+              +{totalEarnedPoints}
+            </span>
             <span className="text-xs opacity-70">({earnedCount})</span>
           </button>
           <button
@@ -294,23 +378,36 @@ export function EssayViewer({
             )}
             style={{
               borderRadius: "2rem",
-              background: viewMode === "lost" ? "var(--error-base)" : "var(--n-1)",
+              background:
+                viewMode === "lost" ? "var(--error-base)" : "var(--n-1)",
             }}
           >
             <AlertCircle className="w-3.5 h-3.5" />
-            <span className={cn("font-bold", viewMode !== "lost" && "text-[#BF6B6B]")}>Issues</span>
+            <span
+              className={cn(
+                "font-bold",
+                viewMode !== "lost" && "text-[#BF6B6B]"
+              )}
+            >
+              Issues
+            </span>
             <span className="text-xs opacity-70">({lostCount})</span>
           </button>
         </div>
 
         {onToggleDetailedFeedback && (
-          <div className="flex items-center gap-3 pl-4" style={{ borderLeft: "1px solid var(--n-3)" }}>
+          <div
+            className="flex items-center gap-3 pl-4"
+            style={{ borderLeft: "1px solid var(--n-3)" }}
+          >
             {showDetailedFeedback ? (
               <Eye className="w-4 h-4 text-n-5" />
             ) : (
               <EyeOff className="w-4 h-4 text-n-4" />
             )}
-            <span className="text-caption2 font-semibold font-inter text-n-5">Details</span>
+            <span className="text-caption2 font-semibold font-inter text-n-5">
+              Details
+            </span>
             <Switch
               checked={showDetailedFeedback}
               onCheckedChange={onToggleDetailedFeedback}
@@ -377,7 +474,8 @@ export function EssayViewer({
               style={{
                 borderRadius: "1.25rem",
                 borderColor: "var(--error-light)",
-                background: "linear-gradient(135deg, var(--error-lighter), white)",
+                background:
+                  "linear-gradient(135deg, var(--error-lighter), white)",
               }}
             >
               <div
@@ -417,9 +515,15 @@ export function EssayViewer({
                           <button className="w-full p-4 text-left flex items-start gap-3 transition-colors hover:bg-[rgba(191,107,107,0.03)]">
                             <span className="flex-shrink-0 mt-0.5">
                               {isExpanded ? (
-                                <ChevronDown className="w-4 h-4" style={{ color: "var(--error-base)" }} />
+                                <ChevronDown
+                                  className="w-4 h-4"
+                                  style={{ color: "var(--error-base)" }}
+                                />
                               ) : (
-                                <ChevronRight className="w-4 h-4" style={{ color: "var(--error-base)" }} />
+                                <ChevronRight
+                                  className="w-4 h-4"
+                                  style={{ color: "var(--error-base)" }}
+                                />
                               )}
                             </span>
                             <div className="flex-1 min-w-0">
@@ -446,13 +550,16 @@ export function EssayViewer({
                         <CollapsibleContent>
                           <div
                             className="px-4 pb-4 pt-0 space-y-3"
-                            style={{ borderTop: "1px solid var(--error-light)" }}
+                            style={{
+                              borderTop: "1px solid var(--error-light)",
+                            }}
                           >
                             <div
                               className="pt-3 p-4 border"
                               style={{
                                 borderRadius: "0.75rem",
-                                background: "linear-gradient(135deg, var(--error-lighter), white)",
+                                background:
+                                  "linear-gradient(135deg, var(--error-lighter), white)",
                                 borderColor: "var(--error-light)",
                               }}
                             >
@@ -462,13 +569,16 @@ export function EssayViewer({
                               >
                                 Issue
                               </p>
-                              <p className="text-base2 text-n-5 leading-relaxed">{item.issue}</p>
+                              <p className="text-base2 text-n-5 leading-relaxed">
+                                {item.issue}
+                              </p>
                             </div>
                             <div
                               className="p-4 border"
                               style={{
                                 borderRadius: "0.75rem",
-                                background: "linear-gradient(135deg, var(--away-lighter), white)",
+                                background:
+                                  "linear-gradient(135deg, var(--away-lighter), white)",
                                 borderColor: "var(--away-light)",
                               }}
                             >
@@ -479,7 +589,9 @@ export function EssayViewer({
                                 <Lightbulb className="w-3 h-3" />
                                 How to Fix
                               </p>
-                              <p className="text-base2 text-n-5 leading-relaxed">{item.howToFix}</p>
+                              <p className="text-base2 text-n-5 leading-relaxed">
+                                {item.howToFix}
+                              </p>
                             </div>
                           </div>
                         </CollapsibleContent>
@@ -498,7 +610,8 @@ export function EssayViewer({
               style={{
                 borderRadius: "1.25rem",
                 borderColor: "var(--success-light)",
-                background: "linear-gradient(135deg, var(--success-lighter), white)",
+                background:
+                  "linear-gradient(135deg, var(--success-lighter), white)",
               }}
             >
               <div
@@ -510,7 +623,8 @@ export function EssayViewer({
                   style={{ color: "var(--success-dark)" }}
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  Marks Earned (+{totalEarnedPoints} from {marksEarned.length} items)
+                  Marks Earned (+{totalEarnedPoints} from {marksEarned.length}{" "}
+                  items)
                 </h3>
               </div>
               <div className="p-4 space-y-3">
@@ -535,9 +649,15 @@ export function EssayViewer({
                           <button className="w-full p-4 text-left flex items-start gap-3 transition-colors hover:bg-[rgba(74,139,127,0.03)]">
                             <span className="flex-shrink-0 mt-0.5">
                               {isExpanded ? (
-                                <ChevronDown className="w-4 h-4" style={{ color: "var(--success-dark)" }} />
+                                <ChevronDown
+                                  className="w-4 h-4"
+                                  style={{ color: "var(--success-dark)" }}
+                                />
                               ) : (
-                                <ChevronRight className="w-4 h-4" style={{ color: "var(--success-dark)" }} />
+                                <ChevronRight
+                                  className="w-4 h-4"
+                                  style={{ color: "var(--success-dark)" }}
+                                />
                               )}
                             </span>
                             <div className="flex-1 min-w-0">
@@ -564,13 +684,16 @@ export function EssayViewer({
                         <CollapsibleContent>
                           <div
                             className="px-4 pb-4 pt-0"
-                            style={{ borderTop: "1px solid var(--success-light)" }}
+                            style={{
+                              borderTop: "1px solid var(--success-light)",
+                            }}
                           >
                             <div
                               className="pt-3 p-4 border"
                               style={{
                                 borderRadius: "0.75rem",
-                                background: "linear-gradient(135deg, var(--success-lighter), white)",
+                                background:
+                                  "linear-gradient(135deg, var(--success-lighter), white)",
                                 borderColor: "var(--success-light)",
                               }}
                             >
@@ -580,7 +703,9 @@ export function EssayViewer({
                               >
                                 Why This Earned Marks
                               </p>
-                              <p className="text-base2 text-n-5 leading-relaxed">{item.reason}</p>
+                              <p className="text-base2 text-n-5 leading-relaxed">
+                                {item.reason}
+                              </p>
                             </div>
                           </div>
                         </CollapsibleContent>
@@ -595,12 +720,18 @@ export function EssayViewer({
       )}
 
       {/* Feedback Modal */}
-      <Dialog open={!!activeFeedback} onOpenChange={() => setActiveFeedback(null)}>
+      <Dialog
+        open={!!activeFeedback}
+        onOpenChange={() => setActiveFeedback(null)}
+      >
         <DialogContent
           className="sm:max-w-md border"
           style={{
             borderRadius: "1.25rem",
-            borderColor: activeFeedback?.type === "earned" ? "var(--success-light)" : "var(--error-light)",
+            borderColor:
+              activeFeedback?.type === "earned"
+                ? "var(--success-light)"
+                : "var(--error-light)",
           }}
         >
           <DialogHeader>
@@ -611,8 +742,8 @@ export function EssayViewer({
                   className="font-semibold flex items-center gap-1.5 text-sm"
                   style={{ color: "var(--success-dark)" }}
                 >
-                  <CheckCircle2 className="w-4 h-4" />
-                  +{(activeFeedback?.data as MarkEarned)?.points} marks
+                  <CheckCircle2 className="w-4 h-4" />+
+                  {(activeFeedback?.data as MarkEarned)?.points} marks
                 </span>
               ) : (
                 <span
@@ -647,7 +778,8 @@ export function EssayViewer({
                 className="p-4 border"
                 style={{
                   borderRadius: "0.75rem",
-                  background: "linear-gradient(135deg, var(--success-lighter), white)",
+                  background:
+                    "linear-gradient(135deg, var(--success-lighter), white)",
                   borderColor: "var(--success-light)",
                 }}
               >
@@ -667,7 +799,8 @@ export function EssayViewer({
                   className="p-4 border"
                   style={{
                     borderRadius: "0.75rem",
-                    background: "linear-gradient(135deg, var(--error-lighter), white)",
+                    background:
+                      "linear-gradient(135deg, var(--error-lighter), white)",
                     borderColor: "var(--error-light)",
                   }}
                 >
@@ -685,7 +818,8 @@ export function EssayViewer({
                   className="p-4 border"
                   style={{
                     borderRadius: "0.75rem",
-                    background: "linear-gradient(135deg, var(--away-lighter), white)",
+                    background:
+                      "linear-gradient(135deg, var(--away-lighter), white)",
                     borderColor: "var(--away-light)",
                   }}
                 >

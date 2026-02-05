@@ -149,7 +149,7 @@ export default function Sidebar({
                     className="flex items-center justify-center w-8 h-8 flex-shrink-0 transition-colors duration-200"
                     style={{
                       borderRadius: "0.375rem",
-                      background: isActive ? "rgba(59, 111, 174, 0.08)" : "transparent",
+                      background: isActive ? "rgba(48, 93, 147, 0.08)" : "transparent",
                     }}
                   >
                     <Icon
@@ -249,7 +249,7 @@ export default function Sidebar({
               className="w-7 h-7 flex items-center justify-center flex-shrink-0"
               style={{
                 borderRadius: "0.375rem",
-                background: "rgba(59, 111, 174, 0.08)",
+                background: "rgba(48, 93, 147, 0.08)",
                 border: "1px solid var(--n-3)",
               }}
             >
