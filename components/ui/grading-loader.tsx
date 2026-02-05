@@ -109,7 +109,7 @@ export function GradingLoader({
           >
             {/* Document header skeleton */}
             <div
-              className="px-8 py-6 flex items-center gap-4"
+              className="px-8 py-6 flex items-center gap-4 max-md:px-5 max-md:py-4 max-md:gap-3"
               style={{
                 borderBottom: "1px solid var(--n-3)",
                 background: "var(--n-2)",
@@ -167,7 +167,7 @@ export function GradingLoader({
             </div>
 
             {/* Document body skeleton — main content area */}
-            <div className="px-8 py-7 space-y-7">
+            <div className="px-8 py-7 space-y-7 max-md:px-5 max-md:py-5 max-md:space-y-5">
               {/* Paragraph block 1 */}
               <div className="space-y-3">
                 <SkeletonLine width="100%" delay={0.3} />
@@ -224,7 +224,7 @@ export function GradingLoader({
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 1.1, ease: naturalEase }}
-                className="grid grid-cols-2 gap-4"
+                className="grid grid-cols-2 gap-4 max-md:gap-3"
               >
                 {[0, 1].map((i) => (
                   <div

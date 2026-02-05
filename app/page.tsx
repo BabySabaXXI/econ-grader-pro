@@ -290,14 +290,14 @@ function GradingResultDisplay({
         <span>Edit Answer</span>
       </button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-5 max-md:gap-4">
         {/* Left Column — Essay View */}
-        <div className="lg:col-span-7 xl:col-span-8">
-          <div className="sticky top-6">
+        <div className="md:col-span-7 xl:col-span-8">
+          <div className="md:sticky md:top-6">
             <div className="card-jp overflow-hidden">
               {/* Header */}
               <div
-                className="px-6 py-4 flex items-center justify-between"
+                className="px-6 py-4 flex items-center justify-between max-md:px-4 max-md:py-3 max-md:flex-wrap max-md:gap-2"
                 style={{
                   borderBottom: "1px solid var(--n-3)",
                   background: "var(--n-2)",
@@ -307,8 +307,11 @@ function GradingResultDisplay({
                   <h3 className="text-base1 font-inter text-n-7">
                     Your Essay
                   </h3>
-                  <p className="text-caption2 text-n-4 mt-0.5">
+                  <p className="text-caption2 text-n-4 mt-0.5 max-md:hidden">
                     Click highlighted text for feedback
+                  </p>
+                  <p className="text-caption2 text-n-4 mt-0.5 hidden max-md:block">
+                    Tap highlights for feedback
                   </p>
                 </div>
                 {hasHighlights && (
@@ -337,7 +340,7 @@ function GradingResultDisplay({
                 )}
               </div>
               {/* Essay content */}
-              <div className="p-6">
+              <div className="p-6 max-md:p-4">
                 {hasHighlights ? (
                   <EssayViewer
                     essay={essayText}
@@ -368,7 +371,7 @@ function GradingResultDisplay({
 
         {/* Right Column — Score Cards */}
         <motion.div
-          className="lg:col-span-5 xl:col-span-4 space-y-4"
+          className="md:col-span-5 xl:col-span-4 space-y-4 max-md:space-y-3"
           variants={staggerContainer}
           initial="initial"
           animate="animate"
@@ -376,8 +379,8 @@ function GradingResultDisplay({
           {/* Overall Score */}
           <motion.div variants={staggerItem}>
             <div className="card-jp-elevated overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-center gap-5">
+              <div className="p-6 max-md:p-4">
+                <div className="flex items-center gap-5 max-md:gap-4">
                   {/* Score Ring */}
                   <div className="relative flex-shrink-0">
                     <svg className="w-24 h-24" viewBox="0 0 100 100">
@@ -446,12 +449,12 @@ function GradingResultDisplay({
           {/* AO Breakdown */}
           <motion.div variants={staggerItem}>
             <div className="card-jp-elevated overflow-hidden">
-              <div className="px-6 pt-5 pb-2.5">
+              <div className="px-6 pt-5 pb-2.5 max-md:px-4 max-md:pt-4">
                 <h4 className="text-caption2 font-medium font-inter text-n-4 uppercase tracking-wider">
                   Assessment Objectives
                 </h4>
               </div>
-              <div className="px-6 pb-5 space-y-4">
+              <div className="px-6 pb-5 space-y-4 max-md:px-4 max-md:pb-4">
                 {markScheme.ao1 > 0 && (
                   <AOScoreBar aoKey="ao1" score={result.aoScores.ao1} maxScore={markScheme.ao1} />
                 )}
@@ -471,12 +474,12 @@ function GradingResultDisplay({
           {/* Examiner Comment */}
           <motion.div variants={staggerItem}>
             <div className="card-jp-elevated overflow-hidden">
-              <div className="px-6 pt-5 pb-2.5">
+              <div className="px-6 pt-5 pb-2.5 max-md:px-4 max-md:pt-4">
                 <h4 className="text-caption2 font-medium font-inter text-n-4 uppercase tracking-wider">
                   Examiner Feedback
                 </h4>
               </div>
-              <div className="px-6 pb-5">
+              <div className="px-6 pb-5 max-md:px-4 max-md:pb-4">
                 <p className="text-base2 text-n-5 leading-relaxed italic">
                   &ldquo;{result.examinerComment}&rdquo;
                 </p>
@@ -519,7 +522,7 @@ function GradingResultDisplay({
           {/* Strengths */}
           <motion.div variants={staggerItem}>
             <div className="card-jp-elevated overflow-hidden">
-              <div className="px-6 pt-5 pb-2.5">
+              <div className="px-6 pt-5 pb-2.5 max-md:px-4 max-md:pt-4">
                 <h4
                   className="text-caption2 font-medium font-inter uppercase tracking-wider flex items-center gap-1.5"
                   style={{ color: "var(--success-dark)" }}
@@ -528,7 +531,7 @@ function GradingResultDisplay({
                   Strengths
                 </h4>
               </div>
-              <div className="px-6 pb-5 space-y-2">
+              <div className="px-6 pb-5 space-y-2 max-md:px-4 max-md:pb-4">
                 {result.strengths.slice(0, 3).map((strength, index) => (
                   <div
                     key={index}
@@ -554,7 +557,7 @@ function GradingResultDisplay({
           {/* Improvements */}
           <motion.div variants={staggerItem}>
             <div className="card-jp-elevated overflow-hidden">
-              <div className="px-6 pt-5 pb-2.5">
+              <div className="px-6 pt-5 pb-2.5 max-md:px-4 max-md:pt-4">
                 <h4
                   className="text-caption2 font-medium font-inter uppercase tracking-wider flex items-center gap-1.5"
                   style={{ color: "var(--away-base)" }}
@@ -563,7 +566,7 @@ function GradingResultDisplay({
                   Areas to Improve
                 </h4>
               </div>
-              <div className="px-6 pb-5 space-y-2">
+              <div className="px-6 pb-5 space-y-2 max-md:px-4 max-md:pb-4">
                 {result.improvements.slice(0, 3).map((improvement, index) => (
                   <div
                     key={index}
@@ -677,7 +680,7 @@ function PlanResultDisplay({
 
       {/* Detail Toggle */}
       <div
-        className="flex items-center justify-between mb-6 p-4"
+        className="flex items-center justify-between mb-6 p-4 max-md:mb-4 max-md:p-3"
         style={{
           borderRadius: "0.5rem",
           background: "var(--n-2)",
@@ -714,7 +717,7 @@ function PlanResultDisplay({
         <motion.div variants={staggerItem}>
           <div className="card-jp-hover overflow-hidden">
             <div
-              className="px-6 py-4 flex items-center justify-between"
+              className="px-6 py-4 flex items-center justify-between max-md:px-4 max-md:py-3 max-md:flex-wrap max-md:gap-2"
               style={{
                 borderBottom: "1px solid var(--n-3)",
                 background: "var(--n-2)",
@@ -722,21 +725,21 @@ function PlanResultDisplay({
             >
               <div className="flex items-center gap-3">
                 <span
-                  className="flex items-center justify-center w-8 h-8 text-white text-caption1 font-inter"
+                  className="flex items-center justify-center w-8 h-8 text-white text-caption1 font-inter flex-shrink-0 max-md:w-7 max-md:h-7"
                   style={{ borderRadius: "0.375rem", background: "var(--n-7)" }}
                 >
                   1
                 </span>
                 <div>
                   <h3 className="text-base1 font-inter text-n-7">Introduction</h3>
-                  <p className="text-caption2 text-n-4 mt-0.5">
+                  <p className="text-caption2 text-n-4 mt-0.5 max-md:hidden">
                     Define key terms and state your thesis
                   </p>
                 </div>
               </div>
               <AOBadge ao="ao1" />
             </div>
-            <div className="p-6">
+            <div className="p-6 max-md:p-4">
               <div
                 className="p-4 border"
                 style={{
@@ -765,15 +768,15 @@ function PlanResultDisplay({
           <motion.div key={index} variants={staggerItem}>
             <div className="card-jp-hover overflow-hidden">
               <div
-                className="px-6 py-4 flex items-center justify-between"
+                className="px-6 py-4 flex items-center justify-between max-md:px-4 max-md:py-3 max-md:flex-wrap max-md:gap-2"
                 style={{
                   borderBottom: "1px solid var(--n-3)",
                   background: "var(--n-2)",
                 }}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <span
-                    className="flex items-center justify-center w-8 h-8 text-white text-caption1 font-inter"
+                    className="flex items-center justify-center w-8 h-8 text-white text-caption1 font-inter flex-shrink-0 max-md:w-7 max-md:h-7"
                     style={{
                       borderRadius: "0.375rem",
                       background: index === 0 ? "var(--success-dark)" : "var(--error-base)",
@@ -781,26 +784,26 @@ function PlanResultDisplay({
                   >
                     {index + 2}
                   </span>
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="text-base1 font-inter text-n-7">
                       Argument {index === 0 ? "FOR" : "AGAINST"}
                     </h3>
-                    <p className="text-caption2 text-n-4 mt-0.5 max-w-md truncate">
+                    <p className="text-caption2 text-n-4 mt-0.5 max-w-md truncate max-md:max-w-[200px]">
                       {arg.point}
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1 flex-wrap">
                   <AOBadge ao="ao1" />
                   <AOBadge ao="ao2" />
                   <AOBadge ao="ao3" />
                 </div>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="p-6 space-y-4 max-md:p-4 max-md:space-y-3">
                 {/* Chain of Reasoning */}
                 {showDetailedPlan && arg.chainOfReasoning && arg.chainOfReasoning.length > 0 && (
                   <div
-                    className="flex flex-wrap items-center gap-2 p-4 border"
+                    className="flex flex-wrap items-center gap-2 p-4 border max-md:p-3 max-md:gap-1.5"
                     style={{
                       borderRadius: "0.5rem",
                       background: "var(--n-2)",
@@ -832,7 +835,7 @@ function PlanResultDisplay({
 
                 {/* Theory and Example */}
                 {showDetailedPlan ? (
-                  <div className="grid md:grid-cols-2 gap-3">
+                  <div className="grid sm:grid-cols-2 gap-3">
                     <div
                       className="p-4 border"
                       style={{
@@ -893,7 +896,7 @@ function PlanResultDisplay({
         <motion.div variants={staggerItem}>
           <div className="card-jp-hover overflow-hidden">
             <div
-              className="px-6 py-4 flex items-center justify-between"
+              className="px-6 py-4 flex items-center justify-between max-md:px-4 max-md:py-3 max-md:flex-wrap max-md:gap-2"
               style={{
                 borderBottom: "1px solid var(--feature-light)",
                 background: "var(--feature-lighter)",
@@ -901,24 +904,24 @@ function PlanResultDisplay({
             >
               <div className="flex items-center gap-3">
                 <span
-                  className="flex items-center justify-center w-8 h-8 text-white text-caption1 font-inter"
+                  className="flex items-center justify-center w-8 h-8 text-white text-caption1 font-inter flex-shrink-0 max-md:w-7 max-md:h-7"
                   style={{ borderRadius: "0.375rem", background: "var(--feature-base)" }}
                 >
                   {result.arguments.length + 2}
                 </span>
                 <div>
                   <h3 className="text-base1 font-inter text-n-7">Deeper Evaluation</h3>
-                  <p className="text-caption2 text-n-5 mt-0.5">
+                  <p className="text-caption2 text-n-5 mt-0.5 max-md:hidden">
                     Critical analysis and limitations
                   </p>
                 </div>
               </div>
-              <div className="flex gap-1">
+              <div className="flex gap-1 flex-wrap">
                 <AOBadge ao="ao3" />
                 <AOBadge ao="ao4" />
               </div>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 max-md:p-4 max-md:space-y-3">
               {showDetailedPlan && (
                 <div
                   className="p-4 border"
@@ -992,28 +995,28 @@ function PlanResultDisplay({
           <motion.div variants={staggerItem}>
             <div className="card-jp-hover overflow-hidden">
               <div
-                className="px-6 py-4 flex items-center gap-3"
+                className="px-6 py-4 flex items-center gap-3 max-md:px-4 max-md:py-3"
                 style={{
                   borderBottom: "1px solid var(--verified-light)",
                   background: "var(--verified-lighter)",
                 }}
               >
                 <div
-                  className="w-8 h-8 flex items-center justify-center"
+                  className="w-8 h-8 flex items-center justify-center flex-shrink-0 max-md:w-7 max-md:h-7"
                   style={{ borderRadius: "0.375rem", background: "var(--verified-base)" }}
                 >
                   <BarChart3 className="w-4 h-4 text-white" />
                 </div>
-                <div>
-                  <h3 className="text-base2 font-inter uppercase tracking-wide text-n-7">
+                <div className="min-w-0">
+                  <h3 className="text-base2 font-inter uppercase tracking-wide text-n-7 truncate">
                     {diagramAnalysis?.customTitle || "Required Diagram"}
                   </h3>
-                  <p className="text-caption2 text-n-4 mt-0.5">
+                  <p className="text-caption2 text-n-4 mt-0.5 truncate">
                     {result.diagramSection?.name || result.diagram.replace("-", " ")}
                   </p>
                 </div>
               </div>
-              <div className="p-6">
+              <div className="p-6 max-md:p-4">
                 {diagramLoading && (
                   <div className="flex items-center justify-center py-10">
                     <div className="flex flex-col items-center gap-2.5">
@@ -1026,7 +1029,7 @@ function PlanResultDisplay({
                 {generatedDiagram && !diagramLoading && (
                   <div className="mb-5">
                     <div
-                      className="flex justify-center p-5 border"
+                      className="flex justify-center p-5 max-md:p-3 border"
                       style={{
                         borderRadius: "0.5rem",
                         borderColor: "var(--n-3)",
@@ -1040,7 +1043,7 @@ function PlanResultDisplay({
                         showPoints={true}
                         width={400}
                         height={400}
-                        className="max-w-full"
+                        className="max-w-full h-auto"
                       />
                     </div>
 
@@ -1141,7 +1144,7 @@ function PlanResultDisplay({
         <motion.div variants={staggerItem}>
           <div className="card-jp-hover overflow-hidden">
             <div
-              className="px-6 py-4 flex items-center justify-between"
+              className="px-6 py-4 flex items-center justify-between max-md:px-4 max-md:py-3 max-md:flex-wrap max-md:gap-2"
               style={{
                 borderBottom: "1px solid var(--success-light)",
                 background: "var(--success-lighter)",
@@ -1149,21 +1152,21 @@ function PlanResultDisplay({
             >
               <div className="flex items-center gap-3">
                 <span
-                  className="flex items-center justify-center w-8 h-8 text-white text-caption1 font-inter"
+                  className="flex items-center justify-center w-8 h-8 text-white text-caption1 font-inter flex-shrink-0 max-md:w-7 max-md:h-7"
                   style={{ borderRadius: "0.375rem", background: "var(--success-dark)" }}
                 >
                   {result.arguments.length + 3}
                 </span>
                 <div>
                   <h3 className="text-base1 font-inter text-n-7">Conclusion</h3>
-                  <p className="text-caption2 text-n-5 mt-0.5">
+                  <p className="text-caption2 text-n-5 mt-0.5 max-md:hidden">
                     Weigh evidence and give your judgement
                   </p>
                 </div>
               </div>
               <AOBadge ao="ao4" />
             </div>
-            <div className="p-6">
+            <div className="p-6 max-md:p-4">
               <p className="text-base2 text-n-5 leading-relaxed">
                 {result.conclusion}
               </p>
@@ -1251,7 +1254,7 @@ function DiagramUpload({
         </span>
       </div>
       <div
-        className="flex flex-col items-center justify-center p-8 cursor-pointer transition-all duration-300 group"
+        className="flex flex-col items-center justify-center p-8 max-md:p-5 cursor-pointer transition-all duration-300 group"
         onClick={() => fileInputRef.current?.click()}
         style={{
           borderRadius: "0.5rem",
@@ -1328,18 +1331,18 @@ function GraderInputForm({
   return (
     <motion.div className="max-w-xl mx-auto" {...pageTransition}>
       {/* Header */}
-      <div className="text-center mb-10">
+      <div className="text-center mb-10 max-md:mb-6">
         <div
-          className="flex justify-center items-center w-12 h-12 mx-auto mb-4"
+          className="flex justify-center items-center w-12 h-12 mx-auto mb-4 max-md:w-10 max-md:h-10 max-md:mb-3"
           style={{
             borderRadius: "0.5rem",
             background: "var(--n-2)",
             border: "1px solid var(--n-3)",
           }}
         >
-          <Pen className="w-5 h-5 text-n-5" />
+          <Pen className="w-5 h-5 text-n-5 max-md:w-4 max-md:h-4" />
         </div>
-        <h2 className="text-h5 font-inter text-n-7 tracking-tight mb-1.5">
+        <h2 className="text-h5 font-inter text-n-7 tracking-tight mb-1.5 max-md:text-h6">
           Grade Your Answer
         </h2>
         <p className="text-base2 text-n-4">
@@ -1348,7 +1351,7 @@ function GraderInputForm({
       </div>
 
       <div className="card-jp overflow-hidden">
-        <div className="p-7 space-y-6">
+        <div className="p-7 space-y-6 max-md:p-5 max-md:space-y-5">
           {/* Question Type */}
           <div className="space-y-2">
             <label className="text-base2 font-inter text-n-7">Question Type</label>
@@ -1470,18 +1473,18 @@ function PlannerInputForm({
   return (
     <motion.div className="max-w-xl mx-auto" {...pageTransition}>
       {/* Header */}
-      <div className="text-center mb-10">
+      <div className="text-center mb-10 max-md:mb-6">
         <div
-          className="flex justify-center items-center w-12 h-12 mx-auto mb-4"
+          className="flex justify-center items-center w-12 h-12 mx-auto mb-4 max-md:w-10 max-md:h-10 max-md:mb-3"
           style={{
             borderRadius: "0.5rem",
             background: "var(--n-2)",
             border: "1px solid var(--n-3)",
           }}
         >
-          <FileText className="w-5 h-5 text-n-5" />
+          <FileText className="w-5 h-5 text-n-5 max-md:w-4 max-md:h-4" />
         </div>
-        <h2 className="text-h5 font-inter text-n-7 tracking-tight mb-1.5">
+        <h2 className="text-h5 font-inter text-n-7 tracking-tight mb-1.5 max-md:text-h6">
           Plan Your Essay
         </h2>
         <p className="text-base2 text-n-4">
@@ -1490,7 +1493,7 @@ function PlannerInputForm({
       </div>
 
       <div className="card-jp overflow-hidden">
-        <div className="p-7 space-y-6">
+        <div className="p-7 space-y-6 max-md:p-5 max-md:space-y-5">
           {/* Question Type */}
           <div className="space-y-2">
             <label className="text-base2 font-inter text-n-7">Question Type</label>
@@ -1702,8 +1705,7 @@ export default function HomePage() {
 
       {/* Main Content */}
       <div
-        className="pt-6 pb-4 pr-4 transition-all duration-500 max-lg:pl-4 max-md:pl-3 max-md:pr-3 max-md:pt-3 max-md:pb-3"
-        style={{ paddingLeft: "18rem" }}
+        className="pt-6 pb-4 pr-4 lg:pl-[18rem] transition-all duration-500 max-lg:pl-4 max-md:pl-3 max-md:pr-3 max-md:pt-3 max-md:pb-3"
       >
         {/* Header Bar */}
         <div className="flex items-center gap-3 mb-4">
@@ -1724,8 +1726,8 @@ export default function HomePage() {
         </div>
 
         {/* Content Container */}
-        <div className="content-wrapper min-h-[calc(100svh-5.5rem)] max-md:min-h-[calc(100svh-4rem)]">
-          <div className="flex-1 overflow-auto scrollbar-none p-8 max-md:p-4">
+        <div className="content-wrapper min-h-[calc(100svh-5.5rem)] max-md:min-h-[calc(100svh-4rem)] max-md:rounded-lg">
+          <div className="flex-1 overflow-auto scrollbar-none p-8 max-lg:p-6 max-md:p-4">
             <AnimatePresence mode="wait">
               {activeMode === "grader" ? (
                 <div key="grader">
@@ -1789,10 +1791,10 @@ export default function HomePage() {
 
           {/* Footer */}
           <div
-            className="shrink-0 px-8 py-3 max-md:px-4"
+            className="shrink-0 px-8 py-3 max-md:px-4 max-md:py-2.5"
             style={{ borderTop: "1px solid var(--n-3)" }}
           >
-            <p className="text-caption2 text-n-4 text-center">
+            <p className="text-caption2 text-n-4 text-center max-md:text-2xs max-md:leading-relaxed">
               AI-powered grading · Edexcel IAL Economics · Always verify with official mark schemes
             </p>
           </div>

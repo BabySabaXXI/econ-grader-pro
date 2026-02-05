@@ -134,6 +134,13 @@
       0 4px 16px -4px rgba(22, 27, 38, 0.06);
   }
 
+  /* Mobile: Reduce border-radius on content wrapper */
+  @media (max-width: 767px) {
+    .content-wrapper {
+      border-radius: 0.625rem;
+    }
+  }
+
   /* ========================================
      Button Styles — Professional, solid
      Good weight, clear hierarchy
@@ -204,6 +211,17 @@
     border-radius: 0.375rem;
   }
 
+  /* Mobile: Increase button tap targets for touch */
+  @media (max-width: 767px) {
+    .btn-jp {
+      height: 3rem;
+      font-size: 0.9375rem;
+    }
+    .btn-jp-sm {
+      height: 2.5rem;
+    }
+  }
+
   /* ========================================
      Field Styles — Clean, professional input
      Clear borders, blue focus ring
@@ -231,6 +249,14 @@
     box-shadow: 0 0 0 3px rgba(59, 111, 174, 0.1);
   }
 
+  /* Mobile: Larger input height for touch targets */
+  @media (max-width: 767px) {
+    .field-jp {
+      height: 3rem;
+      font-size: 1rem;
+    }
+  }
+
   .field-jp-textarea {
     @apply w-full outline-none transition-all duration-200 resize-none;
     padding: 0.875rem;
@@ -251,6 +277,15 @@
   .field-jp-textarea:focus {
     border-color: var(--primary-1);
     box-shadow: 0 0 0 3px rgba(59, 111, 174, 0.1);
+  }
+
+  /* Mobile: Better textarea sizing for touch */
+  @media (max-width: 767px) {
+    .field-jp-textarea {
+      font-size: 1rem;
+      padding: 0.75rem;
+      line-height: 1.6;
+    }
   }
 
   /* ========================================
@@ -291,6 +326,19 @@
     border-radius: 0.75rem;
     border: 1px solid rgba(22, 27, 38, 0.06);
     box-shadow: 0 8px 32px -8px rgba(22, 27, 38, 0.12);
+  }
+
+  /* Mobile: Reduce card border-radius and shadow for compact feel */
+  @media (max-width: 767px) {
+    .card-jp,
+    .card-jp-hover,
+    .card-jp-elevated,
+    .card-jp-deep {
+      border-radius: 0.625rem;
+    }
+    .card-jp-hover:hover {
+      transform: none;
+    }
   }
 
   /* ========================================
@@ -363,6 +411,14 @@
     background-color: rgba(191, 107, 107, 0.18) !important;
     border-bottom-color: rgba(191, 107, 107, 0.55) !important;
     box-shadow: 0 0 0 2px rgba(191, 107, 107, 0.06);
+  }
+
+  /* Mobile: Increase highlight tap targets */
+  @media (max-width: 767px) {
+    .highlight-earned,
+    .highlight-lost {
+      padding: 3px 5px !important;
+    }
   }
 
   /* ========================================

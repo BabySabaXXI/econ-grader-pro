@@ -243,15 +243,15 @@ export function EssayViewer({
     <div className={cn("relative space-y-5", className)} ref={containerRef}>
       {/* Filter Controls */}
       <div
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4"
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 max-md:p-3 max-md:gap-3"
         style={{
           borderRadius: "0.75rem",
           background: "var(--n-2)",
           border: "2px solid var(--n-3)",
         }}
       >
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-caption2 font-semibold font-inter text-n-4 uppercase tracking-wider mr-2">View:</span>
+        <div className="flex items-center gap-2 flex-wrap max-md:gap-1.5">
+          <span className="text-caption2 font-semibold font-inter text-n-4 uppercase tracking-wider mr-2 max-md:mr-1 max-md:text-2xs">View:</span>
           <button
             onClick={() => setViewMode("all")}
             className={cn(
@@ -304,7 +304,7 @@ export function EssayViewer({
         </div>
 
         {onToggleDetailedFeedback && (
-          <div className="flex items-center gap-3 pl-4" style={{ borderLeft: "1px solid var(--n-3)" }}>
+          <div className="flex items-center gap-3 pl-4 max-md:pl-0 max-md:pt-0 max-md:w-full max-md:gap-2" style={{ borderLeft: "1px solid var(--n-3)" }}>
             {showDetailedFeedback ? (
               <Eye className="w-4 h-4 text-n-5" />
             ) : (
@@ -322,8 +322,8 @@ export function EssayViewer({
 
       {/* Essay Content */}
       <div className="card-jp overflow-hidden">
-        <div className="p-6">
-          <p className="text-[15px] leading-[1.9] text-n-5 whitespace-pre-wrap font-[system-ui]">
+        <div className="p-6 max-md:p-4">
+          <p className="text-[15px] leading-[1.9] text-n-5 whitespace-pre-wrap font-[system-ui] max-md:text-[14px] max-md:leading-[1.8]">
             {visibleSegments.map((segment, index) => {
               if (segment.type === "normal") {
                 return <span key={index}>{segment.text}</span>;
@@ -369,11 +369,11 @@ export function EssayViewer({
 
       {/* Detailed Feedback Panel */}
       {showDetailedFeedback && (
-        <div className="space-y-5">
+        <div className="space-y-5 max-md:space-y-4">
           {/* Lost Marks Section */}
           {marksLost.length > 0 && (
             <div
-              className="overflow-hidden border"
+              className="overflow-hidden border max-md:rounded-lg"
               style={{
                 borderRadius: "1.25rem",
                 borderColor: "var(--error-light)",
@@ -494,7 +494,7 @@ export function EssayViewer({
           {/* Earned Marks Section */}
           {marksEarned.length > 0 && (
             <div
-              className="overflow-hidden border"
+              className="overflow-hidden border max-md:rounded-lg"
               style={{
                 borderRadius: "1.25rem",
                 borderColor: "var(--success-light)",
@@ -597,7 +597,7 @@ export function EssayViewer({
       {/* Feedback Modal */}
       <Dialog open={!!activeFeedback} onOpenChange={() => setActiveFeedback(null)}>
         <DialogContent
-          className="sm:max-w-md border"
+          className="sm:max-w-md border max-md:max-w-[calc(100vw-2rem)] max-md:mx-4"
           style={{
             borderRadius: "1.25rem",
             borderColor: activeFeedback?.type === "earned" ? "var(--success-light)" : "var(--error-light)",

@@ -48,7 +48,7 @@ export default function Sidebar({
         className={cn(
           "fixed top-0 left-0 bottom-0 flex flex-col z-30",
           "transition-transform duration-500 ease-natural",
-          "max-lg:z-40",
+          "max-lg:z-40 max-md:w-[80vw] max-md:max-w-[17rem]",
           visible
             ? "max-lg:translate-x-0"
             : "max-lg:-translate-x-full"
@@ -60,7 +60,7 @@ export default function Sidebar({
         }}
       >
         {/* Scrollable Content */}
-        <div className="grow overflow-auto scrollbar-none px-5 pt-7 pb-5">
+        <div className="grow overflow-auto scrollbar-none px-5 pt-7 pb-5 max-md:px-4 max-md:pt-5 max-md:pb-4">
           {/* Brand */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
@@ -83,10 +83,11 @@ export default function Sidebar({
               </div>
             </div>
             <button
-              className="hidden max-lg:flex items-center justify-center w-8 h-8 rounded-md hover:bg-n-2 transition-colors duration-200"
+              className="hidden max-lg:flex items-center justify-center w-9 h-9 rounded-md hover:bg-n-2 transition-colors duration-200"
               onClick={onClose}
+              aria-label="Close sidebar"
             >
-              <X className="w-4 h-4 text-n-4" />
+              <X className="w-4.5 h-4.5 text-n-4" />
             </button>
           </div>
 
