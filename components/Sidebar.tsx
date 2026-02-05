@@ -55,7 +55,7 @@ export default function Sidebar({
         )}
         style={{
           width: "17rem",
-          background: "var(--n-1)",
+          background: "white",
           borderRight: "1px solid var(--n-3)",
         }}
       >
@@ -68,10 +68,10 @@ export default function Sidebar({
                 className="flex items-center justify-center w-9 h-9"
                 style={{
                   borderRadius: "0.5rem",
-                  background: "var(--n-7)",
+                  background: "var(--primary-1)",
                 }}
               >
-                <GraduationCap className="w-4.5 h-4.5 text-white" style={{ strokeWidth: 1.5 }} />
+                <GraduationCap className="w-4.5 h-4.5 text-white" />
               </div>
               <div>
                 <div className="text-base1 font-inter text-n-7 tracking-tight">
@@ -141,7 +141,7 @@ export default function Sidebar({
                     <motion.div
                       layoutId="sidebar-active"
                       className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full"
-                      style={{ background: "var(--n-7)" }}
+                      style={{ background: "var(--primary-1)" }}
                       transition={{ type: "spring", stiffness: 350, damping: 30 }}
                     />
                   )}
@@ -149,13 +149,13 @@ export default function Sidebar({
                     className="flex items-center justify-center w-8 h-8 flex-shrink-0 transition-colors duration-200"
                     style={{
                       borderRadius: "0.375rem",
-                      background: isActive ? "var(--n-3)" : "transparent",
+                      background: isActive ? "rgba(59, 111, 174, 0.08)" : "transparent",
                     }}
                   >
                     <Icon
                       className="w-4 h-4 transition-colors duration-200"
                       style={{
-                        color: isActive ? "var(--n-7)" : "var(--n-4)",
+                        color: isActive ? "var(--primary-1)" : "var(--n-4)",
                       }}
                     />
                   </div>
@@ -201,7 +201,7 @@ export default function Sidebar({
             </div>
           </div>
 
-          {/* AI Card — Minimal dark card */}
+          {/* AI Card */}
           <div
             className="p-4"
             style={{
@@ -210,12 +210,12 @@ export default function Sidebar({
             }}
           >
             <div className="flex items-center gap-2 mb-2.5">
-              <Zap className="w-3.5 h-3.5" style={{ color: "var(--n-4)", strokeWidth: 1.5 }} />
-              <span className="text-caption1 font-inter" style={{ color: "rgba(255,255,255,0.7)" }}>
+              <Zap className="w-3.5 h-3.5" style={{ color: "var(--primary-2)" }} />
+              <span className="text-caption1 font-inter" style={{ color: "rgba(255,255,255,0.75)" }}>
                 Powered by Claude AI
               </span>
             </div>
-            <p className="text-caption2 leading-relaxed" style={{ color: "rgba(255,255,255,0.3)" }}>
+            <p className="text-caption2 leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>
               Aligned with official Edexcel mark schemes and level descriptors.
             </p>
           </div>
@@ -249,11 +249,11 @@ export default function Sidebar({
               className="w-7 h-7 flex items-center justify-center flex-shrink-0"
               style={{
                 borderRadius: "0.375rem",
-                background: "var(--n-2)",
+                background: "rgba(59, 111, 174, 0.08)",
                 border: "1px solid var(--n-3)",
               }}
             >
-              <span className="text-2xs font-medium text-n-5">E</span>
+              <span className="text-2xs font-semibold" style={{ color: "var(--primary-1)" }}>E</span>
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-caption1 font-inter text-n-5 truncate">
@@ -274,7 +274,7 @@ export default function Sidebar({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             className="fixed inset-0 z-30 hidden max-lg:block"
-            style={{ background: "var(--overlay)", backdropFilter: "blur(2px)" }}
+            style={{ background: "var(--overlay)", backdropFilter: "blur(4px)" }}
             onClick={onClose}
           />
         )}

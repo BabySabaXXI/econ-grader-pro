@@ -5,94 +5,94 @@
 @layer base {
   :root {
     /* ========================================
-       Japandi / Scandinavian Design System
-       Warm neutrals, natural tones, minimal
-       and intentional with quiet elegance
+       Professional Economics Design System
+       Muted blues, cool grays, authoritative
+       and clean — think Bloomberg / Linear
        ======================================== */
 
-    /* Neutral Scale — Warm stone/sand base */
-    --n-1: #FAFAF8;
-    --n-2: #F4F3F0;
-    --n-3: #E8E6E1;
-    --n-4: #9C9890;
-    --n-5: #5C5852;
-    --n-6: #3A3733;
-    --n-7: #1C1B18;
+    /* Neutral Scale — Cool blue-gray base */
+    --n-1: #F8F9FB;
+    --n-2: #EEF1F6;
+    --n-3: #DDE2EB;
+    --n-4: #8B93A6;
+    --n-5: #555F75;
+    --n-6: #2E3545;
+    --n-7: #161B26;
 
-    /* Primary — Deep indigo/navy, muted */
-    --primary-1: #4A5568;
-    --primary-2: #718096;
+    /* Primary — Professional muted blue */
+    --primary-1: #3B6FAE;
+    --primary-2: #5B8ECC;
 
-    /* Accent — Earthy, natural tones */
-    --accent-sage: #7C8B6F;
-    --accent-terracotta: #C07B5F;
-    --accent-clay: #B8926A;
-    --accent-stone: #8B8680;
-    --accent-indigo: #6B7FA3;
+    /* Accent — Blue-toned palette */
+    --accent-teal: #4A8B7F;
+    --accent-coral: #BF6B6B;
+    --accent-amber: #B89A5C;
+    --accent-slate: #6E7A8A;
+    --accent-blue: #5A7CB5;
 
-    /* Status colors — Muted and natural */
-    --error-base: #B35B5B;
-    --error-light: #E0C5C5;
-    --error-lighter: #F7F0F0;
-    --warning-base: #B8926A;
-    --warning-light: #E0D4C4;
-    --warning-lighter: #F8F5F0;
-    --success-base: #7C8B6F;
-    --success-dark: #5F6D53;
-    --success-light: #C8D4BE;
-    --success-lighter: #F0F4EC;
-    --information-base: #6B7FA3;
-    --information-light: #C0CBDB;
-    --information-lighter: #EEF1F6;
-    --feature-base: #8B7BA8;
-    --feature-light: #CEC5DB;
-    --feature-lighter: #F2EFF6;
-    --away-base: #B8926A;
-    --away-light: #E0D4C4;
-    --away-lighter: #F8F5F0;
-    --verified-base: #6B8F8B;
-    --verified-light: #BED3D0;
-    --verified-lighter: #EDF3F2;
+    /* Status colors — Professional, muted */
+    --error-base: #BF6B6B;
+    --error-light: #DFC4C4;
+    --error-lighter: #F6F0F0;
+    --warning-base: #B89A5C;
+    --warning-light: #E0D5BD;
+    --warning-lighter: #F8F5EF;
+    --success-base: #4A8B7F;
+    --success-dark: #3A7266;
+    --success-light: #BBDAD4;
+    --success-lighter: #EDF6F4;
+    --information-base: #5A7CB5;
+    --information-light: #B8CADF;
+    --information-lighter: #ECF1F7;
+    --feature-base: #7B6BA0;
+    --feature-light: #C9BFD9;
+    --feature-lighter: #F1EEF6;
+    --away-base: #B89A5C;
+    --away-light: #E0D5BD;
+    --away-lighter: #F8F5EF;
+    --verified-base: #4A8B7F;
+    --verified-light: #BBDAD4;
+    --verified-lighter: #EDF6F4;
 
     /* Overlay */
-    --overlay: rgba(28, 27, 24, 0.45);
+    --overlay: rgba(22, 27, 38, 0.5);
 
     /* ========================================
        shadcn/ui Token Bridge
        ======================================== */
-    --background: 48 20% 96%;
-    --foreground: 40 8% 10%;
-    --card: 48 20% 99%;
-    --card-foreground: 40 8% 10%;
-    --popover: 48 20% 99%;
-    --popover-foreground: 40 8% 10%;
-    --primary: 40 8% 10%;
-    --primary-foreground: 48 20% 99%;
-    --secondary: 45 12% 95%;
-    --secondary-foreground: 40 8% 10%;
-    --muted: 45 10% 94%;
-    --muted-foreground: 30 4% 55%;
-    --accent: 45 10% 94%;
-    --accent-foreground: 40 8% 10%;
-    --destructive: 0 35% 53%;
-    --destructive-foreground: 48 20% 99%;
-    --border: 40 14% 89%;
-    --input: 40 14% 89%;
-    --ring: 216 12% 40%;
+    --background: 220 20% 97%;
+    --foreground: 222 20% 12%;
+    --card: 220 25% 99%;
+    --card-foreground: 222 20% 12%;
+    --popover: 220 25% 99%;
+    --popover-foreground: 222 20% 12%;
+    --primary: 222 20% 12%;
+    --primary-foreground: 220 25% 99%;
+    --secondary: 220 18% 95%;
+    --secondary-foreground: 222 20% 12%;
+    --muted: 220 15% 94%;
+    --muted-foreground: 220 10% 48%;
+    --accent: 220 15% 94%;
+    --accent-foreground: 222 20% 12%;
+    --destructive: 0 35% 58%;
+    --destructive-foreground: 220 25% 99%;
+    --border: 220 16% 90%;
+    --input: 220 16% 90%;
+    --ring: 213 40% 46%;
     --radius: 0.625rem;
 
-    /* Chart colors */
-    --chart-1: 216 22% 53%;
-    --chart-2: 93 12% 48%;
-    --chart-3: 259 15% 56%;
-    --chart-4: 30 33% 56%;
-    --chart-5: 168 12% 48%;
+    /* Chart colors — Blue-toned */
+    --chart-1: 213 33% 53%;
+    --chart-2: 163 30% 42%;
+    --chart-3: 263 20% 53%;
+    --chart-4: 40 35% 54%;
+    --chart-5: 213 25% 60%;
 
     /* AO Colors */
-    --ao1: 216 22% 53%;
-    --ao2: 93 12% 48%;
-    --ao3: 259 17% 56%;
-    --ao4: 30 33% 56%;
+    --ao1: 213 33% 53%;
+    --ao2: 163 30% 42%;
+    --ao3: 263 20% 53%;
+    --ao4: 40 35% 54%;
   }
 
   * {
@@ -113,7 +113,7 @@
   }
 
   ::selection {
-    background: rgba(74, 85, 104, 0.10);
+    background: rgba(59, 111, 174, 0.12);
     color: var(--n-7);
   }
 }
@@ -121,30 +121,29 @@
 @layer components {
   /* ========================================
      Layout — Content Container
-     Clean, paper-like container with very
-     subtle border and gentle shadow
+     Clean, professional with subtle border
      ======================================== */
 
   .content-wrapper {
     @apply flex flex-col overflow-hidden;
     background: var(--n-1);
-    border-radius: 1rem;
+    border-radius: 0.875rem;
     border: 1px solid var(--n-3);
     box-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.02),
-      0 4px 16px -4px rgba(0, 0, 0, 0.04);
+      0 1px 3px rgba(22, 27, 38, 0.04),
+      0 4px 16px -4px rgba(22, 27, 38, 0.06);
   }
 
   /* ========================================
-     Button Styles — Japandi: understated,
-     precise, with subtle depth cues
+     Button Styles — Professional, solid
+     Good weight, clear hierarchy
      ======================================== */
 
   .btn-jp {
     @apply inline-flex items-center justify-center gap-2.5
            px-5 text-sm font-medium tracking-[-0.01em]
-           transition-all duration-300 cursor-pointer
-           disabled:opacity-25 disabled:pointer-events-none;
+           transition-all duration-200 cursor-pointer
+           disabled:opacity-30 disabled:pointer-events-none;
     height: 2.75rem;
     border: 1px solid transparent;
     border-radius: 0.5rem;
@@ -158,7 +157,7 @@
   .btn-jp-dark:hover {
     background: var(--n-6);
     border-color: var(--n-6);
-    box-shadow: 0 2px 8px rgba(28, 27, 24, 0.15);
+    box-shadow: 0 2px 8px rgba(22, 27, 38, 0.2);
     transform: translateY(-0.5px);
   }
   .btn-jp-dark:active {
@@ -172,9 +171,9 @@
     border-color: var(--primary-1);
   }
   .btn-jp-primary:hover {
-    background: #3D4756;
-    border-color: #3D4756;
-    box-shadow: 0 2px 8px rgba(74, 85, 104, 0.2);
+    background: #325F99;
+    border-color: #325F99;
+    box-shadow: 0 2px 8px rgba(59, 111, 174, 0.25);
     transform: translateY(-0.5px);
   }
 
@@ -206,17 +205,17 @@
   }
 
   /* ========================================
-     Field Styles — Clean, minimal input
-     Thin border, gentle focus ring
+     Field Styles — Clean, professional input
+     Clear borders, blue focus ring
      ======================================== */
 
   .field-jp {
-    @apply w-full outline-none transition-all duration-300;
+    @apply w-full outline-none transition-all duration-200;
     height: 2.75rem;
     padding: 0 0.875rem;
     border: 1px solid var(--n-3);
     border-radius: 0.5rem;
-    background: var(--n-1);
+    background: white;
     color: var(--n-7);
     font-size: 0.875rem;
     letter-spacing: -0.01em;
@@ -229,15 +228,15 @@
   }
   .field-jp:focus {
     border-color: var(--primary-1);
-    box-shadow: 0 0 0 3px rgba(74, 85, 104, 0.06);
+    box-shadow: 0 0 0 3px rgba(59, 111, 174, 0.1);
   }
 
   .field-jp-textarea {
-    @apply w-full outline-none transition-all duration-300 resize-none;
+    @apply w-full outline-none transition-all duration-200 resize-none;
     padding: 0.875rem;
     border: 1px solid var(--n-3);
     border-radius: 0.5rem;
-    background: var(--n-1);
+    background: white;
     color: var(--n-7);
     font-size: 0.875rem;
     line-height: 1.7;
@@ -251,51 +250,51 @@
   }
   .field-jp-textarea:focus {
     border-color: var(--primary-1);
-    box-shadow: 0 0 0 3px rgba(74, 85, 104, 0.06);
+    box-shadow: 0 0 0 3px rgba(59, 111, 174, 0.1);
   }
 
   /* ========================================
-     Card Styles — Paper-like, minimal shadow
-     Japandi aesthetic: barely-there elevation
+     Card Styles — Professional elevation
+     Clean whites, subtle blue-tinted shadows
      ======================================== */
 
   .card-jp {
-    @apply transition-all duration-300;
-    background: var(--n-1);
+    @apply transition-all duration-200;
+    background: white;
     border-radius: 0.75rem;
     border: 1px solid var(--n-3);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 1px 3px rgba(22, 27, 38, 0.04);
   }
 
   .card-jp-hover {
     @apply card-jp;
   }
   .card-jp-hover:hover {
-    border-color: rgba(0, 0, 0, 0.06);
+    border-color: rgba(59, 111, 174, 0.15);
     box-shadow:
-      0 4px 12px -2px rgba(0, 0, 0, 0.06),
-      0 1px 2px rgba(0, 0, 0, 0.02);
+      0 4px 12px -2px rgba(22, 27, 38, 0.08),
+      0 1px 3px rgba(22, 27, 38, 0.04);
     transform: translateY(-1px);
   }
 
   .card-jp-elevated {
-    background: var(--n-1);
+    background: white;
     border-radius: 0.75rem;
-    border: 1px solid rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--n-3);
     box-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.02),
-      0 8px 24px -8px rgba(0, 0, 0, 0.08);
+      0 1px 3px rgba(22, 27, 38, 0.04),
+      0 8px 24px -8px rgba(22, 27, 38, 0.08);
   }
 
   .card-jp-deep {
-    background: var(--n-1);
+    background: white;
     border-radius: 0.75rem;
-    border: 1px solid rgba(0, 0, 0, 0.03);
-    box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(22, 27, 38, 0.06);
+    box-shadow: 0 8px 32px -8px rgba(22, 27, 38, 0.12);
   }
 
   /* ========================================
-     Level Badge System — Soft, rounded pills
+     Level Badge System — Clean pills
      ======================================== */
 
   .badge-level-5 {
@@ -305,17 +304,17 @@
   }
   .badge-level-4 {
     background: var(--information-lighter);
-    color: #506585;
+    color: #3D6699;
     border-color: var(--information-light);
   }
   .badge-level-3 {
     background: var(--away-lighter);
-    color: #8B6E45;
+    color: #8B7335;
     border-color: var(--away-light);
   }
   .badge-level-2 {
     background: var(--warning-lighter);
-    color: #8B6E45;
+    color: #8B7335;
     border-color: var(--warning-light);
   }
   .badge-level-1 {
@@ -339,36 +338,35 @@
   .ao-bg-ao4 { background: var(--away-lighter); border-color: var(--away-light); }
 
   /* ========================================
-     Highlight System — CRITICAL for grading
-     Subtle, refined highlight colors
+     Highlight System — Professional markers
      ======================================== */
 
   .highlight-earned {
-    @apply rounded-sm px-0.5 py-0.5 cursor-pointer transition-all duration-300;
-    background: rgba(124, 139, 111, 0.12);
-    color: #4A5A3F;
-    border-bottom: 1.5px solid rgba(124, 139, 111, 0.4);
+    @apply rounded-sm px-0.5 py-0.5 cursor-pointer transition-all duration-200;
+    background: rgba(74, 139, 127, 0.10);
+    color: #2A5E53;
+    border-bottom: 2px solid rgba(74, 139, 127, 0.35);
   }
   .highlight-earned:hover {
-    background: rgba(124, 139, 111, 0.2);
-    box-shadow: 0 0 0 2px rgba(124, 139, 111, 0.08);
+    background: rgba(74, 139, 127, 0.18);
+    box-shadow: 0 0 0 2px rgba(74, 139, 127, 0.08);
   }
 
   .highlight-lost {
-    @apply rounded-sm cursor-pointer transition-all duration-300;
+    @apply rounded-sm cursor-pointer transition-all duration-200;
     padding: 2px 4px !important;
-    background-color: rgba(179, 91, 91, 0.1) !important;
+    background-color: rgba(191, 107, 107, 0.10) !important;
     color: #8B4A4A !important;
-    border-bottom: 1.5px solid rgba(179, 91, 91, 0.4) !important;
+    border-bottom: 2px solid rgba(191, 107, 107, 0.35) !important;
   }
   .highlight-lost:hover {
-    background-color: rgba(179, 91, 91, 0.18) !important;
-    border-bottom-color: rgba(179, 91, 91, 0.6) !important;
-    box-shadow: 0 0 0 2px rgba(179, 91, 91, 0.06);
+    background-color: rgba(191, 107, 107, 0.18) !important;
+    border-bottom-color: rgba(191, 107, 107, 0.55) !important;
+    box-shadow: 0 0 0 2px rgba(191, 107, 107, 0.06);
   }
 
   /* ========================================
-     Sidebar — Fixed panel, clean borders
+     Sidebar — Fixed panel, professional
      ======================================== */
 
   .sidebar-nav-item {
@@ -411,15 +409,15 @@
 }
 
 /* ========================================
-   Thinner icons — Refined line weight
+   Icons — Slightly heavier for readability
    ======================================== */
 
 .lucide {
-  stroke-width: 1.5;
+  stroke-width: 1.75;
 }
 
 /* ========================================
-   Keyframe Animations — Subtle, natural
+   Keyframe Animations
    ======================================== */
 
 @keyframes fadeIn {
@@ -474,13 +472,18 @@
   50% { opacity: 0.6; transform: scale(1.02); }
 }
 
+@keyframes skeletonShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 /* ========================================
-   Scrollbar — Near-invisible, refined
+   Scrollbar — Minimal, blue-tinted
    ======================================== */
 
 ::-webkit-scrollbar {
-  width: 3px;
-  height: 3px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -489,7 +492,7 @@
 
 ::-webkit-scrollbar-thumb {
   background: var(--n-3);
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {

@@ -51,7 +51,7 @@ const config: Config = {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
-        /* Japandi Neutral Scale */
+        /* Neutral Scale — Cool blue-gray */
         n: {
           1: "var(--n-1)",
           2: "var(--n-2)",
@@ -86,13 +86,13 @@ const config: Config = {
       },
       fontSize: {
         "2xs": ["0.625rem", { lineHeight: "0.875rem" }],
-        /* Heading scale — lighter weights for Japandi */
+        /* Heading scale — Medium weights for professional feel */
         h1: [
           "3.5rem",
           {
             lineHeight: "1.1",
             letterSpacing: "-0.03em",
-            fontWeight: "300",
+            fontWeight: "500",
           },
         ],
         h2: [
@@ -100,7 +100,7 @@ const config: Config = {
           {
             lineHeight: "1.15",
             letterSpacing: "-0.025em",
-            fontWeight: "300",
+            fontWeight: "500",
           },
         ],
         h3: [
@@ -108,7 +108,7 @@ const config: Config = {
           {
             lineHeight: "1.2",
             letterSpacing: "-0.02em",
-            fontWeight: "400",
+            fontWeight: "500",
           },
         ],
         h4: [
@@ -116,23 +116,23 @@ const config: Config = {
           {
             lineHeight: "1.3",
             letterSpacing: "-0.02em",
-            fontWeight: "400",
+            fontWeight: "500",
           },
         ],
         h5: [
           "1.25rem",
           {
             lineHeight: "1.4",
-            letterSpacing: "-0.02em",
-            fontWeight: "500",
+            letterSpacing: "-0.015em",
+            fontWeight: "600",
           },
         ],
         h6: [
           "1.0625rem",
           {
             lineHeight: "1.5",
-            letterSpacing: "-0.02em",
-            fontWeight: "500",
+            letterSpacing: "-0.015em",
+            fontWeight: "600",
           },
         ],
         /* Body scale */
@@ -185,13 +185,13 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       boxShadow: {
-        /* Japandi shadow system — barely visible */
-        "jp-subtle": "0 1px 2px rgba(0,0,0,0.03)",
-        "jp-sm": "0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)",
-        "jp-md": "0 4px 12px -2px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.02)",
-        "jp-lg": "0 8px 24px -8px rgba(0,0,0,0.08)",
-        "jp-xl": "0 12px 40px -12px rgba(0,0,0,0.12)",
-        "jp-inset": "inset 0 1px 2px rgba(0,0,0,0.04)",
+        /* Professional shadow system */
+        "jp-subtle": "0 1px 2px rgba(22,27,38,0.04)",
+        "jp-sm": "0 1px 3px rgba(22,27,38,0.06), 0 1px 2px rgba(22,27,38,0.03)",
+        "jp-md": "0 4px 12px -2px rgba(22,27,38,0.08), 0 1px 3px rgba(22,27,38,0.04)",
+        "jp-lg": "0 8px 24px -8px rgba(22,27,38,0.10)",
+        "jp-xl": "0 12px 40px -12px rgba(22,27,38,0.14)",
+        "jp-inset": "inset 0 1px 2px rgba(22,27,38,0.06)",
       },
       spacing: {
         "0.75": "0.1875rem",
@@ -214,14 +214,15 @@ const config: Config = {
         "80": "20rem",
       },
       animation: {
-        "fade-in": "fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1)",
-        "slide-up": "slideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards",
-        "scale-in": "scaleIn 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
+        "fade-in": "fadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
+        "slide-up": "slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards",
+        "scale-in": "scaleIn 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
         "pulse-ring": "pulseRing 3s ease-in-out infinite",
         "gradient-flow": "gradientFlow 4s ease infinite",
         float: "float 4s ease-in-out infinite",
         breathe: "breathe 3s ease-in-out infinite",
         "gentle-pulse": "gentlePulse 4s ease-in-out infinite",
+        "skeleton-shimmer": "skeletonShimmer 1.8s ease-in-out infinite",
         "accordion-down": "accordion-down 0.25s ease-out",
         "accordion-up": "accordion-up 0.25s ease-out",
       },
@@ -259,6 +260,10 @@ const config: Config = {
         gentlePulse: {
           "0%, 100%": { opacity: "0.3", transform: "scale(1)" },
           "50%": { opacity: "0.6", transform: "scale(1.02)" },
+        },
+        skeletonShimmer: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
         },
         "accordion-down": {
           from: { height: "0" },
