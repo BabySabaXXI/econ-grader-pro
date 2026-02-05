@@ -91,24 +91,24 @@ type ViewState = "input" | "loading" | "results";
 // ============================================================================
 
 function getScoreColor(percentage: number): string {
-  if (percentage >= 80) return "text-[#5F6D53]";
-  if (percentage >= 60) return "text-[#6B7FA3]";
-  if (percentage >= 45) return "text-[#B8926A]";
-  return "text-[#B35B5B]";
+  if (percentage >= 80) return "text-[#3A7266]";
+  if (percentage >= 60) return "text-[#5A7CB5]";
+  if (percentage >= 45) return "text-[#B89A5C]";
+  return "text-[#BF6B6B]";
 }
 
 function getScoreRingColor(percentage: number): string {
-  if (percentage >= 80) return "stroke-[#7C8B6F]";
-  if (percentage >= 60) return "stroke-[#6B7FA3]";
-  if (percentage >= 45) return "stroke-[#B8926A]";
-  return "stroke-[#B35B5B]";
+  if (percentage >= 80) return "stroke-[#4A8B7F]";
+  if (percentage >= 60) return "stroke-[#5A7CB5]";
+  if (percentage >= 45) return "stroke-[#B89A5C]";
+  return "stroke-[#BF6B6B]";
 }
 
 function getScoreRingTrailColor(percentage: number): string {
-  if (percentage >= 80) return "rgba(124, 139, 111, 0.12)";
-  if (percentage >= 60) return "rgba(107, 127, 163, 0.12)";
-  if (percentage >= 45) return "rgba(184, 146, 106, 0.12)";
-  return "rgba(179, 91, 91, 0.12)";
+  if (percentage >= 80) return "rgba(74, 139, 127, 0.12)";
+  if (percentage >= 60) return "rgba(90, 124, 181, 0.12)";
+  if (percentage >= 45) return "rgba(184, 154, 92, 0.12)";
+  return "rgba(191, 107, 107, 0.12)";
 }
 
 // ============================================================================
@@ -146,25 +146,25 @@ function LevelBadge({ level }: { level: number }) {
 const AO_CONFIG = {
   ao1: {
     label: "Knowledge",
-    color: "#6B7FA3",
+    color: "#5A7CB5",
     bgLight: "var(--information-lighter)",
     borderLight: "var(--information-light)",
   },
   ao2: {
     label: "Application",
-    color: "#5F6D53",
+    color: "#3A7266",
     bgLight: "var(--success-lighter)",
     borderLight: "var(--success-light)",
   },
   ao3: {
     label: "Analysis",
-    color: "#8B7BA8",
+    color: "#7B6BA0",
     bgLight: "var(--feature-lighter)",
     borderLight: "var(--feature-light)",
   },
   ao4: {
     label: "Evaluation",
-    color: "#B8926A",
+    color: "#B89A5C",
     bgLight: "var(--away-lighter)",
     borderLight: "var(--away-light)",
   },
@@ -318,7 +318,7 @@ function GradingResultDisplay({
                         className="w-3 h-1"
                         style={{
                           borderRadius: "1px",
-                          background: "rgba(124, 139, 111, 0.4)",
+                          background: "rgba(74, 139, 127, 0.4)",
                         }}
                       />
                       <span className="text-caption2 text-n-4">Earned</span>
@@ -328,7 +328,7 @@ function GradingResultDisplay({
                         className="w-3 h-1"
                         style={{
                           borderRadius: "1px",
-                          background: "rgba(179, 91, 91, 0.4)",
+                          background: "rgba(191, 107, 107, 0.4)",
                         }}
                       />
                       <span className="text-caption2 text-n-4">Lost</span>
@@ -747,7 +747,7 @@ function PlanResultDisplay({
               >
                 <p
                   className="text-caption2 font-medium uppercase tracking-wider mb-2 flex items-center gap-1.5 font-inter"
-                  style={{ color: "#8B6E45" }}
+                  style={{ color: "#8B7335" }}
                 >
                   <Lightbulb className="w-3 h-3" />
                   What to Write
@@ -973,7 +973,7 @@ function PlanResultDisplay({
                       borderColor: "var(--away-light)",
                     }}
                   >
-                    <h5 className="text-base2 font-inter mb-1.5" style={{ color: "#8B6E45" }}>
+                    <h5 className="text-base2 font-inter mb-1.5" style={{ color: "#8B7335" }}>
                       {evaluation.point}
                     </h5>
                     {showDetailedPlan && (

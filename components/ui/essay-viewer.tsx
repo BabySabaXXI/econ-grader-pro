@@ -281,7 +281,7 @@ export function EssayViewer({
             }}
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span className={cn("font-bold", viewMode !== "earned" && "text-[#2fb862]")}>+{totalEarnedPoints}</span>
+            <span className={cn("font-bold", viewMode !== "earned" && "text-[#3A7266]")}>+{totalEarnedPoints}</span>
             <span className="text-xs opacity-70">({earnedCount})</span>
           </button>
           <button
@@ -298,7 +298,7 @@ export function EssayViewer({
             }}
           >
             <AlertCircle className="w-3.5 h-3.5" />
-            <span className={cn("font-bold", viewMode !== "lost" && "text-[#c75050]")}>Issues</span>
+            <span className={cn("font-bold", viewMode !== "lost" && "text-[#BF6B6B]")}>Issues</span>
             <span className="text-xs opacity-70">({lostCount})</span>
           </button>
         </div>
@@ -354,7 +354,7 @@ export function EssayViewer({
                       className="ml-0.5 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold text-white rounded-full align-middle"
                       style={{
                         background: "var(--error-base)",
-                        boxShadow: "0 1px 3px rgba(199, 80, 80, 0.3)",
+                        boxShadow: "0 1px 3px rgba(191, 107, 107, 0.3)",
                       }}
                     >
                       !
@@ -414,7 +414,7 @@ export function EssayViewer({
                         }}
                       >
                         <CollapsibleTrigger asChild>
-                          <button className="w-full p-4 text-left flex items-start gap-3 transition-colors hover:bg-[rgba(199,80,80,0.03)]">
+                          <button className="w-full p-4 text-left flex items-start gap-3 transition-colors hover:bg-[rgba(191,107,107,0.03)]">
                             <span className="flex-shrink-0 mt-0.5">
                               {isExpanded ? (
                                 <ChevronDown className="w-4 h-4" style={{ color: "var(--error-base)" }} />
@@ -532,7 +532,7 @@ export function EssayViewer({
                         }}
                       >
                         <CollapsibleTrigger asChild>
-                          <button className="w-full p-4 text-left flex items-start gap-3 transition-colors hover:bg-[rgba(63,221,120,0.03)]">
+                          <button className="w-full p-4 text-left flex items-start gap-3 transition-colors hover:bg-[rgba(74,139,127,0.03)]">
                             <span className="flex-shrink-0 mt-0.5">
                               {isExpanded ? (
                                 <ChevronDown className="w-4 h-4" style={{ color: "var(--success-dark)" }} />
