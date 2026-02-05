@@ -11,6 +11,7 @@ import {
   Sparkles,
   BookOpen,
   ChevronRight,
+  Zap,
 } from "lucide-react";
 
 type SidebarProps = {
@@ -20,6 +21,24 @@ type SidebarProps = {
   onClose: () => void;
 };
 
+// Brainwave-style navigation with colored icon backgrounds
+const NAV_ITEMS = [
+  {
+    mode: "grader" as const,
+    title: "Exam Grader",
+    icon: Pen,
+    color: "#0084FF",
+    bgColor: "rgba(0, 132, 255, 0.12)",
+  },
+  {
+    mode: "planner" as const,
+    title: "Essay Planner",
+    icon: FileText,
+    color: "#8E55EA",
+    bgColor: "rgba(142, 85, 234, 0.12)",
+  },
+];
+
 export default function Sidebar({
   activeMode,
   onModeChange,
@@ -28,197 +47,253 @@ export default function Sidebar({
 }: SidebarProps) {
   return (
     <>
-      {/* Sidebar Panel */}
+      {/* Sidebar Panel — Brainwave LeftSidebar pattern */}
       <div
         className={cn(
-          "fixed top-5 left-5 bottom-5 flex flex-col w-72 bg-white rounded-3xl z-30",
+          "fixed top-0 left-0 bottom-0 flex flex-col z-30 bg-n-1",
           "transition-transform duration-300 ease-spring",
-          "max-lg:top-0 max-lg:left-0 max-lg:bottom-0 max-lg:z-40 max-lg:w-75 max-lg:rounded-none",
-          "max-md:w-full max-md:p-4",
+          "max-lg:z-40",
           visible
             ? "max-lg:translate-x-0"
             : "max-lg:-translate-x-full"
         )}
         style={{
-          border: "1px solid rgba(0, 0, 0, 0.06)",
-          boxShadow:
-            "0 1px 3px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.05)",
+          width: "20rem",
+          borderRight: "1px solid var(--n-3)",
         }}
       >
         {/* Scrollable Content */}
-        <div className="grow overflow-auto scrollbar-none p-6 max-md:p-0">
-          {/* Brand Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
+        <div className="grow overflow-auto scrollbar-none px-6 pt-8 pb-6">
+          {/* Brand Header — Brainwave Logo pattern */}
+          <div className="flex items-center justify-between mb-10">
+            <div className="flex items-center gap-3.5">
               <div
-                className="flex items-center justify-center w-10 h-10 rounded-2xl"
+                className="flex items-center justify-center w-11 h-11"
                 style={{
-                  background: "linear-gradient(135deg, #5472b8, #a0b0d6)",
-                  boxShadow: "0 2px 8px rgba(84, 114, 184, 0.25)",
+                  borderRadius: "0.75rem",
+                  background: "linear-gradient(135deg, var(--primary-1), var(--accent-3))",
+                  boxShadow: "0 0.25rem 1rem rgba(0, 132, 255, 0.3)",
                 }}
               >
-                <GraduationCap className="w-5 h-5 text-white" />
+                <GraduationCap className="w-5.5 h-5.5 text-white" />
               </div>
               <div>
-                <div className="text-label-md font-inter text-[--strong-950]">
+                <div className="text-h6 font-inter text-n-7">
                   EconGrader
                 </div>
-                <div className="text-p-xs text-[--text-soft-400]">
-                  Edexcel IAL
+                <div className="text-caption1 text-n-4">
+                  AI Exam Assistant
                 </div>
               </div>
             </div>
             <button
-              className="hidden max-lg:flex items-center justify-center w-8 h-8 rounded-full hover:bg-[--bg-weak-50] transition-colors"
+              className="hidden max-lg:flex items-center justify-center w-9 h-9 rounded-lg hover:bg-n-2 transition-colors"
               onClick={onClose}
             >
-              <X className="w-4 h-4 text-[--text-sub-600]" />
+              <X className="w-5 h-5 text-n-4" />
             </button>
           </div>
 
-          {/* Exam Info Badge */}
-          <div className="mb-8 p-3.5 rounded-xl bg-[--bg-weak-50] border border-[--stroke-soft-200]">
-            <div className="flex items-center gap-2 mb-1.5">
+          {/* Exam Info Badge — Brainwave caption style */}
+          <div
+            className="mb-8 px-4 py-3.5"
+            style={{
+              borderRadius: "0.75rem",
+              background: "var(--n-2)",
+              border: "2px solid var(--n-3)",
+            }}
+          >
+            <div className="flex items-center gap-2.5 mb-1">
               <span
-                className="w-1.5 h-1.5 rounded-full"
-                style={{ background: "#4a9e72" }}
+                className="w-2 h-2 rounded-full"
+                style={{ background: "var(--primary-2)" }}
               />
-              <span className="text-label-xs font-inter text-[--text-sub-600] uppercase tracking-wider">
+              <span className="text-caption1 font-inter text-n-5 uppercase tracking-wider">
                 Pearson Edexcel IAL
               </span>
             </div>
-            <div className="text-p-xs text-[--text-soft-400]">
+            <div className="text-caption1 text-n-4">
               AS & A Level Economics · Units 1–4
             </div>
           </div>
 
-          {/* Navigation */}
-          <div className="mb-2.5 text-label-xs font-inter text-[--text-soft-400] px-3.5">
+          {/* Section Label */}
+          <div className="mb-3 px-4 text-caption2 font-inter text-n-4 uppercase tracking-widest">
             Tools
           </div>
 
-          {/* Exam Grader Link */}
-          <button
-            onClick={() => {
-              onModeChange("grader");
-              onClose();
-            }}
-            className={cn(
-              "sidebar-link w-full mb-1",
-              activeMode === "grader" && "sidebar-link-active"
-            )}
-          >
-            <Pen
-              className={cn(
-                "w-[18px] h-[18px] transition-colors",
-                activeMode === "grader"
-                  ? "text-[--blue-600]"
-                  : "text-[--text-sub-600]"
-              )}
-            />
-            <span className="flex-1 text-left">Exam Grader</span>
-            {activeMode === "grader" && (
-              <ChevronRight className="w-3.5 h-3.5 text-[--blue-500]" />
-            )}
-          </button>
+          {/* Navigation — Brainwave Menu pattern with colored icon bgs */}
+          <div className="space-y-1.5 mb-10">
+            {NAV_ITEMS.map((item) => {
+              const isActive = activeMode === item.mode;
+              const Icon = item.icon;
 
-          {/* Essay Planner Link */}
-          <button
-            onClick={() => {
-              onModeChange("planner");
-              onClose();
-            }}
-            className={cn(
-              "sidebar-link w-full mb-1",
-              activeMode === "planner" && "sidebar-link-active"
-            )}
-          >
-            <FileText
-              className={cn(
-                "w-[18px] h-[18px] transition-colors",
-                activeMode === "planner"
-                  ? "text-[--blue-600]"
-                  : "text-[--text-sub-600]"
-              )}
-            />
-            <span className="flex-1 text-left">Essay Planner</span>
-            {activeMode === "planner" && (
-              <ChevronRight className="w-3.5 h-3.5 text-[--blue-500]" />
-            )}
-          </button>
+              return (
+                <button
+                  key={item.mode}
+                  onClick={() => {
+                    onModeChange(item.mode);
+                    onClose();
+                  }}
+                  className={cn(
+                    "menu-item-bw",
+                    isActive && "!border-transparent"
+                  )}
+                  style={
+                    isActive
+                      ? {
+                          borderColor: "transparent",
+                          boxShadow:
+                            "0 0 1rem 0.25rem rgba(0,0,0,0.04), 0 2rem 2rem -1rem rgba(0,0,0,0.1)",
+                        }
+                      : undefined
+                  }
+                >
+                  {/* Colored icon background — key Brainwave pattern */}
+                  <div
+                    className="flex items-center justify-center w-9 h-9 flex-shrink-0"
+                    style={{
+                      borderRadius: "0.5rem",
+                      background: isActive ? item.bgColor : "var(--n-2)",
+                    }}
+                  >
+                    <Icon
+                      className="w-[18px] h-[18px]"
+                      style={{ color: isActive ? item.color : "var(--n-4)" }}
+                    />
+                  </div>
+                  <span
+                    className="flex-1 text-left text-base2 font-inter"
+                    style={{
+                      color: isActive ? "var(--n-7)" : "var(--n-4)",
+                    }}
+                  >
+                    {item.title}
+                  </span>
+                  <ChevronRight
+                    className="w-4 h-4 transition-all"
+                    style={{
+                      color: isActive ? item.color : "var(--n-3)",
+                      transform: isActive ? "translateX(2px)" : "none",
+                    }}
+                  />
+                </button>
+              );
+            })}
+          </div>
 
           {/* Resources Section */}
-          <div className="mt-10 mb-2.5 text-label-xs font-inter text-[--text-soft-400] px-3.5">
+          <div className="mb-3 px-4 text-caption2 font-inter text-n-4 uppercase tracking-widest">
             Resources
           </div>
 
-          <div className="sidebar-link cursor-default opacity-50">
-            <BookOpen className="w-[18px] h-[18px] text-[--text-sub-600]" />
-            <span className="flex-1 text-left">Study Guide</span>
-            <span className="text-[10px] font-medium text-[--text-soft-400] bg-[--bg-soft-200] px-2 py-0.5 rounded-full">
-              Soon
-            </span>
+          <div className="space-y-1 mb-10">
+            <div
+              className="flex items-center gap-3.5 w-full px-4 text-sm text-n-4 opacity-50"
+              style={{ height: "3rem", borderRadius: "0.75rem" }}
+            >
+              <BookOpen className="w-[18px] h-[18px]" />
+              <span className="flex-1 text-left text-base2 font-inter">
+                Study Guide
+              </span>
+              <span
+                className="text-caption2 font-semibold text-n-4 px-2 py-0.5"
+                style={{
+                  background: "var(--n-2)",
+                  borderRadius: "0.375rem",
+                }}
+              >
+                Soon
+              </span>
+            </div>
           </div>
 
-          {/* AI Info Card */}
+          {/* AI Info Card — Brainwave dark gradient pattern */}
           <div
-            className="mt-10 p-4 rounded-2xl text-white"
+            className="p-5 text-white"
             style={{
-              background: "linear-gradient(135deg, #1c2640, #324478)",
-              boxShadow: "0 2px 12px rgba(28, 38, 64, 0.2)",
+              borderRadius: "1.25rem",
+              background: "linear-gradient(135deg, var(--n-7), var(--n-6))",
+              boxShadow: "0 0.75rem 2.5rem -0.75rem rgba(0, 0, 0, 0.25)",
             }}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4 text-[--blue-300]" />
-              <span className="text-label-sm font-inter text-white/90">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div
+                className="flex items-center justify-center w-8 h-8"
+                style={{
+                  borderRadius: "0.5rem",
+                  background: "rgba(0, 132, 255, 0.2)",
+                }}
+              >
+                <Zap className="w-4 h-4 text-primary-1" />
+              </div>
+              <span className="text-base2 font-inter text-white/90">
                 Powered by AI
               </span>
             </div>
-            <p className="text-p-xs text-white/50 leading-relaxed">
-              Get AI-powered feedback aligned with official Edexcel mark
+            <p className="text-caption1 text-white/40 leading-relaxed">
+              Claude AI provides feedback aligned with official Edexcel mark
               schemes and level descriptors.
             </p>
           </div>
 
           {/* Bottom Actions */}
-          <div className="mt-8">
-            <div className="sidebar-link cursor-default opacity-50">
-              <CircleHelp className="w-[18px] h-[18px] text-[--text-sub-600]" />
-              <span>Help</span>
+          <div className="mt-8 space-y-0.5">
+            <div
+              className="flex items-center gap-3.5 w-full px-4 text-n-4 opacity-50 cursor-default"
+              style={{
+                height: "2.75rem",
+                borderRadius: "0.75rem",
+                fontSize: "0.875rem",
+              }}
+            >
+              <CircleHelp className="w-[18px] h-[18px]" />
+              <span className="text-base2 font-inter">Help</span>
             </div>
-            <div className="sidebar-link cursor-default opacity-50">
-              <Settings className="w-[18px] h-[18px] text-[--text-sub-600]" />
-              <span>Settings</span>
+            <div
+              className="flex items-center gap-3.5 w-full px-4 text-n-4 opacity-50 cursor-default"
+              style={{
+                height: "2.75rem",
+                borderRadius: "0.75rem",
+                fontSize: "0.875rem",
+              }}
+            >
+              <Settings className="w-[18px] h-[18px]" />
+              <span className="text-base2 font-inter">Settings</span>
             </div>
           </div>
         </div>
 
-        {/* Version Footer */}
-        <div className="shrink-0 px-6 py-4 border-t border-[--stroke-soft-200]">
+        {/* Version Footer — Brainwave profile pattern */}
+        <div
+          className="shrink-0 px-6 py-4"
+          style={{ borderTop: "1px solid var(--n-3)" }}
+        >
           <div className="flex items-center gap-3">
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center"
+              className="w-9 h-9 flex items-center justify-center flex-shrink-0"
               style={{
-                background: "linear-gradient(135deg, #5472b8, #a0b0d6)",
-                boxShadow: "0 1px 4px rgba(84, 114, 184, 0.2)",
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, var(--primary-1), var(--accent-3))",
+                boxShadow: "0 0 0 0.25rem var(--n-1), 0 2px 6px rgba(0,132,255,0.2)",
               }}
             >
-              <span className="text-[11px] font-bold text-white">E</span>
+              <span className="text-xs font-bold text-white">E</span>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-label-sm font-inter text-[--strong-950] truncate">
+              <div className="text-base2 font-inter text-n-7 truncate">
                 EconGrader Pro
               </div>
-              <div className="text-p-xs text-[--text-soft-400]">v2.0</div>
+              <div className="text-caption2 text-n-4">v2.0</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Mobile Overlay */}
+      {/* Mobile Overlay — Brainwave 75% opacity */}
       <div
         className={cn(
-          "fixed inset-0 z-30 bg-[--overlay] backdrop-blur-sm transition-all hidden max-lg:block",
+          "fixed inset-0 z-30 bg-n-7/75 backdrop-blur-sm transition-all hidden max-lg:block",
           visible
             ? "visible opacity-100"
             : "invisible opacity-0"
