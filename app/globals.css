@@ -368,14 +368,17 @@
   }
 
   .highlight-lost {
-    @apply rounded-sm px-0.5 py-0.5 cursor-pointer transition-all duration-200;
-    background: rgba(199, 80, 80, 0.1);
-    color: #8b3a3a;
-    border-bottom: 2px solid rgba(199, 80, 80, 0.45);
+    @apply rounded-sm cursor-pointer transition-all duration-200;
+    padding: 2px 4px !important;
+    background-color: rgba(220, 60, 60, 0.15) !important;
+    color: #b83232 !important;
+    border-bottom: 2px solid rgba(220, 60, 60, 0.55) !important;
+    text-decoration-color: rgba(220, 60, 60, 0.55);
   }
   .highlight-lost:hover {
-    background: rgba(199, 80, 80, 0.18);
-    box-shadow: 0 0 0 2px rgba(199, 80, 80, 0.1);
+    background-color: rgba(220, 60, 60, 0.25) !important;
+    border-bottom-color: rgba(220, 60, 60, 0.8) !important;
+    box-shadow: 0 0 0 2px rgba(220, 60, 60, 0.1);
   }
 
   /* ========================================

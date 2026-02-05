@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2,
@@ -49,6 +49,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EssayViewer } from "@/components/ui/essay-viewer";
 import { GradingLoader } from "@/components/ui/grading-loader";
 import Sidebar from "@/components/Sidebar";
+import { DiagramRenderer } from "@/components/diagrams/DiagramRenderer";
+import type { DiagramTemplate } from "@/lib/diagrams/types";
 
 // ============================================================================
 // ANIMATION VARIANTS — Brainwave-style spring easing
@@ -651,11 +653,58 @@ function GradingResultDisplay({
 function PlanResultDisplay({
   result,
   onBack,
+  question,
+  questionType,
 }: {
   result: PlanResult;
   onBack: () => void;
+  question?: string;
+  questionType?: string;
 }) {
   const [showDetailedPlan, setShowDetailedPlan] = useState(true);
+  const [generatedDiagram, setGeneratedDiagram] = useState<DiagramTemplate | null>(null);
+  const [diagramAnalysis, setDiagramAnalysis] = useState<{
+    customTitle?: string;
+    reasoning?: string;
+    annotations?: string[];
+    examRelevance?: string;
+  } | null>(null);
+  const [diagramLoading, setDiagramLoading] = useState(false);
+  const [diagramError, setDiagramError] = useState("");
+
+  // Fetch generated diagram on mount if diagram is recommended
+  useEffect(() => {
+    if (result.diagram && result.diagram !== "none" && question) {
+      setDiagramLoading(true);
+      setDiagramError("");
+      fetch("/api/diagram/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question,
+          questionType: questionType || "evaluate-20",
+          planThesis: result.thesis,
+          diagramType: result.diagram,
+          diagramExplanation: result.diagramExplanation,
+        }),
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to generate diagram");
+          return res.json();
+        })
+        .then((data) => {
+          if (data.success && data.diagram) {
+            setGeneratedDiagram(data.diagram);
+            setDiagramAnalysis(data.analysis || null);
+          }
+        })
+        .catch((err) => {
+          console.error("Diagram generation failed:", err);
+          setDiagramError("Could not generate diagram");
+        })
+        .finally(() => setDiagramLoading(false));
+    }
+  }, [result.diagram, result.thesis, result.diagramExplanation, question, questionType]);
 
   return (
     <motion.div
@@ -1019,7 +1068,7 @@ function PlanResultDisplay({
           </div>
         </motion.div>
 
-        {/* Diagram */}
+        {/* Diagram — AI-Generated SVG */}
         {result.diagram && result.diagram !== "none" && (
           <motion.div variants={staggerItem}>
             <div className="card-bw-hover overflow-hidden">
@@ -1041,7 +1090,7 @@ function PlanResultDisplay({
                 </div>
                 <div>
                   <h3 className="text-base2 font-inter uppercase tracking-wide text-n-7">
-                    Required Diagram
+                    {diagramAnalysis?.customTitle || "Required Diagram"}
                   </h3>
                   <p className="text-caption1 text-n-4 mt-0.5">
                     {result.diagramSection?.name ||
@@ -1050,6 +1099,111 @@ function PlanResultDisplay({
                 </div>
               </div>
               <div className="p-7">
+                {/* SVG Diagram Rendering */}
+                {diagramLoading && (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2
+                        className="w-6 h-6 animate-spin"
+                        style={{ color: "var(--verified-base)" }}
+                      />
+                      <span className="text-caption1 text-n-4">
+                        Generating diagram...
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {generatedDiagram && !diagramLoading && (
+                  <div className="mb-6">
+                    <div
+                      className="flex justify-center p-6 bg-white border"
+                      style={{
+                        borderRadius: "0.75rem",
+                        borderColor: "var(--n-3)",
+                        boxShadow: "inset 0 1px 3px rgba(0,0,0,0.04)",
+                      }}
+                    >
+                      <DiagramRenderer
+                        diagram={generatedDiagram}
+                        showLabels={true}
+                        showAreas={true}
+                        showPoints={true}
+                        width={420}
+                        height={420}
+                        className="max-w-full"
+                      />
+                    </div>
+
+                    {/* Diagram Annotations */}
+                    {diagramAnalysis?.annotations &&
+                      diagramAnalysis.annotations.length > 0 && (
+                        <div className="mt-4 space-y-2">
+                          {diagramAnalysis.annotations.map((note, i) => (
+                            <div
+                              key={i}
+                              className="flex items-start gap-2.5 text-base2 text-n-5"
+                            >
+                              <span
+                                className="w-5 h-5 flex items-center justify-center shrink-0 mt-0.5 text-2xs font-bold border"
+                                style={{
+                                  borderRadius: "50%",
+                                  background: "var(--verified-lighter)",
+                                  borderColor: "var(--verified-light)",
+                                  color: "var(--verified-base)",
+                                }}
+                              >
+                                {i + 1}
+                              </span>
+                              <span className="leading-relaxed">{note}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                    {/* Exam Relevance */}
+                    {diagramAnalysis?.examRelevance && (
+                      <div
+                        className="mt-4 p-4 border"
+                        style={{
+                          borderRadius: "0.75rem",
+                          background: "var(--information-lighter)",
+                          borderColor: "var(--information-light)",
+                        }}
+                      >
+                        <p
+                          className="text-caption2 font-bold uppercase tracking-wider mb-1"
+                          style={{ color: "var(--information-base)" }}
+                        >
+                          Exam Tip
+                        </p>
+                        <p className="text-base2 text-n-5 leading-relaxed">
+                          {diagramAnalysis.examRelevance}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {diagramError && !diagramLoading && (
+                  <div
+                    className="mb-5 p-4 border"
+                    style={{
+                      borderRadius: "0.75rem",
+                      background: "var(--error-lighter)",
+                      borderColor: "var(--error-light)",
+                    }}
+                  >
+                    <p
+                      className="text-base2"
+                      style={{ color: "var(--error-base)" }}
+                    >
+                      {diagramError}
+                    </p>
+                  </div>
+                )}
+
+                {/* Key Labels */}
                 {showDetailedPlan && result.diagramSection?.keyLabels && (
                   <div className="flex flex-wrap gap-2 mb-5">
                     {result.diagramSection.keyLabels.map((label, i) => (
@@ -1067,10 +1221,27 @@ function PlanResultDisplay({
                     ))}
                   </div>
                 )}
+
+                {/* Diagram Explanation */}
                 {result.diagramExplanation && (
                   <p className="text-base2 text-n-5 leading-relaxed">
                     {result.diagramExplanation}
                   </p>
+                )}
+
+                {/* AI Analysis Reasoning */}
+                {showDetailedPlan && diagramAnalysis?.reasoning && (
+                  <div
+                    className="mt-4 pt-4"
+                    style={{ borderTop: "1px solid var(--n-3)" }}
+                  >
+                    <p className="text-caption2 font-semibold text-n-4 mb-1.5">
+                      AI Analysis
+                    </p>
+                    <p className="text-base2 text-n-5 leading-relaxed">
+                      {diagramAnalysis.reasoning}
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
@@ -1765,6 +1936,8 @@ export default function HomePage() {
                     <PlanResultDisplay
                       result={plannerResult}
                       onBack={() => setPlannerView("input")}
+                      question={plannerQuestion}
+                      questionType={plannerQuestionType}
                     />
                   )}
                 </div>
