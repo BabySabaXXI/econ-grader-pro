@@ -1394,7 +1394,7 @@ export default function HomePage() {
       />
 
       {/* Main Content Area */}
-      <div className="pl-[19rem] pt-8 pb-5 pr-5 transition-all max-lg:pl-5 max-md:pl-4 max-md:pr-4 max-md:pt-3 max-md:pb-4">
+      <div className="pl-[21rem] pt-8 pb-5 pr-5 transition-all max-lg:pl-5 max-md:pl-4 max-md:pr-4 max-md:pt-3 max-md:pb-4">
         {/* Header Bar — minimal */}
         <div className="flex items-center gap-4 mb-5">
           <button

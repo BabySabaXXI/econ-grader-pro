@@ -325,7 +325,7 @@ export function EssayViewer({
                     )
                   }
                   className={cn(
-                    "relative inline cursor-pointer rounded-sm px-1 py-0.5 transition-all duration-200",
+                    "relative inline",
                     isEarned && "highlight-earned",
                     isLost && "highlight-lost"
                   )}

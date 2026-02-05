@@ -300,12 +300,12 @@
 
   .highlight-lost {
     @apply rounded-sm px-0.5 py-0.5 cursor-pointer transition-all duration-200;
-    background: rgba(199, 80, 80, 0.1);
-    color: #8b3a3a;
-    border-bottom: 2px solid rgba(199, 80, 80, 0.45);
+    background-color: rgba(199, 80, 80, 0.14) !important;
+    color: #943838;
+    border-bottom: 2px solid rgba(199, 80, 80, 0.5);
   }
   .highlight-lost:hover {
-    background: rgba(199, 80, 80, 0.18);
+    background-color: rgba(199, 80, 80, 0.24) !important;
   }
 
   /* ========================================
