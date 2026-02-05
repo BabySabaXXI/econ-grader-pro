@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2,
@@ -43,6 +43,8 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EssayViewer } from "@/components/ui/essay-viewer";
 import Sidebar from "@/components/Sidebar";
+import { DiagramRenderer } from "@/components/diagrams/DiagramRenderer";
+import type { DiagramTemplate } from "@/lib/diagrams/types";
 
 // ============================================================================
 // ANIMATION VARIANTS
@@ -541,11 +543,58 @@ function GradingResultDisplay({
 function PlanResultDisplay({
   result,
   onBack,
+  question,
+  questionType,
 }: {
   result: PlanResult;
   onBack: () => void;
+  question?: string;
+  questionType?: string;
 }) {
   const [showDetailedPlan, setShowDetailedPlan] = useState(true);
+  const [generatedDiagram, setGeneratedDiagram] = useState<DiagramTemplate | null>(null);
+  const [diagramAnalysis, setDiagramAnalysis] = useState<{
+    customTitle?: string;
+    reasoning?: string;
+    annotations?: string[];
+    examRelevance?: string;
+  } | null>(null);
+  const [diagramLoading, setDiagramLoading] = useState(false);
+  const [diagramError, setDiagramError] = useState("");
+
+  // Fetch generated diagram on mount if diagram is recommended
+  useEffect(() => {
+    if (result.diagram && result.diagram !== "none" && question) {
+      setDiagramLoading(true);
+      setDiagramError("");
+      fetch("/api/diagram/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question,
+          questionType: questionType || "evaluate-20",
+          planThesis: result.thesis,
+          diagramType: result.diagram,
+          diagramExplanation: result.diagramExplanation,
+        }),
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to generate diagram");
+          return res.json();
+        })
+        .then((data) => {
+          if (data.success && data.diagram) {
+            setGeneratedDiagram(data.diagram);
+            setDiagramAnalysis(data.analysis || null);
+          }
+        })
+        .catch((err) => {
+          console.error("Diagram generation failed:", err);
+          setDiagramError("Could not generate diagram");
+        })
+        .finally(() => setDiagramLoading(false));
+    }
+  }, [result.diagram, result.thesis, result.diagramExplanation, question, questionType]);
 
   return (
     <motion.div
@@ -792,7 +841,7 @@ function PlanResultDisplay({
           </div>
         </motion.div>
 
-        {/* Diagram */}
+        {/* Diagram — AI-Generated SVG */}
         {result.diagram && result.diagram !== "none" && (
           <motion.div variants={staggerItem}>
             <div className="card-neura-hover overflow-hidden">
@@ -803,7 +852,7 @@ function PlanResultDisplay({
                   </div>
                   <div>
                     <h3 className="text-[0.875rem] font-medium font-inter uppercase tracking-wide text-[#111318]">
-                      Required Diagram
+                      {diagramAnalysis?.customTitle || "Required Diagram"}
                     </h3>
                     <p className="text-[0.75rem] text-[#9ca3af] mt-0.5">
                       {result.diagramSection?.name ||
@@ -813,6 +862,69 @@ function PlanResultDisplay({
                 </div>
               </div>
               <div className="p-7">
+                {/* SVG Diagram Rendering */}
+                {diagramLoading && (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 className="w-6 h-6 text-[#5aa0be] animate-spin" />
+                      <span className="text-[0.8rem] text-[#9ca3af]">Generating diagram...</span>
+                    </div>
+                  </div>
+                )}
+
+                {generatedDiagram && !diagramLoading && (
+                  <div className="mb-6">
+                    <div
+                      className="flex justify-center p-6 rounded-xl bg-white border border-[#e5e7eb]"
+                      style={{ boxShadow: "inset 0 1px 3px rgba(0,0,0,0.04)" }}
+                    >
+                      <DiagramRenderer
+                        diagram={generatedDiagram}
+                        showLabels={true}
+                        showAreas={true}
+                        showPoints={true}
+                        width={420}
+                        height={420}
+                        className="max-w-full"
+                      />
+                    </div>
+
+                    {/* Diagram Annotations */}
+                    {diagramAnalysis?.annotations && diagramAnalysis.annotations.length > 0 && (
+                      <div className="mt-4 space-y-2">
+                        {diagramAnalysis.annotations.map((note, i) => (
+                          <div
+                            key={i}
+                            className="flex items-start gap-2.5 text-[0.8rem] text-[#4b5563]"
+                          >
+                            <span className="w-5 h-5 rounded-full bg-[#edf4f7] border border-[#c4dce6] text-[#5aa0be] text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                              {i + 1}
+                            </span>
+                            <span className="leading-relaxed">{note}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Exam Relevance */}
+                    {diagramAnalysis?.examRelevance && (
+                      <div className="mt-4 p-4 rounded-xl bg-[#f0f2f8] border border-[#ccd4ec]">
+                        <p className="text-[0.75rem] font-medium text-[#3d5390] mb-1">Exam Tip</p>
+                        <p className="text-[0.8rem] text-[#4b5563] leading-relaxed">
+                          {diagramAnalysis.examRelevance}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {diagramError && !diagramLoading && (
+                  <div className="mb-5 p-4 rounded-xl bg-[#faf2f2] border border-[#ebc8c8]">
+                    <p className="text-[0.8rem] text-[#943838]">{diagramError}</p>
+                  </div>
+                )}
+
+                {/* Key Labels */}
                 {showDetailedPlan && result.diagramSection?.keyLabels && (
                   <div className="flex flex-wrap gap-2 mb-5">
                     {result.diagramSection.keyLabels.map((label, i) => (
@@ -826,10 +938,22 @@ function PlanResultDisplay({
                     ))}
                   </div>
                 )}
+
+                {/* Diagram Explanation */}
                 {result.diagramExplanation && (
                   <p className="text-[0.875rem] text-[#4b5563] leading-relaxed">
                     {result.diagramExplanation}
                   </p>
+                )}
+
+                {/* AI Analysis Reasoning */}
+                {showDetailedPlan && diagramAnalysis?.reasoning && (
+                  <div className="mt-4 pt-4 border-t border-[#e5e7eb]">
+                    <p className="text-[0.75rem] font-medium text-[#9ca3af] mb-1.5">AI Analysis</p>
+                    <p className="text-[0.8rem] text-[#4b5563] leading-relaxed">
+                      {diagramAnalysis.reasoning}
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
@@ -1394,7 +1518,7 @@ export default function HomePage() {
       />
 
       {/* Main Content Area */}
-      <div className="pl-[19rem] pt-8 pb-5 pr-5 transition-all max-lg:pl-5 max-md:pl-4 max-md:pr-4 max-md:pt-3 max-md:pb-4">
+      <div className="pl-[24rem] pt-8 pb-5 pr-5 transition-all max-lg:pl-5 max-md:pl-4 max-md:pr-4 max-md:pt-3 max-md:pb-4">
         {/* Header Bar — minimal */}
         <div className="flex items-center gap-4 mb-5">
           <button
@@ -1463,6 +1587,8 @@ export default function HomePage() {
                     <PlanResultDisplay
                       result={plannerResult}
                       onBack={() => setPlannerView("input")}
+                      question={plannerQuestion}
+                      questionType={plannerQuestionType}
                     />
                   )}
                 </div>
