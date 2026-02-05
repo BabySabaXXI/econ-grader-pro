@@ -5,129 +5,130 @@
 @layer base {
   :root {
     /* ========================================
-       NeuraTalk-inspired Design System
+       Refined Professional Design System
+       Muted, desaturated palette with depth
        ======================================== */
 
     /* Core neutrals */
     --static-white: #ffffff;
     --static-black: #0e121b;
     --white-0: #ffffff;
-    --strong-950: #0e121b;
-    --bg-weak-50: #f5f7fa;
+    --strong-950: #111318;
+    --bg-weak-50: #f7f8fa;
     --bg-surface-800: #222530;
-    --bg-soft-200: #e1e4ea;
-    --bg-sub-300: #cacfd8;
-    --text-sub-600: #525866;
-    --text-soft-400: #99a0ae;
-    --text-disabled-300: #cacfd8;
+    --bg-soft-200: #e4e7ec;
+    --bg-sub-300: #cdd1d9;
+    --text-sub-600: #4b5563;
+    --text-soft-400: #9ca3af;
+    --text-disabled-300: #cdd1d9;
 
-    /* Stroke / Border */
-    --stroke-soft-200: #e1e4ea;
-    --stroke-strong-950: #0e121b;
+    /* Stroke / Border — softer, less visible */
+    --stroke-soft-200: #e5e7eb;
+    --stroke-strong-950: #111318;
     --stroke-white-0: #ffffff;
-    --stroke-sub-300: #cacfd8;
+    --stroke-sub-300: #d1d5db;
 
-    /* Status colors */
-    --error-base: #fb3748;
-    --error-light: #ffc0c5;
-    --error-lighter: #ffebec;
-    --warning-base: #ff8447;
-    --warning-light: #ffd5c0;
-    --warning-lighter: #fff1eb;
-    --success-base: #1fc16b;
-    --success-light: #c2f5da;
-    --success-lighter: #e0faec;
-    --information-base: #335cff;
-    --information-light: #c0d5ff;
-    --information-lighter: #ebf1ff;
-    --feature-base: #7d52f4;
-    --feature-light: #cac0ff;
-    --feature-lighter: #efebff;
-    --away-base: #f6b51e;
-    --away-light: #ffecc0;
-    --away-lighter: #fffaeb;
-    --verified-base: #47c2ff;
-    --verified-light: #c0eaff;
-    --verified-lighter: #ebf8ff;
+    /* Status colors — desaturated, professional */
+    --error-base: #c75050;
+    --error-light: #ebc8c8;
+    --error-lighter: #faf2f2;
+    --warning-base: #c48840;
+    --warning-light: #ebd8c0;
+    --warning-lighter: #faf5ee;
+    --success-base: #4a9e72;
+    --success-light: #c2dace;
+    --success-lighter: #eef5f1;
+    --information-base: #5472b8;
+    --information-light: #ccd4ec;
+    --information-lighter: #f0f2f8;
+    --feature-base: #7b6eae;
+    --feature-light: #d2cde4;
+    --feature-lighter: #f0eef6;
+    --away-base: #b89050;
+    --away-light: #e4d6ba;
+    --away-lighter: #f7f2ea;
+    --verified-base: #5aa0be;
+    --verified-light: #c4dce6;
+    --verified-lighter: #edf4f7;
 
-    /* Blue scale */
-    --blue-50: #ebf1ff;
-    --blue-100: #d5e2ff;
-    --blue-200: #c0d5ff;
-    --blue-300: #97baff;
-    --blue-400: #6895ff;
-    --blue-500: #335cff;
-    --blue-600: #3559e9;
-    --blue-700: #2547d0;
-    --blue-800: #1f3bad;
-    --blue-900: #182f8b;
-    --blue-950: #122368;
+    /* Blue scale — refined slate-blue */
+    --blue-50: #f0f2f8;
+    --blue-100: #dde2ee;
+    --blue-200: #ccd4ec;
+    --blue-300: #a0b0d6;
+    --blue-400: #7b92c4;
+    --blue-500: #5472b8;
+    --blue-600: #4a64a6;
+    --blue-700: #3d5390;
+    --blue-800: #324478;
+    --blue-900: #283660;
+    --blue-950: #1c2640;
 
-    /* Green scale */
-    --green-50: #e0faec;
-    --green-200: #c2f5da;
-    --green-400: #3ee089;
-    --green-500: #1fc16b;
-    --green-600: #1daf61;
-    --green-800: #1a7544;
+    /* Green scale — muted sage */
+    --green-50: #eef5f1;
+    --green-200: #c2dace;
+    --green-400: #66b88e;
+    --green-500: #4a9e72;
+    --green-600: #428e66;
+    --green-800: #326b4e;
 
     /* Overlay */
-    --overlay: rgba(2, 13, 23, 0.24);
+    --overlay: rgba(2, 13, 23, 0.2);
 
     /* ========================================
        shadcn/ui Token Bridge
        ======================================== */
-    --background: 0 0% 96.5%;
-    --foreground: 222 47% 8%;
+    --background: 220 14% 97%;
+    --foreground: 222 40% 8%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 8%;
+    --card-foreground: 222 40% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 8%;
-    --primary: 222 47% 8%;
+    --popover-foreground: 222 40% 8%;
+    --primary: 222 40% 8%;
     --primary-foreground: 0 0% 100%;
     --secondary: 220 14% 96%;
-    --secondary-foreground: 222 47% 8%;
+    --secondary-foreground: 222 40% 8%;
     --muted: 220 14% 96%;
     --muted-foreground: 220 9% 46%;
     --accent: 220 14% 96%;
-    --accent-foreground: 222 47% 8%;
-    --destructive: 355 90% 60%;
+    --accent-foreground: 222 40% 8%;
+    --destructive: 0 55% 55%;
     --destructive-foreground: 0 0% 100%;
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 222 47% 8%;
+    --ring: 222 40% 8%;
     --radius: 0.75rem;
 
-    /* Chart colors */
-    --chart-1: 230 80% 60%;
-    --chart-2: 152 60% 45%;
-    --chart-3: 263 70% 55%;
-    --chart-4: 40 90% 50%;
-    --chart-5: 200 80% 55%;
+    /* Chart colors — muted */
+    --chart-1: 220 40% 53%;
+    --chart-2: 152 35% 46%;
+    --chart-3: 260 25% 55%;
+    --chart-4: 35 45% 52%;
+    --chart-5: 195 35% 55%;
 
-    /* AO Colors — mapped to NeuraTalk semantic palette */
-    --ao1: 217 91% 60%;
-    --ao2: 152 76% 44%;
-    --ao3: 263 88% 64%;
-    --ao4: 40 93% 54%;
+    /* AO Colors — muted, professional */
+    --ao1: 220 40% 53%;
+    --ao2: 152 35% 46%;
+    --ao3: 260 25% 55%;
+    --ao4: 35 45% 52%;
   }
 
   .dark {
-    --background: 222 47% 8%;
+    --background: 222 40% 8%;
     --foreground: 0 0% 95%;
     --card: 222 30% 12%;
     --card-foreground: 0 0% 95%;
     --popover: 222 30% 12%;
     --popover-foreground: 0 0% 95%;
     --primary: 0 0% 100%;
-    --primary-foreground: 222 47% 8%;
+    --primary-foreground: 222 40% 8%;
     --secondary: 222 20% 16%;
     --secondary-foreground: 0 0% 95%;
     --muted: 222 20% 16%;
     --muted-foreground: 220 10% 60%;
     --accent: 222 20% 16%;
     --accent-foreground: 0 0% 95%;
-    --destructive: 355 80% 50%;
+    --destructive: 0 55% 50%;
     --destructive-foreground: 0 0% 100%;
     --border: 222 20% 20%;
     --input: 222 20% 20%;
@@ -158,17 +159,19 @@
 
 @layer components {
   /* ========================================
-     NeuraTalk Layout Classes
+     Layout
      ======================================== */
 
   .content-wrapper {
-    @apply flex flex-col bg-white rounded-3xl
-           shadow-[0_0_1.25rem_0_rgba(0,0,0,0.03)]
-           overflow-hidden;
+    @apply flex flex-col bg-white rounded-3xl overflow-hidden;
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.03),
+      0 1px 2px rgba(0, 0, 0, 0.04),
+      0 8px 24px rgba(0, 0, 0, 0.04);
   }
 
   /* ========================================
-     NeuraTalk-inspired Button Styles
+     Button Styles
      ======================================== */
 
   .btn-neura {
@@ -183,9 +186,11 @@
   }
 
   .btn-neura-blue {
-    @apply btn-neura bg-gradient-to-r from-[--blue-500] to-[--blue-300]
-           text-white border border-[--stroke-soft-200]
-           hover:opacity-90;
+    @apply btn-neura text-white border border-transparent;
+    background: var(--blue-500);
+  }
+  .btn-neura-blue:hover {
+    background: var(--blue-600);
   }
 
   .btn-neura-stroke {
@@ -195,7 +200,7 @@
   }
 
   /* ========================================
-     NeuraTalk Field Styles
+     Field Styles
      ======================================== */
 
   .field-neura {
@@ -213,41 +218,60 @@
   }
 
   /* ========================================
-     NeuraTalk Card Styles
+     Card Styles — with layered depth
      ======================================== */
 
   .card-neura {
-    @apply border border-[--stroke-soft-200] rounded-xl bg-white
-           shadow-[0_0_1.25rem_0_rgba(0,0,0,0.03)]
-           transition-all;
+    @apply rounded-2xl bg-white transition-all;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.04),
+      0 4px 12px rgba(0, 0, 0, 0.03);
   }
 
   .card-neura-hover {
-    @apply card-neura hover:border-[--stroke-sub-300] hover:shadow-md;
+    @apply card-neura;
+  }
+  .card-neura-hover:hover {
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.06),
+      0 8px 24px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+  }
+
+  /* Elevated card — more prominent shadow for bento boxes */
+  .card-elevated {
+    @apply rounded-2xl bg-white transition-all;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.04),
+      0 4px 16px rgba(0, 0, 0, 0.05),
+      0 12px 32px rgba(0, 0, 0, 0.03);
   }
 
   /* ========================================
-     Level Badge System
+     Level Badge System — muted
      ======================================== */
 
   .badge-level-5 {
-    @apply bg-emerald-50 text-emerald-700 border-emerald-200;
+    @apply bg-[#eef5f1] text-[#3a7a58] border-[#c2dace];
   }
   .badge-level-4 {
-    @apply bg-blue-50 text-blue-700 border-blue-200;
+    @apply bg-[#f0f2f8] text-[#3d5390] border-[#ccd4ec];
   }
   .badge-level-3 {
-    @apply bg-amber-50 text-amber-700 border-amber-200;
+    @apply bg-[#f7f2ea] text-[#8a6e3a] border-[#e4d6ba];
   }
   .badge-level-2 {
-    @apply bg-orange-50 text-orange-700 border-orange-200;
+    @apply bg-[#faf5ee] text-[#9a6830] border-[#ebd8c0];
   }
   .badge-level-1 {
-    @apply bg-red-50 text-red-700 border-red-200;
+    @apply bg-[#faf2f2] text-[#963e3e] border-[#ebc8c8];
   }
 
   /* ========================================
-     AO Color System
+     AO Color System — muted
      ======================================== */
 
   .ao-ao1 { color: var(--information-base); }
@@ -261,19 +285,27 @@
   .ao-bg-ao4 { background: var(--away-lighter); border-color: var(--away-light); }
 
   /* ========================================
-     Highlight System
+     Highlight System — refined
      ======================================== */
 
   .highlight-earned {
-    @apply bg-emerald-100/80 text-emerald-900 rounded-sm px-0.5 py-0.5
-           border-b-2 border-emerald-500 cursor-pointer
-           transition-all duration-200 hover:bg-emerald-200/80;
+    @apply rounded-sm px-0.5 py-0.5 cursor-pointer transition-all duration-200;
+    background: rgba(74, 158, 114, 0.12);
+    color: #2d6b4a;
+    border-bottom: 2px solid rgba(74, 158, 114, 0.5);
+  }
+  .highlight-earned:hover {
+    background: rgba(74, 158, 114, 0.2);
   }
 
   .highlight-lost {
-    @apply bg-red-100/80 text-red-900 rounded-sm px-0.5 py-0.5
-           border-b-2 border-red-500 cursor-pointer
-           transition-all duration-200 hover:bg-red-200/80;
+    @apply rounded-sm px-0.5 py-0.5 cursor-pointer transition-all duration-200;
+    background: rgba(199, 80, 80, 0.1);
+    color: #8b3a3a;
+    border-bottom: 2px solid rgba(199, 80, 80, 0.45);
+  }
+  .highlight-lost:hover {
+    background: rgba(199, 80, 80, 0.18);
   }
 
   /* ========================================
@@ -281,18 +313,26 @@
      ======================================== */
 
   .sidebar-link {
-    @apply relative flex items-center gap-3 h-10 px-3 rounded-xl
+    @apply relative flex items-center gap-3 h-11 px-3.5 rounded-xl
            text-sm font-medium transition-colors
            text-[--text-sub-600] hover:text-[--strong-950] hover:bg-[--bg-weak-50];
   }
 
   .sidebar-link-active {
-    @apply text-[--blue-500] bg-[--bg-weak-50];
+    @apply text-[--blue-600] bg-[--bg-weak-50];
   }
 
   .sidebar-link-active svg {
-    @apply text-[--blue-500];
+    @apply text-[--blue-600];
   }
+}
+
+/* ========================================
+   Thinner icons — Apple/iOS feel
+   ======================================== */
+
+.lucide {
+  stroke-width: 1.5;
 }
 
 /* ========================================
@@ -326,9 +366,9 @@
 }
 
 @keyframes pulseRing {
-  0% { transform: scale(1); opacity: 0.3; }
-  50% { transform: scale(1.05); opacity: 0.15; }
-  100% { transform: scale(1); opacity: 0.3; }
+  0% { transform: scale(1); opacity: 0.2; }
+  50% { transform: scale(1.05); opacity: 0.1; }
+  100% { transform: scale(1); opacity: 0.2; }
 }
 
 /* ========================================
@@ -336,8 +376,8 @@
    ======================================== */
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
