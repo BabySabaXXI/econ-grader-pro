@@ -13,15 +13,15 @@ import {
   AlertCircle,
   ChevronRight,
   BarChart3,
-  Target,
-  Sparkles,
+  Crosshair,
+  Wand2,
   Eye,
   EyeOff,
   BookOpen,
-  PenTool,
+  Pen,
   Lightbulb,
   GraduationCap,
-  Menu,
+  PanelLeft,
 } from "lucide-react";
 import {
   QUESTION_TYPE_OPTIONS,
@@ -49,20 +49,20 @@ import Sidebar from "@/components/Sidebar";
 // ============================================================================
 
 const pageTransition = {
-  initial: { opacity: 0, y: 12 },
+  initial: { opacity: 0, y: 10 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -8 },
+  exit: { opacity: 0, y: -6 },
   transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
 };
 
 const staggerContainer = {
   animate: {
-    transition: { staggerChildren: 0.08 },
+    transition: { staggerChildren: 0.1 },
   },
 };
 
 const staggerItem = {
-  initial: { opacity: 0, y: 16 },
+  initial: { opacity: 0, y: 14 },
   animate: {
     opacity: 1,
     y: 0,
@@ -77,21 +77,21 @@ const staggerItem = {
 type ViewState = "input" | "loading" | "results";
 
 // ============================================================================
-// SCORE COLOR HELPERS
+// SCORE COLOR HELPERS — muted professional tones
 // ============================================================================
 
 function getScoreColor(percentage: number): string {
-  if (percentage >= 80) return "text-emerald-600";
-  if (percentage >= 60) return "text-[#335cff]";
-  if (percentage >= 45) return "text-amber-600";
-  return "text-[#fb3748]";
+  if (percentage >= 80) return "text-[#4a9e72]";
+  if (percentage >= 60) return "text-[#5472b8]";
+  if (percentage >= 45) return "text-[#b89050]";
+  return "text-[#c75050]";
 }
 
 function getScoreRingColor(percentage: number): string {
-  if (percentage >= 80) return "stroke-emerald-500";
-  if (percentage >= 60) return "stroke-[#335cff]";
-  if (percentage >= 45) return "stroke-amber-500";
-  return "stroke-[#fb3748]";
+  if (percentage >= 80) return "stroke-[#4a9e72]";
+  if (percentage >= 60) return "stroke-[#5472b8]";
+  if (percentage >= 45) return "stroke-[#b89050]";
+  return "stroke-[#c75050]";
 }
 
 // ============================================================================
@@ -102,23 +102,23 @@ function LevelBadge({ level }: { level: number }) {
   const config: Record<number, { label: string; className: string }> = {
     5: {
       label: "Excellent",
-      className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      className: "bg-[#eef5f1] text-[#3a7a58] border-[#c2dace]",
     },
     4: {
       label: "Good",
-      className: "bg-[#ebf1ff] text-[#2547d0] border-[#c0d5ff]",
+      className: "bg-[#f0f2f8] text-[#3d5390] border-[#ccd4ec]",
     },
     3: {
       label: "Sound",
-      className: "bg-[#fffaeb] text-amber-700 border-[#ffecc0]",
+      className: "bg-[#f7f2ea] text-[#8a6e3a] border-[#e4d6ba]",
     },
     2: {
       label: "Basic",
-      className: "bg-[#fff1eb] text-orange-700 border-[#ffd5c0]",
+      className: "bg-[#faf5ee] text-[#9a6830] border-[#ebd8c0]",
     },
     1: {
       label: "Limited",
-      className: "bg-[#ffebec] text-red-700 border-[#ffc0c5]",
+      className: "bg-[#faf2f2] text-[#963e3e] border-[#ebc8c8]",
     },
   };
 
@@ -137,37 +137,37 @@ function LevelBadge({ level }: { level: number }) {
 }
 
 // ============================================================================
-// AO CONFIG & COMPONENTS
+// AO CONFIG & COMPONENTS — muted professional palette
 // ============================================================================
 
 const AO_CONFIG = {
   ao1: {
     label: "Knowledge",
-    color: "bg-[#335cff]",
-    bgLight: "bg-[#ebf1ff]",
-    text: "text-[#335cff]",
-    border: "border-[#c0d5ff]",
+    color: "bg-[#5472b8]",
+    bgLight: "bg-[#f0f2f8]",
+    text: "text-[#5472b8]",
+    border: "border-[#ccd4ec]",
   },
   ao2: {
     label: "Application",
-    color: "bg-[#1fc16b]",
-    bgLight: "bg-[#e0faec]",
-    text: "text-[#1fc16b]",
-    border: "border-[#c2f5da]",
+    color: "bg-[#4a9e72]",
+    bgLight: "bg-[#eef5f1]",
+    text: "text-[#4a9e72]",
+    border: "border-[#c2dace]",
   },
   ao3: {
     label: "Analysis",
-    color: "bg-[#7d52f4]",
-    bgLight: "bg-[#efebff]",
-    text: "text-[#7d52f4]",
-    border: "border-[#cac0ff]",
+    color: "bg-[#7b6eae]",
+    bgLight: "bg-[#f0eef6]",
+    text: "text-[#7b6eae]",
+    border: "border-[#d2cde4]",
   },
   ao4: {
     label: "Evaluation",
-    color: "bg-[#f6b51e]",
-    bgLight: "bg-[#fffaeb]",
-    text: "text-[#f6b51e]",
-    border: "border-[#ffecc0]",
+    color: "bg-[#b89050]",
+    bgLight: "bg-[#f7f2ea]",
+    text: "text-[#b89050]",
+    border: "border-[#e4d6ba]",
   },
 };
 
@@ -184,28 +184,28 @@ function AOScoreBar({
   const config = AO_CONFIG[aoKey];
 
   return (
-    <div className="group">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
+    <div>
+      <div className="flex items-center justify-between mb-2.5">
+        <div className="flex items-center gap-2.5">
           <div className={cn("w-2 h-2 rounded-full", config.color)} />
           <span
             className={cn(
-              "text-[0.75rem] font-medium font-inter uppercase tracking-wider",
+              "text-[0.7rem] font-medium font-inter uppercase tracking-wider",
               config.text
             )}
           >
             {aoKey.toUpperCase()}
           </span>
-          <span className="text-[0.75rem] text-[#99a0ae]">
+          <span className="text-[0.7rem] text-[#9ca3af]">
             {config.label}
           </span>
         </div>
-        <span className="text-[0.875rem] font-medium font-inter tabular-nums text-[#0e121b]">
+        <span className="text-[0.875rem] font-medium font-inter tabular-nums text-[#111318]">
           {score}
-          <span className="text-[#cacfd8] font-normal">/{maxScore}</span>
+          <span className="text-[#cdd1d9] font-normal">/{maxScore}</span>
         </span>
       </div>
-      <div className="h-1.5 rounded-full overflow-hidden bg-[#e1e4ea]">
+      <div className="h-1.5 rounded-full overflow-hidden bg-[#e5e7eb]">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${percentage}%` }}
@@ -263,37 +263,33 @@ function GradingResultDisplay({
   return (
     <motion.div
       className="max-w-7xl mx-auto"
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
     >
       {/* Back Button */}
       <button
         onClick={onBack}
-        className="group flex items-center gap-2 text-[0.875rem] font-medium text-[#525866] hover:text-[#0e121b] transition-colors mb-6"
+        className="group flex items-center gap-2 text-[0.875rem] font-medium text-[#9ca3af] hover:text-[#111318] transition-colors mb-8"
       >
         <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
         <span>Edit Answer</span>
       </button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column - Essay View */}
         <div className="lg:col-span-7 xl:col-span-8">
           <div className="sticky top-8">
             <div className="card-neura overflow-hidden">
-              <div className="border-b border-[#e1e4ea] bg-[#f5f7fa] px-6 py-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-[1rem] font-medium font-inter text-[#0e121b]">
-                      Your Essay
-                    </h3>
-                    <p className="text-[0.75rem] text-[#99a0ae] mt-0.5">
-                      Click highlighted text to see detailed feedback
-                    </p>
-                  </div>
-                </div>
+              <div className="border-b border-[#e5e7eb] bg-[#f7f8fa] px-7 py-5">
+                <h3 className="text-[1rem] font-medium font-inter text-[#111318]">
+                  Your Essay
+                </h3>
+                <p className="text-[0.75rem] text-[#9ca3af] mt-1">
+                  Click highlighted text for detailed feedback
+                </p>
               </div>
-              <div className="p-6">
+              <div className="p-7">
                 {hasHighlights ? (
                   <EssayViewer
                     essay={essayText}
@@ -305,8 +301,8 @@ function GradingResultDisplay({
                     }
                   />
                 ) : (
-                  <div className="p-6 bg-[#f5f7fa] rounded-xl">
-                    <p className="text-[1rem] leading-relaxed text-[#525866] whitespace-pre-wrap">
+                  <div className="p-7 bg-[#f7f8fa] rounded-xl">
+                    <p className="text-[1rem] leading-relaxed text-[#4b5563] whitespace-pre-wrap">
                       {essayText}
                     </p>
                   </div>
@@ -316,18 +312,18 @@ function GradingResultDisplay({
           </div>
         </div>
 
-        {/* Right Column - Score Cards */}
+        {/* Right Column - Score Cards (Bento) */}
         <motion.div
-          className="lg:col-span-5 xl:col-span-4 space-y-4"
+          className="lg:col-span-5 xl:col-span-4 space-y-5"
           variants={staggerContainer}
           initial="initial"
           animate="animate"
         >
           {/* Overall Score Card */}
           <motion.div variants={staggerItem}>
-            <div className="card-neura overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-center gap-6">
+            <div className="card-elevated overflow-hidden">
+              <div className="p-7">
+                <div className="flex items-center gap-7">
                   {/* Score Ring */}
                   <div className="relative flex-shrink-0">
                     <svg className="w-28 h-28" viewBox="0 0 100 100">
@@ -336,15 +332,15 @@ function GradingResultDisplay({
                         cy="50"
                         r="40"
                         stroke="currentColor"
-                        strokeWidth="8"
+                        strokeWidth="7"
                         fill="none"
-                        className="text-[#e1e4ea]"
+                        className="text-[#e5e7eb]"
                       />
                       <motion.circle
                         cx="50"
                         cy="50"
                         r="40"
-                        strokeWidth="8"
+                        strokeWidth="7"
                         fill="none"
                         strokeDasharray={`${2 * Math.PI * 40}`}
                         initial={{ strokeDashoffset: 2 * Math.PI * 40 }}
@@ -382,14 +378,14 @@ function GradingResultDisplay({
 
                   {/* Score Details */}
                   <div className="flex-1">
-                    <div className="text-4xl font-light text-[#0e121b] mb-2 tracking-tight font-inter">
+                    <div className="text-4xl font-light text-[#111318] mb-3 tracking-tight font-inter">
                       {result.totalMarks}
-                      <span className="text-lg text-[#cacfd8] font-normal">
+                      <span className="text-lg text-[#cdd1d9] font-normal">
                         /{markScheme.total}
                       </span>
                     </div>
                     <LevelBadge level={result.levelAchieved} />
-                    <p className="text-[0.75rem] text-[#99a0ae] mt-3 leading-relaxed">
+                    <p className="text-[0.75rem] text-[#9ca3af] mt-3 leading-relaxed">
                       {LEVEL_DESCRIPTORS[result.levelAchieved]}
                     </p>
                   </div>
@@ -400,13 +396,13 @@ function GradingResultDisplay({
 
           {/* AO Breakdown */}
           <motion.div variants={staggerItem}>
-            <div className="card-neura overflow-hidden">
-              <div className="px-6 pt-5 pb-2">
-                <h4 className="text-[0.75rem] font-medium font-inter text-[#99a0ae] uppercase tracking-wider">
+            <div className="card-elevated overflow-hidden">
+              <div className="px-7 pt-6 pb-3">
+                <h4 className="text-[0.7rem] font-medium font-inter text-[#9ca3af] uppercase tracking-wider">
                   Assessment Objectives
                 </h4>
               </div>
-              <div className="px-6 pb-5 space-y-5">
+              <div className="px-7 pb-6 space-y-6">
                 {markScheme.ao1 > 0 && (
                   <AOScoreBar
                     aoKey="ao1"
@@ -441,21 +437,16 @@ function GradingResultDisplay({
 
           {/* Examiner Comment */}
           <motion.div variants={staggerItem}>
-            <div className="card-neura overflow-hidden">
-              <div className="px-6 pt-5 pb-2">
-                <h4 className="text-[0.75rem] font-medium font-inter text-[#99a0ae] uppercase tracking-wider">
+            <div className="card-elevated overflow-hidden">
+              <div className="px-7 pt-6 pb-3">
+                <h4 className="text-[0.7rem] font-medium font-inter text-[#9ca3af] uppercase tracking-wider">
                   Examiner Feedback
                 </h4>
               </div>
-              <div className="px-6 pb-5">
-                <div className="relative p-4 bg-[#f5f7fa] rounded-xl border border-[#e1e4ea]">
-                  <div className="absolute top-2 left-4 text-4xl text-[#cacfd8] font-serif leading-none">
-                    &ldquo;
-                  </div>
-                  <p className="text-[0.875rem] text-[#525866] leading-relaxed pt-5 pl-2 italic">
-                    {result.examinerComment}
-                  </p>
-                </div>
+              <div className="px-7 pb-6">
+                <p className="text-[0.875rem] text-[#4b5563] leading-relaxed italic">
+                  &ldquo;{result.examinerComment}&rdquo;
+                </p>
               </div>
             </div>
           </motion.div>
@@ -463,27 +454,25 @@ function GradingResultDisplay({
           {/* Feedback Summary */}
           {hasHighlights && (
             <motion.div variants={staggerItem}>
-              <div className="card-neura overflow-hidden p-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 rounded-xl bg-[#e0faec] border border-[#c2f5da]">
-                    <div className="text-2xl font-bold text-[#1fc16b] tracking-tight font-inter">
-                      +
-                      {result.marksEarned?.reduce(
-                        (sum, m) => sum + m.points,
-                        0
-                      ) || 0}
-                    </div>
-                    <div className="text-[0.75rem] text-emerald-700 font-medium mt-1">
-                      Marks Earned
-                    </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="card-elevated p-5">
+                  <div className="text-2xl font-bold text-[#4a9e72] tracking-tight font-inter">
+                    +
+                    {result.marksEarned?.reduce(
+                      (sum, m) => sum + m.points,
+                      0
+                    ) || 0}
                   </div>
-                  <div className="p-4 rounded-xl bg-[#ffebec] border border-[#ffc0c5]">
-                    <div className="text-2xl font-bold text-[#fb3748] tracking-tight font-inter">
-                      {result.marksLost?.length || 0}
-                    </div>
-                    <div className="text-[0.75rem] text-red-700 font-medium mt-1">
-                      Issues Found
-                    </div>
+                  <div className="text-[0.75rem] text-[#4b5563] font-medium mt-1.5">
+                    Marks Earned
+                  </div>
+                </div>
+                <div className="card-elevated p-5">
+                  <div className="text-2xl font-bold text-[#c75050] tracking-tight font-inter">
+                    {result.marksLost?.length || 0}
+                  </div>
+                  <div className="text-[0.75rem] text-[#4b5563] font-medium mt-1.5">
+                    Issues Found
                   </div>
                 </div>
               </div>
@@ -492,21 +481,21 @@ function GradingResultDisplay({
 
           {/* Strengths */}
           <motion.div variants={staggerItem}>
-            <div className="card-neura overflow-hidden">
-              <div className="px-6 pt-5 pb-2">
-                <h4 className="text-[0.75rem] font-medium font-inter text-emerald-600 uppercase tracking-wider flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5" />
+            <div className="card-elevated overflow-hidden">
+              <div className="px-7 pt-6 pb-3">
+                <h4 className="text-[0.7rem] font-medium font-inter text-[#4a9e72] uppercase tracking-wider flex items-center gap-2">
+                  <Check className="w-3 h-3" />
                   Strengths
                 </h4>
               </div>
-              <div className="px-6 pb-5 space-y-2">
+              <div className="px-7 pb-6 space-y-2.5">
                 {result.strengths.slice(0, 3).map((strength, index) => (
                   <div
                     key={index}
-                    className="flex gap-3 p-3 rounded-xl bg-[#e0faec] border border-[#c2f5da]"
+                    className="flex gap-3 p-3.5 rounded-xl bg-[#f7f8fa]"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#1fc16b] mt-1.5 flex-shrink-0" />
-                    <span className="text-[0.75rem] text-[#525866] leading-relaxed">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#4a9e72] mt-1.5 flex-shrink-0" />
+                    <span className="text-[0.8rem] text-[#4b5563] leading-relaxed">
                       {strength}
                     </span>
                   </div>
@@ -517,21 +506,21 @@ function GradingResultDisplay({
 
           {/* Improvements */}
           <motion.div variants={staggerItem}>
-            <div className="card-neura overflow-hidden">
-              <div className="px-6 pt-5 pb-2">
-                <h4 className="text-[0.75rem] font-medium font-inter text-[#f6b51e] uppercase tracking-wider flex items-center gap-2">
-                  <Target className="w-3.5 h-3.5" />
+            <div className="card-elevated overflow-hidden">
+              <div className="px-7 pt-6 pb-3">
+                <h4 className="text-[0.7rem] font-medium font-inter text-[#b89050] uppercase tracking-wider flex items-center gap-2">
+                  <Crosshair className="w-3 h-3" />
                   Areas to Improve
                 </h4>
               </div>
-              <div className="px-6 pb-5 space-y-2">
+              <div className="px-7 pb-6 space-y-2.5">
                 {result.improvements.slice(0, 3).map((improvement, index) => (
                   <div
                     key={index}
-                    className="flex gap-3 p-3 rounded-xl bg-[#fffaeb] border border-[#ffecc0]"
+                    className="flex gap-3 p-3.5 rounded-xl bg-[#f7f8fa]"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#f6b51e] mt-1.5 flex-shrink-0" />
-                    <span className="text-[0.75rem] text-[#525866] leading-relaxed">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#b89050] mt-1.5 flex-shrink-0" />
+                    <span className="text-[0.8rem] text-[#4b5563] leading-relaxed">
                       {improvement}
                     </span>
                   </div>
@@ -561,32 +550,32 @@ function PlanResultDisplay({
   return (
     <motion.div
       className="max-w-4xl mx-auto"
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
     >
       {/* Back Button */}
       <button
         onClick={onBack}
-        className="group flex items-center gap-2 text-[0.875rem] font-medium text-[#525866] hover:text-[#0e121b] transition-colors mb-6"
+        className="group flex items-center gap-2 text-[0.875rem] font-medium text-[#9ca3af] hover:text-[#111318] transition-colors mb-8"
       >
         <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
         <span>Edit Question</span>
       </button>
 
       {/* Detail Toggle */}
-      <div className="flex items-center justify-between mb-6 p-4 rounded-2xl border border-[#e1e4ea] bg-[#f5f7fa]">
+      <div className="flex items-center justify-between mb-8 p-5 rounded-2xl bg-[#f7f8fa] border border-[#e5e7eb]">
         <div className="flex items-center gap-3">
           {showDetailedPlan ? (
-            <Eye className="w-5 h-5 text-[#525866]" />
+            <Eye className="w-5 h-5 text-[#4b5563]" />
           ) : (
-            <EyeOff className="w-5 h-5 text-[#99a0ae]" />
+            <EyeOff className="w-5 h-5 text-[#9ca3af]" />
           )}
           <div>
-            <p className="text-[0.875rem] font-medium font-inter text-[#0e121b]">
+            <p className="text-[0.875rem] font-medium font-inter text-[#111318]">
               Detailed View
             </p>
-            <p className="text-[0.75rem] text-[#99a0ae]">
+            <p className="text-[0.75rem] text-[#9ca3af]">
               Show examples, chains of reasoning, and techniques
             </p>
           </div>
@@ -594,12 +583,12 @@ function PlanResultDisplay({
         <Switch
           checked={showDetailedPlan}
           onCheckedChange={setShowDetailedPlan}
-          className="data-[state=checked]:bg-[#335cff]"
+          className="data-[state=checked]:bg-[#5472b8]"
         />
       </div>
 
       <motion.div
-        className="space-y-4"
+        className="space-y-5"
         variants={staggerContainer}
         initial="initial"
         animate="animate"
@@ -607,17 +596,17 @@ function PlanResultDisplay({
         {/* Introduction */}
         <motion.div variants={staggerItem}>
           <div className="card-neura-hover overflow-hidden">
-            <div className="border-b border-[#e1e4ea] bg-[#f5f7fa] px-6 py-4">
+            <div className="border-b border-[#e5e7eb] bg-[#f7f8fa] px-7 py-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#0e121b] text-white text-[0.875rem] font-medium font-inter">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#111318] text-white text-[0.875rem] font-medium font-inter">
                     1
                   </span>
                   <div>
-                    <h3 className="text-[1.125rem] font-medium font-inter text-[#0e121b]">
+                    <h3 className="text-[1rem] font-medium font-inter text-[#111318]">
                       Introduction
                     </h3>
-                    <p className="text-[0.75rem] text-[#99a0ae] mt-0.5">
+                    <p className="text-[0.75rem] text-[#9ca3af] mt-0.5">
                       Define key terms and state your thesis
                     </p>
                   </div>
@@ -625,13 +614,13 @@ function PlanResultDisplay({
                 <AOBadge ao="ao1" />
               </div>
             </div>
-            <div className="p-6">
-              <div className="p-5 rounded-xl bg-[#fffaeb] border border-[#ffecc0]">
-                <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-2 flex items-center gap-1.5 font-inter">
+            <div className="p-7">
+              <div className="p-5 rounded-xl bg-[#f7f2ea] border border-[#e4d6ba]">
+                <p className="text-[10px] font-bold text-[#8a6e3a] uppercase tracking-wider mb-2.5 flex items-center gap-1.5 font-inter">
                   <Lightbulb className="w-3 h-3" />
                   What to Write
                 </p>
-                <p className="text-[0.875rem] text-[#525866] leading-relaxed">
+                <p className="text-[0.875rem] text-[#4b5563] leading-relaxed">
                   {result.introduction?.whatToWrite || result.thesis}
                 </p>
               </div>
@@ -643,22 +632,22 @@ function PlanResultDisplay({
         {result.arguments.map((arg, index) => (
           <motion.div key={index} variants={staggerItem}>
             <div className="card-neura-hover overflow-hidden">
-              <div className="border-b border-[#e1e4ea] bg-[#f5f7fa] px-6 py-4">
+              <div className="border-b border-[#e5e7eb] bg-[#f7f8fa] px-7 py-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <span
                       className={cn(
                         "flex items-center justify-center w-10 h-10 rounded-xl text-white text-[0.875rem] font-medium font-inter",
-                        index === 0 ? "bg-[#1fc16b]" : "bg-[#fb3748]"
+                        index === 0 ? "bg-[#4a9e72]" : "bg-[#c75050]"
                       )}
                     >
                       {index + 2}
                     </span>
                     <div>
-                      <h3 className="text-[1.125rem] font-medium font-inter text-[#0e121b]">
+                      <h3 className="text-[1rem] font-medium font-inter text-[#111318]">
                         Argument {index === 0 ? "FOR" : "AGAINST"}
                       </h3>
-                      <p className="text-[0.75rem] text-[#99a0ae] mt-0.5 max-w-md truncate">
+                      <p className="text-[0.75rem] text-[#9ca3af] mt-0.5 max-w-md truncate">
                         {arg.point}
                       </p>
                     </div>
@@ -670,18 +659,18 @@ function PlanResultDisplay({
                   </div>
                 </div>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="p-7 space-y-5">
                 {/* Chain of Reasoning */}
                 {showDetailedPlan &&
                   arg.chainOfReasoning &&
                   arg.chainOfReasoning.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-2 p-4 bg-[#f5f7fa] rounded-xl border border-[#e1e4ea]">
-                      <span className="text-[10px] font-bold text-[#99a0ae] uppercase tracking-wider mr-2 font-inter">
+                    <div className="flex flex-wrap items-center gap-2 p-5 bg-[#f7f8fa] rounded-xl border border-[#e5e7eb]">
+                      <span className="text-[10px] font-bold text-[#9ca3af] uppercase tracking-wider mr-2 font-inter">
                         Chain:
                       </span>
                       {arg.chainOfReasoning.slice(0, 5).map((step, i) => (
                         <span key={i} className="flex items-center gap-2">
-                          <span className="px-3 py-1.5 bg-white rounded-lg text-[0.75rem] text-[#525866] font-medium shadow-neura border border-[#e1e4ea]">
+                          <span className="px-3 py-1.5 bg-white rounded-lg text-[0.75rem] text-[#4b5563] font-medium border border-[#e5e7eb]">
                             {step}
                           </span>
                           {arg.chainOfReasoning &&
@@ -690,7 +679,7 @@ function PlanResultDisplay({
                                 arg.chainOfReasoning.length - 1,
                                 4
                               ) && (
-                              <ChevronRight className="w-3.5 h-3.5 text-[#cacfd8]" />
+                              <ChevronRight className="w-3 h-3 text-[#cdd1d9]" />
                             )}
                         </span>
                       ))}
@@ -700,28 +689,28 @@ function PlanResultDisplay({
                 {/* Theory and Example */}
                 {showDetailedPlan ? (
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-xl bg-[#ebf1ff] border border-[#c0d5ff]">
-                      <p className="text-[10px] font-bold text-[#335cff] uppercase tracking-wider mb-2 flex items-center gap-1.5 font-inter">
+                    <div className="p-5 rounded-xl bg-[#f0f2f8] border border-[#ccd4ec]">
+                      <p className="text-[10px] font-bold text-[#5472b8] uppercase tracking-wider mb-2.5 flex items-center gap-1.5 font-inter">
                         <BookOpen className="w-3 h-3" />
                         Theory / Explanation
                       </p>
-                      <p className="text-[0.875rem] text-[#525866] leading-relaxed">
+                      <p className="text-[0.875rem] text-[#4b5563] leading-relaxed">
                         {arg.explanation}
                       </p>
                     </div>
-                    <div className="p-4 rounded-xl bg-[#e0faec] border border-[#c2f5da]">
-                      <p className="text-[10px] font-bold text-[#1fc16b] uppercase tracking-wider mb-2 flex items-center gap-1.5 font-inter">
+                    <div className="p-5 rounded-xl bg-[#eef5f1] border border-[#c2dace]">
+                      <p className="text-[10px] font-bold text-[#4a9e72] uppercase tracking-wider mb-2.5 flex items-center gap-1.5 font-inter">
                         <GraduationCap className="w-3 h-3" />
                         Real-World Example
                       </p>
-                      <p className="text-[0.875rem] text-[#525866] leading-relaxed">
+                      <p className="text-[0.875rem] text-[#4b5563] leading-relaxed">
                         {arg.example}
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <div className="p-4 rounded-xl bg-[#f5f7fa] border border-[#e1e4ea]">
-                    <p className="text-[0.875rem] font-medium font-inter text-[#0e121b]">
+                  <div className="p-5 rounded-xl bg-[#f7f8fa] border border-[#e5e7eb]">
+                    <p className="text-[0.875rem] font-medium font-inter text-[#111318]">
                       {arg.point}
                     </p>
                   </div>
@@ -734,17 +723,17 @@ function PlanResultDisplay({
         {/* Evaluation */}
         <motion.div variants={staggerItem}>
           <div className="card-neura-hover overflow-hidden">
-            <div className="border-b border-[#cac0ff] bg-[#efebff] px-6 py-4">
+            <div className="border-b border-[#d2cde4] bg-[#f0eef6] px-7 py-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#7d52f4] text-white text-[0.875rem] font-medium font-inter">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#7b6eae] text-white text-[0.875rem] font-medium font-inter">
                     {result.arguments.length + 2}
                   </span>
                   <div>
-                    <h3 className="text-[1.125rem] font-medium font-inter text-[#0e121b]">
+                    <h3 className="text-[1rem] font-medium font-inter text-[#111318]">
                       Deeper Evaluation
                     </h3>
-                    <p className="text-[0.75rem] text-[#525866] mt-0.5">
+                    <p className="text-[0.75rem] text-[#4b5563] mt-0.5">
                       Critical analysis and limitations
                     </p>
                   </div>
@@ -755,11 +744,11 @@ function PlanResultDisplay({
                 </div>
               </div>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-7 space-y-5">
               {showDetailedPlan && (
-                <div className="p-5 rounded-xl bg-[#efebff] border border-[#cac0ff]">
-                  <p className="text-[10px] font-bold text-[#7d52f4] uppercase tracking-wider mb-3 flex items-center gap-1.5 font-inter">
-                    <Target className="w-3 h-3" />
+                <div className="p-5 rounded-xl bg-[#f0eef6] border border-[#d2cde4]">
+                  <p className="text-[10px] font-bold text-[#7b6eae] uppercase tracking-wider mb-3 flex items-center gap-1.5 font-inter">
+                    <Crosshair className="w-3 h-3" />
                     Evaluation Techniques
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -773,7 +762,7 @@ function PlanResultDisplay({
                     ).map((technique, i) => (
                       <span
                         key={i}
-                        className="px-3 py-1.5 bg-white rounded-lg text-[0.75rem] text-[#7d52f4] font-medium shadow-neura border border-[#cac0ff]"
+                        className="px-3 py-1.5 bg-white rounded-lg text-[0.75rem] text-[#7b6eae] font-medium border border-[#d2cde4]"
                       >
                         {technique}
                       </span>
@@ -787,13 +776,13 @@ function PlanResultDisplay({
                 .map((evaluation, index) => (
                   <div
                     key={index}
-                    className="p-4 rounded-xl bg-[#fffaeb] border border-[#ffecc0]"
+                    className="p-5 rounded-xl bg-[#f7f2ea] border border-[#e4d6ba]"
                   >
-                    <h5 className="text-[0.875rem] font-medium font-inter text-amber-800 mb-2">
+                    <h5 className="text-[0.875rem] font-medium font-inter text-[#8a6e3a] mb-2">
                       {evaluation.point}
                     </h5>
                     {showDetailedPlan && (
-                      <p className="text-[0.875rem] text-amber-700/80 leading-relaxed">
+                      <p className="text-[0.875rem] text-[#4b5563] leading-relaxed">
                         {evaluation.development}
                       </p>
                     )}
@@ -807,30 +796,30 @@ function PlanResultDisplay({
         {result.diagram && result.diagram !== "none" && (
           <motion.div variants={staggerItem}>
             <div className="card-neura-hover overflow-hidden">
-              <div className="border-b border-[#c0eaff] bg-[#ebf8ff] px-6 py-4">
+              <div className="border-b border-[#c4dce6] bg-[#edf4f7] px-7 py-5">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-[#47c2ff] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-[#5aa0be] flex items-center justify-center">
                     <BarChart3 className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-[0.875rem] font-medium font-inter uppercase tracking-wide text-[#0e121b]">
+                    <h3 className="text-[0.875rem] font-medium font-inter uppercase tracking-wide text-[#111318]">
                       Required Diagram
                     </h3>
-                    <p className="text-[0.75rem] text-[#99a0ae] mt-0.5">
+                    <p className="text-[0.75rem] text-[#9ca3af] mt-0.5">
                       {result.diagramSection?.name ||
                         result.diagram.replace("-", " ")}
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="p-6">
+              <div className="p-7">
                 {showDetailedPlan && result.diagramSection?.keyLabels && (
-                  <div className="flex flex-wrap gap-2 mb-4">
+                  <div className="flex flex-wrap gap-2 mb-5">
                     {result.diagramSection.keyLabels.map((label, i) => (
                       <Badge
                         key={i}
                         variant="secondary"
-                        className="text-[0.75rem] font-medium bg-[#f5f7fa] border border-[#e1e4ea]"
+                        className="text-[0.75rem] font-medium bg-[#f7f8fa] border border-[#e5e7eb]"
                       >
                         {label}
                       </Badge>
@@ -838,7 +827,7 @@ function PlanResultDisplay({
                   </div>
                 )}
                 {result.diagramExplanation && (
-                  <p className="text-[0.875rem] text-[#525866] leading-relaxed">
+                  <p className="text-[0.875rem] text-[#4b5563] leading-relaxed">
                     {result.diagramExplanation}
                   </p>
                 )}
@@ -850,17 +839,17 @@ function PlanResultDisplay({
         {/* Conclusion */}
         <motion.div variants={staggerItem}>
           <div className="card-neura-hover overflow-hidden">
-            <div className="border-b border-[#c2f5da] bg-[#e0faec] px-6 py-4">
+            <div className="border-b border-[#c2dace] bg-[#eef5f1] px-7 py-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#1fc16b] text-white text-[0.875rem] font-medium font-inter">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#4a9e72] text-white text-[0.875rem] font-medium font-inter">
                     {result.arguments.length + 3}
                   </span>
                   <div>
-                    <h3 className="text-[1.125rem] font-medium font-inter text-[#0e121b]">
+                    <h3 className="text-[1rem] font-medium font-inter text-[#111318]">
                       Conclusion
                     </h3>
-                    <p className="text-[0.75rem] text-[#525866] mt-0.5">
+                    <p className="text-[0.75rem] text-[#4b5563] mt-0.5">
                       Weigh evidence and give your judgement
                     </p>
                   </div>
@@ -868,16 +857,10 @@ function PlanResultDisplay({
                 <AOBadge ao="ao4" />
               </div>
             </div>
-            <div className="p-6">
-              <div className="p-5 rounded-xl bg-[#e0faec] border border-[#c2f5da]">
-                <p className="text-[10px] font-bold text-[#1fc16b] uppercase tracking-wider mb-2 flex items-center gap-1.5 font-inter">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Your Conclusion
-                </p>
-                <p className="text-[0.875rem] text-[#525866] leading-relaxed">
-                  {result.conclusion}
-                </p>
-              </div>
+            <div className="p-7">
+              <p className="text-[0.875rem] text-[#4b5563] leading-relaxed">
+                {result.conclusion}
+              </p>
             </div>
           </div>
         </motion.div>
@@ -918,18 +901,18 @@ function DiagramUpload({
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <label className="text-[0.875rem] font-medium font-inter text-[#0e121b]">
+          <label className="text-[0.875rem] font-medium font-inter text-[#111318]">
             Diagram Uploaded
           </label>
           <button
             onClick={onRemove}
-            className="flex items-center gap-1.5 text-[0.75rem] text-[#fb3748] hover:text-red-700 transition-colors"
+            className="flex items-center gap-1.5 text-[0.75rem] text-[#c75050] hover:text-[#963e3e] transition-colors"
           >
             <Trash2 className="w-3.5 h-3.5" />
             Remove
           </button>
         </div>
-        <div className="rounded-xl overflow-hidden border border-[#e1e4ea] bg-white">
+        <div className="rounded-xl overflow-hidden border border-[#e5e7eb] bg-white">
           <img
             src={image}
             alt="Uploaded diagram"
@@ -943,24 +926,24 @@ function DiagramUpload({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="text-[0.875rem] font-medium font-inter text-[#0e121b]">
+        <label className="text-[0.875rem] font-medium font-inter text-[#111318]">
           Diagram Upload
         </label>
-        <span className="text-[10px] font-medium text-[#99a0ae] bg-[#f5f7fa] px-2 py-0.5 rounded-full border border-[#e1e4ea]">
+        <span className="text-[10px] font-medium text-[#9ca3af] bg-[#f7f8fa] px-2 py-0.5 rounded-full border border-[#e5e7eb]">
           Optional
         </span>
       </div>
       <div
-        className="flex flex-col items-center justify-center p-8 rounded-xl cursor-pointer transition-all border-2 border-dashed border-[#e1e4ea] hover:border-[#cacfd8] bg-[#f5f7fa] hover:bg-[#e1e4ea] group"
+        className="flex flex-col items-center justify-center p-10 rounded-xl cursor-pointer transition-all border-2 border-dashed border-[#e5e7eb] hover:border-[#cdd1d9] bg-[#f7f8fa] hover:bg-[#f0f1f4] group"
         onClick={() => fileInputRef.current?.click()}
       >
-        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center mb-3 shadow-neura group-hover:bg-[#f5f7fa] transition-colors">
-          <Upload className="w-5 h-5 text-[#99a0ae] group-hover:text-[#525866]" />
+        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center mb-3 group-hover:bg-[#f7f8fa] transition-colors" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+          <Upload className="w-5 h-5 text-[#9ca3af] group-hover:text-[#4b5563]" />
         </div>
-        <span className="text-[0.875rem] font-medium text-[#525866] mb-1">
+        <span className="text-[0.875rem] font-medium text-[#4b5563] mb-1">
           Click to upload
         </span>
-        <span className="text-[0.75rem] text-[#99a0ae]">
+        <span className="text-[0.75rem] text-[#9ca3af]">
           PNG, JPG up to 10MB
         </span>
       </div>
@@ -1012,30 +995,30 @@ function GraderInputForm({
   return (
     <motion.div className="max-w-2xl mx-auto" {...pageTransition}>
       {/* Header */}
-      <div className="text-center mb-10">
-        <div className="flex justify-center items-center w-[4.5rem] h-[4.5rem] rounded-2xl bg-gradient-to-br from-[#f5f7fa] to-[#e1e4ea] mx-auto mb-5 shadow-neura">
-          <PenTool className="w-7 h-7 text-[#525866]" />
+      <div className="text-center mb-12">
+        <div className="flex justify-center items-center w-16 h-16 rounded-2xl bg-[#f7f8fa] mx-auto mb-5" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+          <Pen className="w-6 h-6 text-[#4b5563]" />
         </div>
-        <h2 className="text-[1.25rem] font-medium font-inter-display text-[#0e121b] tracking-tight mb-2">
+        <h2 className="text-[1.25rem] font-medium font-inter-display text-[#111318] tracking-tight mb-2">
           Grade Your Answer
         </h2>
-        <p className="text-[0.875rem] text-[#99a0ae]">
-          Get AI-powered feedback aligned with Edexcel mark schemes
+        <p className="text-[0.875rem] text-[#9ca3af]">
+          AI-powered feedback aligned with Edexcel mark schemes
         </p>
       </div>
 
       <div className="card-neura overflow-hidden">
-        <div className="p-7 space-y-6">
+        <div className="p-8 space-y-7">
           {/* Question Type */}
-          <div className="space-y-2">
-            <label className="text-[0.875rem] font-medium font-inter text-[#0e121b]">
+          <div className="space-y-2.5">
+            <label className="text-[0.875rem] font-medium font-inter text-[#111318]">
               Question Type
             </label>
             <Select
               value={questionType}
               onValueChange={(v) => setQuestionType(v as QuestionType)}
             >
-              <SelectTrigger className="h-12 rounded-xl bg-[#f5f7fa] border-[#e1e4ea] hover:bg-[#e1e4ea] transition-colors focus:!border-[#335cff]">
+              <SelectTrigger className="h-12 rounded-xl bg-[#f7f8fa] border-[#e5e7eb] hover:bg-[#f0f1f4] transition-colors focus:!border-[#5472b8]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1049,28 +1032,28 @@ function GraderInputForm({
           </div>
 
           {/* Exam Question */}
-          <div className="space-y-2">
-            <label className="text-[0.875rem] font-medium font-inter text-[#0e121b]">
+          <div className="space-y-2.5">
+            <label className="text-[0.875rem] font-medium font-inter text-[#111318]">
               Exam Question
             </label>
             <Textarea
               placeholder="Paste the exam question here..."
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              className="min-h-[100px] resize-none rounded-xl bg-[#f5f7fa] border-[#e1e4ea] text-[#0e121b] transition-colors outline-none focus:!border-[#335cff] focus:bg-white placeholder:text-[#99a0ae]"
+              className="min-h-[100px] resize-none rounded-xl bg-[#f7f8fa] border-[#e5e7eb] text-[#111318] transition-colors outline-none focus:!border-[#5472b8] focus:bg-white placeholder:text-[#9ca3af]"
             />
           </div>
 
           {/* Student Answer */}
-          <div className="space-y-2">
-            <label className="text-[0.875rem] font-medium font-inter text-[#0e121b]">
+          <div className="space-y-2.5">
+            <label className="text-[0.875rem] font-medium font-inter text-[#111318]">
               Student Answer
             </label>
             <Textarea
               placeholder="Paste the student's answer here for grading..."
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
-              className="min-h-[200px] resize-none rounded-xl bg-[#f5f7fa] border-[#e1e4ea] text-[#0e121b] transition-colors outline-none focus:!border-[#335cff] focus:bg-white placeholder:text-[#99a0ae]"
+              className="min-h-[200px] resize-none rounded-xl bg-[#f7f8fa] border-[#e5e7eb] text-[#111318] transition-colors outline-none focus:!border-[#5472b8] focus:bg-white placeholder:text-[#9ca3af]"
             />
           </div>
 
@@ -1085,17 +1068,17 @@ function GraderInputForm({
           {error && (
             <Alert
               variant="destructive"
-              className="rounded-xl border-[#ffc0c5] bg-[#ffebec]"
+              className="rounded-xl border-[#ebc8c8] bg-[#faf2f2]"
             >
-              <AlertCircle className="h-4 w-4 text-[#fb3748]" />
-              <AlertDescription className="text-[#fb3748]">
+              <AlertCircle className="h-4 w-4 text-[#c75050]" />
+              <AlertDescription className="text-[#c75050]">
                 {error}
               </AlertDescription>
             </Alert>
           )}
 
           {/* Actions */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-3">
             <button
               className="btn-neura-blue flex-1 h-12"
               onClick={onSubmit}
@@ -1108,7 +1091,7 @@ function GraderInputForm({
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4" />
+                  <Wand2 className="w-4 h-4" />
                   Grade Answer
                 </>
               )}
@@ -1149,30 +1132,30 @@ function PlannerInputForm({
   return (
     <motion.div className="max-w-2xl mx-auto" {...pageTransition}>
       {/* Header */}
-      <div className="text-center mb-10">
-        <div className="flex justify-center items-center w-[4.5rem] h-[4.5rem] rounded-2xl bg-gradient-to-br from-[#f5f7fa] to-[#e1e4ea] mx-auto mb-5 shadow-neura">
-          <FileText className="w-7 h-7 text-[#525866]" />
+      <div className="text-center mb-12">
+        <div className="flex justify-center items-center w-16 h-16 rounded-2xl bg-[#f7f8fa] mx-auto mb-5" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+          <FileText className="w-6 h-6 text-[#4b5563]" />
         </div>
-        <h2 className="text-[1.25rem] font-medium font-inter-display text-[#0e121b] tracking-tight mb-2">
+        <h2 className="text-[1.25rem] font-medium font-inter-display text-[#111318] tracking-tight mb-2">
           Plan Your Essay
         </h2>
-        <p className="text-[0.875rem] text-[#99a0ae]">
+        <p className="text-[0.875rem] text-[#9ca3af]">
           Generate a comprehensive A*-grade essay structure
         </p>
       </div>
 
       <div className="card-neura overflow-hidden">
-        <div className="p-7 space-y-6">
+        <div className="p-8 space-y-7">
           {/* Question Type */}
-          <div className="space-y-2">
-            <label className="text-[0.875rem] font-medium font-inter text-[#0e121b]">
+          <div className="space-y-2.5">
+            <label className="text-[0.875rem] font-medium font-inter text-[#111318]">
               Question Type
             </label>
             <Select
               value={questionType}
               onValueChange={(v) => setQuestionType(v as QuestionType)}
             >
-              <SelectTrigger className="h-12 rounded-xl bg-[#f5f7fa] border-[#e1e4ea] hover:bg-[#e1e4ea] transition-colors focus:!border-[#335cff]">
+              <SelectTrigger className="h-12 rounded-xl bg-[#f7f8fa] border-[#e5e7eb] hover:bg-[#f0f1f4] transition-colors focus:!border-[#5472b8]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1186,15 +1169,15 @@ function PlannerInputForm({
           </div>
 
           {/* Essay Question */}
-          <div className="space-y-2">
-            <label className="text-[0.875rem] font-medium font-inter text-[#0e121b]">
+          <div className="space-y-2.5">
+            <label className="text-[0.875rem] font-medium font-inter text-[#111318]">
               Essay Question
             </label>
             <Textarea
               placeholder="Type or paste the essay question here..."
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              className="min-h-[140px] resize-none rounded-xl bg-[#f5f7fa] border-[#e1e4ea] text-[#0e121b] transition-colors outline-none focus:!border-[#335cff] focus:bg-white placeholder:text-[#99a0ae]"
+              className="min-h-[140px] resize-none rounded-xl bg-[#f7f8fa] border-[#e5e7eb] text-[#111318] transition-colors outline-none focus:!border-[#5472b8] focus:bg-white placeholder:text-[#9ca3af]"
             />
           </div>
 
@@ -1202,17 +1185,17 @@ function PlannerInputForm({
           {error && (
             <Alert
               variant="destructive"
-              className="rounded-xl border-[#ffc0c5] bg-[#ffebec]"
+              className="rounded-xl border-[#ebc8c8] bg-[#faf2f2]"
             >
-              <AlertCircle className="h-4 w-4 text-[#fb3748]" />
-              <AlertDescription className="text-[#fb3748]">
+              <AlertCircle className="h-4 w-4 text-[#c75050]" />
+              <AlertDescription className="text-[#c75050]">
                 {error}
               </AlertDescription>
             </Alert>
           )}
 
           {/* Actions */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-3">
             <button
               className="btn-neura-blue flex-1 h-12"
               onClick={onSubmit}
@@ -1225,7 +1208,7 @@ function PlannerInputForm({
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4" />
+                  <Wand2 className="w-4 h-4" />
                   Generate Plan
                 </>
               )}
@@ -1247,19 +1230,19 @@ function PlannerInputForm({
 function LoadingView({ message }: { message: string }) {
   return (
     <motion.div
-      className="max-w-md mx-auto text-center py-24"
+      className="max-w-md mx-auto text-center py-28"
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
     >
-      <div className="relative w-20 h-20 mx-auto mb-8">
-        <div className="absolute inset-0 rounded-full border-4 border-[#e1e4ea]" />
-        <div className="absolute inset-0 rounded-full border-4 border-[#335cff] border-t-transparent animate-spin" />
+      <div className="relative w-20 h-20 mx-auto mb-10">
+        <div className="absolute inset-0 rounded-full border-[3px] border-[#e5e7eb]" />
+        <div className="absolute inset-0 rounded-full border-[3px] border-[#5472b8] border-t-transparent animate-spin" />
       </div>
-      <h3 className="text-[1.25rem] font-medium font-inter-display text-[#0e121b] mb-2">
+      <h3 className="text-[1.125rem] font-medium font-inter-display text-[#111318] mb-2">
         {message}
       </h3>
-      <p className="text-[0.875rem] text-[#99a0ae]">Powered by Claude AI</p>
+      <p className="text-[0.875rem] text-[#9ca3af]">Powered by Claude AI</p>
     </motion.div>
   );
 }
@@ -1397,10 +1380,6 @@ export default function HomePage() {
 
   const currentModeTitle =
     activeMode === "grader" ? "Exam Grader" : "Essay Planner";
-  const currentModeDescription =
-    activeMode === "grader"
-      ? "AI-powered essay grading aligned with Edexcel mark schemes"
-      : "Generate comprehensive A*-grade essay structures";
 
   return (
     <div className="min-h-screen bg-background">
@@ -1414,29 +1393,24 @@ export default function HomePage() {
         onClose={() => setSidebarVisible(false)}
       />
 
-      {/* Main Content Area — offset by sidebar */}
-      <div className="pl-[19rem] pt-9.5 pb-5 pr-5 transition-all max-lg:pl-5 max-md:pl-4 max-md:pr-4 max-md:pt-3 max-md:pb-4">
-        {/* Header Bar */}
-        <div className="flex items-center gap-4 mb-4">
+      {/* Main Content Area */}
+      <div className="pl-[19rem] pt-8 pb-5 pr-5 transition-all max-lg:pl-5 max-md:pl-4 max-md:pr-4 max-md:pt-3 max-md:pb-4">
+        {/* Header Bar — minimal */}
+        <div className="flex items-center gap-4 mb-5">
           <button
             className="hidden max-lg:flex items-center justify-center w-10 h-10 rounded-xl hover:bg-white transition-colors"
             onClick={() => setSidebarVisible(true)}
           >
-            <Menu className="w-5 h-5 text-[#0e121b]" />
+            <PanelLeft className="w-5 h-5 text-[#111318]" />
           </button>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-[1.5rem] font-medium font-inter text-[#0e121b] tracking-tight max-md:text-[1rem]">
-              {currentModeTitle}
-            </h1>
-            <p className="text-[0.875rem] font-medium text-[#525866] max-lg:hidden mt-0.5">
-              {currentModeDescription}
-            </p>
-          </div>
+          <h1 className="text-[1.25rem] font-medium font-inter text-[#111318] tracking-tight max-md:text-[1rem]">
+            {currentModeTitle}
+          </h1>
         </div>
 
-        {/* Content Wrapper — NeuraTalk chat-wrapper pattern */}
-        <div className="content-wrapper min-h-[calc(100svh-8rem)] max-md:min-h-[calc(100svh-5rem)] max-md:rounded-xl">
-          <div className="flex-1 overflow-auto scrollbar-none p-7 max-md:p-4">
+        {/* Content Wrapper */}
+        <div className="content-wrapper min-h-[calc(100svh-7rem)] max-md:min-h-[calc(100svh-5rem)] max-md:rounded-xl">
+          <div className="flex-1 overflow-auto scrollbar-none p-9 max-md:p-5">
             <AnimatePresence mode="wait">
               {activeMode === "grader" ? (
                 <div key="grader">
@@ -1496,22 +1470,11 @@ export default function HomePage() {
             </AnimatePresence>
           </div>
 
-          {/* Footer inside content wrapper */}
-          <div className="shrink-0 border-t border-[#e1e4ea] px-7 py-4 max-md:px-4">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#335cff] to-[#97baff] flex items-center justify-center">
-                  <Sparkles className="w-3 h-3 text-white" />
-                </div>
-                <p className="text-[0.75rem] text-[#99a0ae]">
-                  AI-powered grading aligned with Edexcel IAL Economics mark
-                  schemes
-                </p>
-              </div>
-              <p className="text-[0.75rem] text-[#cacfd8]">
-                Always verify with your teacher or official mark schemes
-              </p>
-            </div>
+          {/* Footer — minimal */}
+          <div className="shrink-0 border-t border-[#e5e7eb] px-9 py-4 max-md:px-5">
+            <p className="text-[0.75rem] text-[#9ca3af] text-center">
+              AI-powered grading · Edexcel IAL Economics · Always verify with official mark schemes
+            </p>
           </div>
         </div>
       </div>

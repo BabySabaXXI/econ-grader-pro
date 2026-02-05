@@ -3,12 +3,12 @@
 import { cn } from "@/lib/utils";
 import {
   GraduationCap,
-  PenTool,
+  Pen,
   FileText,
   Settings,
-  HelpCircle,
+  CircleHelp,
   X,
-  Zap,
+  Sparkles,
   BookOpen,
   ChevronRight,
 } from "lucide-react";
@@ -31,21 +31,32 @@ export default function Sidebar({
       {/* Sidebar Panel */}
       <div
         className={cn(
-          "fixed top-5 left-5 bottom-5 flex flex-col w-72 bg-white rounded-3xl shadow-neura z-30",
+          "fixed top-5 left-5 bottom-5 flex flex-col w-72 bg-white rounded-3xl z-30",
           "transition-transform duration-300 ease-spring",
-          "max-lg:top-0 max-lg:left-0 max-lg:bottom-0 max-lg:z-40 max-lg:w-75 max-lg:rounded-none max-lg:shadow-2xl",
+          "max-lg:top-0 max-lg:left-0 max-lg:bottom-0 max-lg:z-40 max-lg:w-75 max-lg:rounded-none",
           "max-md:w-full max-md:p-4",
           visible
             ? "max-lg:translate-x-0"
             : "max-lg:-translate-x-full"
         )}
+        style={{
+          border: "1px solid rgba(0, 0, 0, 0.06)",
+          boxShadow:
+            "0 1px 3px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.05)",
+        }}
       >
         {/* Scrollable Content */}
-        <div className="grow overflow-auto scrollbar-none p-5 max-md:p-0">
+        <div className="grow overflow-auto scrollbar-none p-6 max-md:p-0">
           {/* Brand Header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-br from-[#335cff] to-[#97baff]">
+              <div
+                className="flex items-center justify-center w-10 h-10 rounded-2xl"
+                style={{
+                  background: "linear-gradient(135deg, #5472b8, #a0b0d6)",
+                  boxShadow: "0 2px 8px rgba(84, 114, 184, 0.25)",
+                }}
+              >
                 <GraduationCap className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -66,9 +77,12 @@ export default function Sidebar({
           </div>
 
           {/* Exam Info Badge */}
-          <div className="mb-6 p-3 rounded-xl bg-[--bg-weak-50] border border-[--stroke-soft-200]">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <div className="mb-8 p-3.5 rounded-xl bg-[--bg-weak-50] border border-[--stroke-soft-200]">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: "#4a9e72" }}
+              />
               <span className="text-label-xs font-inter text-[--text-sub-600] uppercase tracking-wider">
                 Pearson Edexcel IAL
               </span>
@@ -79,7 +93,7 @@ export default function Sidebar({
           </div>
 
           {/* Navigation */}
-          <div className="mb-2 text-label-xs font-inter text-[--text-soft-400] px-3">
+          <div className="mb-2.5 text-label-xs font-inter text-[--text-soft-400] px-3.5">
             Tools
           </div>
 
@@ -94,11 +108,11 @@ export default function Sidebar({
               activeMode === "grader" && "sidebar-link-active"
             )}
           >
-            <PenTool
+            <Pen
               className={cn(
                 "w-[18px] h-[18px] transition-colors",
                 activeMode === "grader"
-                  ? "text-[--blue-500]"
+                  ? "text-[--blue-600]"
                   : "text-[--text-sub-600]"
               )}
             />
@@ -123,7 +137,7 @@ export default function Sidebar({
               className={cn(
                 "w-[18px] h-[18px] transition-colors",
                 activeMode === "planner"
-                  ? "text-[--blue-500]"
+                  ? "text-[--blue-600]"
                   : "text-[--text-sub-600]"
               )}
             />
@@ -134,11 +148,11 @@ export default function Sidebar({
           </button>
 
           {/* Resources Section */}
-          <div className="mt-8 mb-2 text-label-xs font-inter text-[--text-soft-400] px-3">
+          <div className="mt-10 mb-2.5 text-label-xs font-inter text-[--text-soft-400] px-3.5">
             Resources
           </div>
 
-          <div className="sidebar-link cursor-default opacity-60">
+          <div className="sidebar-link cursor-default opacity-50">
             <BookOpen className="w-[18px] h-[18px] text-[--text-sub-600]" />
             <span className="flex-1 text-left">Study Guide</span>
             <span className="text-[10px] font-medium text-[--text-soft-400] bg-[--bg-soft-200] px-2 py-0.5 rounded-full">
@@ -146,27 +160,33 @@ export default function Sidebar({
             </span>
           </div>
 
-          {/* Upgrade Card */}
-          <div className="mt-8 p-4 rounded-2xl bg-gradient-to-br from-[--blue-950] to-[--blue-800] text-white">
+          {/* AI Info Card */}
+          <div
+            className="mt-10 p-4 rounded-2xl text-white"
+            style={{
+              background: "linear-gradient(135deg, #1c2640, #324478)",
+              boxShadow: "0 2px 12px rgba(28, 38, 64, 0.2)",
+            }}
+          >
             <div className="flex items-center gap-2 mb-2">
-              <Zap className="w-4 h-4 text-[--blue-300]" />
-              <span className="text-label-sm font-inter text-white">
+              <Sparkles className="w-4 h-4 text-[--blue-300]" />
+              <span className="text-label-sm font-inter text-white/90">
                 Powered by AI
               </span>
             </div>
-            <p className="text-p-xs text-blue-200 leading-relaxed">
+            <p className="text-p-xs text-white/50 leading-relaxed">
               Get AI-powered feedback aligned with official Edexcel mark
               schemes and level descriptors.
             </p>
           </div>
 
           {/* Bottom Actions */}
-          <div className="mt-6">
-            <div className="sidebar-link cursor-default opacity-60">
-              <HelpCircle className="w-[18px] h-[18px] text-[--text-sub-600]" />
+          <div className="mt-8">
+            <div className="sidebar-link cursor-default opacity-50">
+              <CircleHelp className="w-[18px] h-[18px] text-[--text-sub-600]" />
               <span>Help</span>
             </div>
-            <div className="sidebar-link cursor-default opacity-60">
+            <div className="sidebar-link cursor-default opacity-50">
               <Settings className="w-[18px] h-[18px] text-[--text-sub-600]" />
               <span>Settings</span>
             </div>
@@ -174,9 +194,15 @@ export default function Sidebar({
         </div>
 
         {/* Version Footer */}
-        <div className="shrink-0 px-5 py-4 border-t border-[--stroke-soft-200]">
+        <div className="shrink-0 px-6 py-4 border-t border-[--stroke-soft-200]">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[--blue-500] to-[--blue-300] flex items-center justify-center">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center"
+              style={{
+                background: "linear-gradient(135deg, #5472b8, #a0b0d6)",
+                boxShadow: "0 1px 4px rgba(84, 114, 184, 0.2)",
+              }}
+            >
               <span className="text-[11px] font-bold text-white">E</span>
             </div>
             <div className="flex-1 min-w-0">
