@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2,
   FileText,
@@ -20,24 +21,17 @@ import {
   PenTool,
   Lightbulb,
   GraduationCap,
+  Menu,
 } from "lucide-react";
 import {
   QUESTION_TYPE_OPTIONS,
   MARK_SCHEMES,
   LEVEL_DESCRIPTORS,
 } from "@/lib/constants";
-import {
-  GradingResult,
-  PlanResult,
-  QuestionType,
-} from "@/lib/types";
+import { GradingResult, PlanResult, QuestionType } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -48,6 +42,33 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EssayViewer } from "@/components/ui/essay-viewer";
+import Sidebar from "@/components/Sidebar";
+
+// ============================================================================
+// ANIMATION VARIANTS
+// ============================================================================
+
+const pageTransition = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -8 },
+  transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+};
+
+const staggerContainer = {
+  animate: {
+    transition: { staggerChildren: 0.08 },
+  },
+};
+
+const staggerItem = {
+  initial: { opacity: 0, y: 16 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+  },
+};
 
 // ============================================================================
 // VIEW STATES TYPE
@@ -56,28 +77,21 @@ import { EssayViewer } from "@/components/ui/essay-viewer";
 type ViewState = "input" | "loading" | "results";
 
 // ============================================================================
-// SCORE COLOR HELPER
+// SCORE COLOR HELPERS
 // ============================================================================
 
 function getScoreColor(percentage: number): string {
   if (percentage >= 80) return "text-emerald-600";
-  if (percentage >= 60) return "text-blue-600";
+  if (percentage >= 60) return "text-[#335cff]";
   if (percentage >= 45) return "text-amber-600";
-  return "text-red-600";
-}
-
-function getScoreBgColor(percentage: number): string {
-  if (percentage >= 80) return "bg-emerald-500";
-  if (percentage >= 60) return "bg-blue-500";
-  if (percentage >= 45) return "bg-amber-500";
-  return "bg-red-500";
+  return "text-[#fb3748]";
 }
 
 function getScoreRingColor(percentage: number): string {
   if (percentage >= 80) return "stroke-emerald-500";
-  if (percentage >= 60) return "stroke-blue-500";
+  if (percentage >= 60) return "stroke-[#335cff]";
   if (percentage >= 45) return "stroke-amber-500";
-  return "stroke-red-500";
+  return "stroke-[#fb3748]";
 }
 
 // ============================================================================
@@ -86,31 +100,75 @@ function getScoreRingColor(percentage: number): string {
 
 function LevelBadge({ level }: { level: number }) {
   const config: Record<number, { label: string; className: string }> = {
-    5: { label: "Excellent", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-    4: { label: "Good", className: "bg-blue-50 text-blue-700 border-blue-200" },
-    3: { label: "Sound", className: "bg-amber-50 text-amber-700 border-amber-200" },
-    2: { label: "Basic", className: "bg-orange-50 text-orange-700 border-orange-200" },
-    1: { label: "Limited", className: "bg-red-50 text-red-700 border-red-200" },
+    5: {
+      label: "Excellent",
+      className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    },
+    4: {
+      label: "Good",
+      className: "bg-[#ebf1ff] text-[#2547d0] border-[#c0d5ff]",
+    },
+    3: {
+      label: "Sound",
+      className: "bg-[#fffaeb] text-amber-700 border-[#ffecc0]",
+    },
+    2: {
+      label: "Basic",
+      className: "bg-[#fff1eb] text-orange-700 border-[#ffd5c0]",
+    },
+    1: {
+      label: "Limited",
+      className: "bg-[#ffebec] text-red-700 border-[#ffc0c5]",
+    },
   };
 
   const { label, className } = config[level] || config[1];
 
   return (
-    <Badge variant="outline" className={cn("text-xs font-medium px-3 py-1", className)}>
+    <span
+      className={cn(
+        "inline-flex items-center text-xs font-medium px-3 py-1 rounded-full border",
+        className
+      )}
+    >
       Level {level} · {label}
-    </Badge>
+    </span>
   );
 }
 
 // ============================================================================
-// AO SCORE BAR COMPONENT
+// AO CONFIG & COMPONENTS
 // ============================================================================
 
 const AO_CONFIG = {
-  ao1: { label: "Knowledge", color: "bg-blue-500", bgLight: "bg-blue-50", text: "text-blue-600", border: "border-blue-200" },
-  ao2: { label: "Application", color: "bg-emerald-500", bgLight: "bg-emerald-50", text: "text-emerald-600", border: "border-emerald-200" },
-  ao3: { label: "Analysis", color: "bg-violet-500", bgLight: "bg-violet-50", text: "text-violet-600", border: "border-violet-200" },
-  ao4: { label: "Evaluation", color: "bg-amber-500", bgLight: "bg-amber-50", text: "text-amber-600", border: "border-amber-200" },
+  ao1: {
+    label: "Knowledge",
+    color: "bg-[#335cff]",
+    bgLight: "bg-[#ebf1ff]",
+    text: "text-[#335cff]",
+    border: "border-[#c0d5ff]",
+  },
+  ao2: {
+    label: "Application",
+    color: "bg-[#1fc16b]",
+    bgLight: "bg-[#e0faec]",
+    text: "text-[#1fc16b]",
+    border: "border-[#c2f5da]",
+  },
+  ao3: {
+    label: "Analysis",
+    color: "bg-[#7d52f4]",
+    bgLight: "bg-[#efebff]",
+    text: "text-[#7d52f4]",
+    border: "border-[#cac0ff]",
+  },
+  ao4: {
+    label: "Evaluation",
+    color: "bg-[#f6b51e]",
+    bgLight: "bg-[#fffaeb]",
+    text: "text-[#f6b51e]",
+    border: "border-[#ffecc0]",
+  },
 };
 
 function AOScoreBar({
@@ -130,48 +188,54 @@ function AOScoreBar({
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <div className={cn("w-2 h-2 rounded-full", config.color)} />
-          <span className={cn("text-xs font-semibold uppercase tracking-wider", config.text)}>
+          <span
+            className={cn(
+              "text-[0.75rem] font-medium font-inter uppercase tracking-wider",
+              config.text
+            )}
+          >
             {aoKey.toUpperCase()}
           </span>
-          <span className="text-[10px] text-neutral-400 font-medium">{config.label}</span>
+          <span className="text-[0.75rem] text-[#99a0ae]">
+            {config.label}
+          </span>
         </div>
-        <span className="text-sm font-semibold tabular-nums text-neutral-900">
-          {score}<span className="text-neutral-300 font-normal">/{maxScore}</span>
+        <span className="text-[0.875rem] font-medium font-inter tabular-nums text-[#0e121b]">
+          {score}
+          <span className="text-[#cacfd8] font-normal">/{maxScore}</span>
         </span>
       </div>
-      <div className={cn("h-1.5 rounded-full overflow-hidden bg-neutral-100")}>
-        <div
-          className={cn(
-            "h-full rounded-full transition-all duration-1000 ease-out",
-            config.color
-          )}
-          style={{ width: `${percentage}%` }}
+      <div className="h-1.5 rounded-full overflow-hidden bg-[#e1e4ea]">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${percentage}%` }}
+          transition={{
+            duration: 1,
+            ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
+            delay: 0.3,
+          }}
+          className={cn("h-full rounded-full", config.color)}
         />
       </div>
     </div>
   );
 }
 
-// ============================================================================
-// AO BADGE COMPONENT
-// ============================================================================
-
 function AOBadge({ ao }: { ao: string }) {
   const config = AO_CONFIG[ao as keyof typeof AO_CONFIG];
   if (!config) return null;
 
   return (
-    <Badge
-      variant="outline"
+    <span
       className={cn(
-        "text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5",
+        "inline-flex items-center text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border",
         config.text,
         config.bgLight,
         config.border
       )}
     >
       {ao.toUpperCase()}
-    </Badge>
+    </span>
   );
 }
 
@@ -192,476 +256,633 @@ function GradingResultDisplay({
 }) {
   const [showDetailedFeedback, setShowDetailedFeedback] = useState(false);
   const markScheme = MARK_SCHEMES[questionType];
-  const hasHighlights = (result.marksEarned?.length || 0) > 0 || (result.marksLost?.length || 0) > 0;
+  const hasHighlights =
+    (result.marksEarned?.length || 0) > 0 ||
+    (result.marksLost?.length || 0) > 0;
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <motion.div
+      className="max-w-7xl mx-auto"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
+    >
       {/* Back Button */}
       <button
         onClick={onBack}
-        className="group flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900 transition-colors mb-8"
+        className="group flex items-center gap-2 text-[0.875rem] font-medium text-[#525866] hover:text-[#0e121b] transition-colors mb-6"
       >
         <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
         <span>Edit Answer</span>
       </button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column - Essay View */}
         <div className="lg:col-span-7 xl:col-span-8">
           <div className="sticky top-8">
-            <Card className="overflow-hidden border-neutral-200/60 shadow-sm">
-              <CardHeader className="border-b border-neutral-100 bg-neutral-50/50">
+            <div className="card-neura overflow-hidden">
+              <div className="border-b border-[#e1e4ea] bg-[#f5f7fa] px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-base font-semibold text-neutral-900">
+                    <h3 className="text-[1rem] font-medium font-inter text-[#0e121b]">
                       Your Essay
-                    </CardTitle>
-                    <CardDescription className="text-xs mt-1">
+                    </h3>
+                    <p className="text-[0.75rem] text-[#99a0ae] mt-0.5">
                       Click highlighted text to see detailed feedback
-                    </CardDescription>
+                    </p>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="p-6">
+              </div>
+              <div className="p-6">
                 {hasHighlights ? (
                   <EssayViewer
                     essay={essayText}
                     marksEarned={result.marksEarned || []}
                     marksLost={result.marksLost || []}
                     showDetailedFeedback={showDetailedFeedback}
-                    onToggleDetailedFeedback={() => setShowDetailedFeedback(!showDetailedFeedback)}
+                    onToggleDetailedFeedback={() =>
+                      setShowDetailedFeedback(!showDetailedFeedback)
+                    }
                   />
                 ) : (
-                  <div className="p-6 bg-neutral-50 rounded-xl">
-                    <p className="text-[15px] leading-relaxed text-neutral-700 whitespace-pre-wrap">
+                  <div className="p-6 bg-[#f5f7fa] rounded-xl">
+                    <p className="text-[1rem] leading-relaxed text-[#525866] whitespace-pre-wrap">
                       {essayText}
                     </p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Right Column - Score Cards */}
-        <div className="lg:col-span-5 xl:col-span-4 space-y-5">
+        <motion.div
+          className="lg:col-span-5 xl:col-span-4 space-y-4"
+          variants={staggerContainer}
+          initial="initial"
+          animate="animate"
+        >
           {/* Overall Score Card */}
-          <Card className="overflow-hidden border-neutral-200/60 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-6">
-                {/* Score Ring */}
-                <div className="relative flex-shrink-0">
-                  <svg className="w-28 h-28" viewBox="0 0 100 100">
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="none"
-                      className="text-neutral-100"
-                    />
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      strokeWidth="8"
-                      fill="none"
-                      strokeDasharray={`${2 * Math.PI * 40}`}
-                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - result.overallPercentage / 100)}`}
-                      strokeLinecap="round"
-                      className={cn(
-                        "transition-all duration-1000 ease-out origin-center -rotate-90",
-                        getScoreRingColor(result.overallPercentage)
-                      )}
-                      style={{ transformOrigin: "center" }}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className={cn("text-2xl font-bold", getScoreColor(result.overallPercentage))}>
-                      {result.overallPercentage}%
-                    </span>
+          <motion.div variants={staggerItem}>
+            <div className="card-neura overflow-hidden">
+              <div className="p-6">
+                <div className="flex items-center gap-6">
+                  {/* Score Ring */}
+                  <div className="relative flex-shrink-0">
+                    <svg className="w-28 h-28" viewBox="0 0 100 100">
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                        fill="none"
+                        className="text-[#e1e4ea]"
+                      />
+                      <motion.circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        strokeWidth="8"
+                        fill="none"
+                        strokeDasharray={`${2 * Math.PI * 40}`}
+                        initial={{ strokeDashoffset: 2 * Math.PI * 40 }}
+                        animate={{
+                          strokeDashoffset:
+                            2 *
+                            Math.PI *
+                            40 *
+                            (1 - result.overallPercentage / 100),
+                        }}
+                        transition={{
+                          duration: 1.2,
+                          ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
+                          delay: 0.2,
+                        }}
+                        strokeLinecap="round"
+                        className={cn(
+                          "origin-center -rotate-90",
+                          getScoreRingColor(result.overallPercentage)
+                        )}
+                        style={{ transformOrigin: "center" }}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span
+                        className={cn(
+                          "text-2xl font-bold font-inter",
+                          getScoreColor(result.overallPercentage)
+                        )}
+                      >
+                        {result.overallPercentage}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Score Details */}
+                  <div className="flex-1">
+                    <div className="text-4xl font-light text-[#0e121b] mb-2 tracking-tight font-inter">
+                      {result.totalMarks}
+                      <span className="text-lg text-[#cacfd8] font-normal">
+                        /{markScheme.total}
+                      </span>
+                    </div>
+                    <LevelBadge level={result.levelAchieved} />
+                    <p className="text-[0.75rem] text-[#99a0ae] mt-3 leading-relaxed">
+                      {LEVEL_DESCRIPTORS[result.levelAchieved]}
+                    </p>
                   </div>
                 </div>
+              </div>
+            </div>
+          </motion.div>
 
-                {/* Score Details */}
-                <div className="flex-1">
-                  <div className="text-4xl font-light text-neutral-900 mb-2 tracking-tight">
-                    {result.totalMarks}
-                    <span className="text-lg text-neutral-300 font-normal">/{markScheme.total}</span>
+          {/* AO Breakdown */}
+          <motion.div variants={staggerItem}>
+            <div className="card-neura overflow-hidden">
+              <div className="px-6 pt-5 pb-2">
+                <h4 className="text-[0.75rem] font-medium font-inter text-[#99a0ae] uppercase tracking-wider">
+                  Assessment Objectives
+                </h4>
+              </div>
+              <div className="px-6 pb-5 space-y-5">
+                {markScheme.ao1 > 0 && (
+                  <AOScoreBar
+                    aoKey="ao1"
+                    score={result.aoScores.ao1}
+                    maxScore={markScheme.ao1}
+                  />
+                )}
+                {markScheme.ao2 > 0 && (
+                  <AOScoreBar
+                    aoKey="ao2"
+                    score={result.aoScores.ao2}
+                    maxScore={markScheme.ao2}
+                  />
+                )}
+                {markScheme.ao3 > 0 && (
+                  <AOScoreBar
+                    aoKey="ao3"
+                    score={result.aoScores.ao3}
+                    maxScore={markScheme.ao3}
+                  />
+                )}
+                {markScheme.ao4 > 0 && (
+                  <AOScoreBar
+                    aoKey="ao4"
+                    score={result.aoScores.ao4}
+                    maxScore={markScheme.ao4}
+                  />
+                )}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Examiner Comment */}
+          <motion.div variants={staggerItem}>
+            <div className="card-neura overflow-hidden">
+              <div className="px-6 pt-5 pb-2">
+                <h4 className="text-[0.75rem] font-medium font-inter text-[#99a0ae] uppercase tracking-wider">
+                  Examiner Feedback
+                </h4>
+              </div>
+              <div className="px-6 pb-5">
+                <div className="relative p-4 bg-[#f5f7fa] rounded-xl border border-[#e1e4ea]">
+                  <div className="absolute top-2 left-4 text-4xl text-[#cacfd8] font-serif leading-none">
+                    &ldquo;
                   </div>
-                  <LevelBadge level={result.levelAchieved} />
-                  <p className="text-xs text-neutral-500 mt-3 leading-relaxed">
-                    {LEVEL_DESCRIPTORS[result.levelAchieved]}
+                  <p className="text-[0.875rem] text-[#525866] leading-relaxed pt-5 pl-2 italic">
+                    {result.examinerComment}
                   </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* AO Breakdown */}
-          <Card className="overflow-hidden border-neutral-200/60 shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
-                Assessment Objectives
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5 pt-0">
-              {markScheme.ao1 > 0 && (
-                <AOScoreBar aoKey="ao1" score={result.aoScores.ao1} maxScore={markScheme.ao1} />
-              )}
-              {markScheme.ao2 > 0 && (
-                <AOScoreBar aoKey="ao2" score={result.aoScores.ao2} maxScore={markScheme.ao2} />
-              )}
-              {markScheme.ao3 > 0 && (
-                <AOScoreBar aoKey="ao3" score={result.aoScores.ao3} maxScore={markScheme.ao3} />
-              )}
-              {markScheme.ao4 > 0 && (
-                <AOScoreBar aoKey="ao4" score={result.aoScores.ao4} maxScore={markScheme.ao4} />
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Examiner Comment */}
-          <Card className="overflow-hidden border-neutral-200/60 shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
-                Examiner Feedback
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="relative p-4 bg-gradient-to-br from-neutral-50 to-neutral-100/50 rounded-xl">
-                <div className="absolute top-3 left-4 text-4xl text-neutral-200 font-serif">&ldquo;</div>
-                <p className="text-sm text-neutral-600 leading-relaxed pt-4 pl-2 italic">
-                  {result.examinerComment}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </motion.div>
 
           {/* Feedback Summary */}
           {hasHighlights && (
-            <Card className="overflow-hidden border-neutral-200/60 shadow-sm">
-              <CardContent className="p-4">
+            <motion.div variants={staggerItem}>
+              <div className="card-neura overflow-hidden p-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/30 border border-emerald-100">
-                    <div className="text-2xl font-bold text-emerald-600 tracking-tight">
-                      +{result.marksEarned?.reduce((sum, m) => sum + m.points, 0) || 0}
+                  <div className="p-4 rounded-xl bg-[#e0faec] border border-[#c2f5da]">
+                    <div className="text-2xl font-bold text-[#1fc16b] tracking-tight font-inter">
+                      +
+                      {result.marksEarned?.reduce(
+                        (sum, m) => sum + m.points,
+                        0
+                      ) || 0}
                     </div>
-                    <div className="text-xs text-emerald-600/80 font-medium mt-1">Marks Earned</div>
+                    <div className="text-[0.75rem] text-emerald-700 font-medium mt-1">
+                      Marks Earned
+                    </div>
                   </div>
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-red-50 to-red-100/30 border border-red-100">
-                    <div className="text-2xl font-bold text-red-600 tracking-tight">
+                  <div className="p-4 rounded-xl bg-[#ffebec] border border-[#ffc0c5]">
+                    <div className="text-2xl font-bold text-[#fb3748] tracking-tight font-inter">
                       {result.marksLost?.length || 0}
                     </div>
-                    <div className="text-xs text-red-600/80 font-medium mt-1">Issues Found</div>
+                    <div className="text-[0.75rem] text-red-700 font-medium mt-1">
+                      Issues Found
+                    </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </motion.div>
           )}
 
           {/* Strengths */}
-          <Card className="overflow-hidden border-neutral-200/60 shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-xs font-semibold text-emerald-600 uppercase tracking-wider flex items-center gap-2">
-                <Check className="w-3.5 h-3.5" />
-                Strengths
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-0">
-              {result.strengths.slice(0, 3).map((strength, index) => (
-                <div
-                  key={index}
-                  className="flex gap-3 p-3 rounded-xl bg-emerald-50/50 border border-emerald-100/50"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
-                  <span className="text-xs text-neutral-600 leading-relaxed">{strength}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <motion.div variants={staggerItem}>
+            <div className="card-neura overflow-hidden">
+              <div className="px-6 pt-5 pb-2">
+                <h4 className="text-[0.75rem] font-medium font-inter text-emerald-600 uppercase tracking-wider flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5" />
+                  Strengths
+                </h4>
+              </div>
+              <div className="px-6 pb-5 space-y-2">
+                {result.strengths.slice(0, 3).map((strength, index) => (
+                  <div
+                    key={index}
+                    className="flex gap-3 p-3 rounded-xl bg-[#e0faec] border border-[#c2f5da]"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#1fc16b] mt-1.5 flex-shrink-0" />
+                    <span className="text-[0.75rem] text-[#525866] leading-relaxed">
+                      {strength}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
 
           {/* Improvements */}
-          <Card className="overflow-hidden border-neutral-200/60 shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-xs font-semibold text-amber-600 uppercase tracking-wider flex items-center gap-2">
-                <Target className="w-3.5 h-3.5" />
-                Areas to Improve
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-0">
-              {result.improvements.slice(0, 3).map((improvement, index) => (
-                <div
-                  key={index}
-                  className="flex gap-3 p-3 rounded-xl bg-amber-50/50 border border-amber-100/50"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                  <span className="text-xs text-neutral-600 leading-relaxed">{improvement}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
+          <motion.div variants={staggerItem}>
+            <div className="card-neura overflow-hidden">
+              <div className="px-6 pt-5 pb-2">
+                <h4 className="text-[0.75rem] font-medium font-inter text-[#f6b51e] uppercase tracking-wider flex items-center gap-2">
+                  <Target className="w-3.5 h-3.5" />
+                  Areas to Improve
+                </h4>
+              </div>
+              <div className="px-6 pb-5 space-y-2">
+                {result.improvements.slice(0, 3).map((improvement, index) => (
+                  <div
+                    key={index}
+                    className="flex gap-3 p-3 rounded-xl bg-[#fffaeb] border border-[#ffecc0]"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#f6b51e] mt-1.5 flex-shrink-0" />
+                    <span className="text-[0.75rem] text-[#525866] leading-relaxed">
+                      {improvement}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 // ============================================================================
-// PLAN RESULT DISPLAY WITH TOGGLE
+// PLAN RESULT DISPLAY
 // ============================================================================
 
-function PlanResultDisplay({ result, onBack }: { result: PlanResult; onBack: () => void }) {
+function PlanResultDisplay({
+  result,
+  onBack,
+}: {
+  result: PlanResult;
+  onBack: () => void;
+}) {
   const [showDetailedPlan, setShowDetailedPlan] = useState(true);
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <motion.div
+      className="max-w-4xl mx-auto"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
+    >
       {/* Back Button */}
       <button
         onClick={onBack}
-        className="group flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900 transition-colors mb-8"
+        className="group flex items-center gap-2 text-[0.875rem] font-medium text-[#525866] hover:text-[#0e121b] transition-colors mb-6"
       >
         <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
         <span>Edit Question</span>
       </button>
 
       {/* Detail Toggle */}
-      <div className="flex items-center justify-between mb-8 p-4 bg-neutral-50 rounded-2xl border border-neutral-100">
+      <div className="flex items-center justify-between mb-6 p-4 rounded-2xl border border-[#e1e4ea] bg-[#f5f7fa]">
         <div className="flex items-center gap-3">
           {showDetailedPlan ? (
-            <Eye className="w-5 h-5 text-neutral-600" />
+            <Eye className="w-5 h-5 text-[#525866]" />
           ) : (
-            <EyeOff className="w-5 h-5 text-neutral-400" />
+            <EyeOff className="w-5 h-5 text-[#99a0ae]" />
           )}
           <div>
-            <p className="text-sm font-medium text-neutral-900">Detailed View</p>
-            <p className="text-xs text-neutral-500">Show examples, chains of reasoning, and techniques</p>
+            <p className="text-[0.875rem] font-medium font-inter text-[#0e121b]">
+              Detailed View
+            </p>
+            <p className="text-[0.75rem] text-[#99a0ae]">
+              Show examples, chains of reasoning, and techniques
+            </p>
           </div>
         </div>
         <Switch
           checked={showDetailedPlan}
           onCheckedChange={setShowDetailedPlan}
-          className="data-[state=checked]:bg-neutral-900"
+          className="data-[state=checked]:bg-[#335cff]"
         />
       </div>
 
-      <div className="space-y-5">
+      <motion.div
+        className="space-y-4"
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+      >
         {/* Introduction */}
-        <Card className="overflow-hidden border-neutral-200/60 shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="border-b border-neutral-100 bg-gradient-to-r from-neutral-50 to-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-neutral-900 text-white text-sm font-semibold shadow-sm">
-                  1
-                </span>
-                <div>
-                  <CardTitle className="text-lg font-semibold">Introduction</CardTitle>
-                  <CardDescription className="text-xs mt-0.5">Define key terms and state your thesis</CardDescription>
+        <motion.div variants={staggerItem}>
+          <div className="card-neura-hover overflow-hidden">
+            <div className="border-b border-[#e1e4ea] bg-[#f5f7fa] px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#0e121b] text-white text-[0.875rem] font-medium font-inter">
+                    1
+                  </span>
+                  <div>
+                    <h3 className="text-[1.125rem] font-medium font-inter text-[#0e121b]">
+                      Introduction
+                    </h3>
+                    <p className="text-[0.75rem] text-[#99a0ae] mt-0.5">
+                      Define key terms and state your thesis
+                    </p>
+                  </div>
                 </div>
+                <AOBadge ao="ao1" />
               </div>
-              <AOBadge ao="ao1" />
             </div>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="p-5 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100/30 border border-amber-200/50">
-              <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <Lightbulb className="w-3 h-3" />
-                What to Write
-              </p>
-              <p className="text-sm text-neutral-700 leading-relaxed">
-                {result.introduction?.whatToWrite || result.thesis}
-              </p>
+            <div className="p-6">
+              <div className="p-5 rounded-xl bg-[#fffaeb] border border-[#ffecc0]">
+                <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-2 flex items-center gap-1.5 font-inter">
+                  <Lightbulb className="w-3 h-3" />
+                  What to Write
+                </p>
+                <p className="text-[0.875rem] text-[#525866] leading-relaxed">
+                  {result.introduction?.whatToWrite || result.thesis}
+                </p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </motion.div>
 
         {/* Arguments */}
         {result.arguments.map((arg, index) => (
-          <Card key={index} className="overflow-hidden border-neutral-200/60 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="border-b border-neutral-100 bg-gradient-to-r from-neutral-50 to-white">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <span className={cn(
-                    "flex items-center justify-center w-10 h-10 rounded-xl text-white text-sm font-semibold shadow-sm",
-                    index === 0 ? "bg-emerald-600" : "bg-red-500"
-                  )}>
-                    {index + 2}
-                  </span>
-                  <div>
-                    <CardTitle className="text-lg font-semibold">
-                      Argument {index === 0 ? "FOR" : "AGAINST"}
-                    </CardTitle>
-                    <CardDescription className="text-xs mt-0.5 max-w-md truncate">{arg.point}</CardDescription>
+          <motion.div key={index} variants={staggerItem}>
+            <div className="card-neura-hover overflow-hidden">
+              <div className="border-b border-[#e1e4ea] bg-[#f5f7fa] px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <span
+                      className={cn(
+                        "flex items-center justify-center w-10 h-10 rounded-xl text-white text-[0.875rem] font-medium font-inter",
+                        index === 0 ? "bg-[#1fc16b]" : "bg-[#fb3748]"
+                      )}
+                    >
+                      {index + 2}
+                    </span>
+                    <div>
+                      <h3 className="text-[1.125rem] font-medium font-inter text-[#0e121b]">
+                        Argument {index === 0 ? "FOR" : "AGAINST"}
+                      </h3>
+                      <p className="text-[0.75rem] text-[#99a0ae] mt-0.5 max-w-md truncate">
+                        {arg.point}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex gap-1.5">
-                  <AOBadge ao="ao1" />
-                  <AOBadge ao="ao2" />
-                  <AOBadge ao="ao3" />
+                  <div className="flex gap-1.5">
+                    <AOBadge ao="ao1" />
+                    <AOBadge ao="ao2" />
+                    <AOBadge ao="ao3" />
+                  </div>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="p-6 space-y-4">
-              {/* Chain of Reasoning */}
-              {showDetailedPlan && arg.chainOfReasoning && arg.chainOfReasoning.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2 p-4 bg-neutral-50 rounded-xl border border-neutral-100">
-                  <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mr-2">Chain:</span>
-                  {arg.chainOfReasoning.slice(0, 5).map((step, i) => (
-                    <span key={i} className="flex items-center gap-2">
-                      <span className="px-3 py-1.5 bg-white rounded-lg text-xs text-neutral-600 font-medium shadow-sm border border-neutral-100">
-                        {step}
+              <div className="p-6 space-y-4">
+                {/* Chain of Reasoning */}
+                {showDetailedPlan &&
+                  arg.chainOfReasoning &&
+                  arg.chainOfReasoning.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2 p-4 bg-[#f5f7fa] rounded-xl border border-[#e1e4ea]">
+                      <span className="text-[10px] font-bold text-[#99a0ae] uppercase tracking-wider mr-2 font-inter">
+                        Chain:
                       </span>
-                      {arg.chainOfReasoning && i < Math.min(arg.chainOfReasoning.length - 1, 4) && (
-                        <ChevronRight className="w-3.5 h-3.5 text-neutral-300" />
-                      )}
-                    </span>
-                  ))}
-                </div>
-              )}
+                      {arg.chainOfReasoning.slice(0, 5).map((step, i) => (
+                        <span key={i} className="flex items-center gap-2">
+                          <span className="px-3 py-1.5 bg-white rounded-lg text-[0.75rem] text-[#525866] font-medium shadow-neura border border-[#e1e4ea]">
+                            {step}
+                          </span>
+                          {arg.chainOfReasoning &&
+                            i <
+                              Math.min(
+                                arg.chainOfReasoning.length - 1,
+                                4
+                              ) && (
+                              <ChevronRight className="w-3.5 h-3.5 text-[#cacfd8]" />
+                            )}
+                        </span>
+                      ))}
+                    </div>
+                  )}
 
-              {/* Theory and Example */}
-              {showDetailedPlan ? (
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/30 border border-blue-100">
-                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                      <BookOpen className="w-3 h-3" />
-                      Theory / Explanation
-                    </p>
-                    <p className="text-sm text-neutral-600 leading-relaxed">{arg.explanation}</p>
+                {/* Theory and Example */}
+                {showDetailedPlan ? (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl bg-[#ebf1ff] border border-[#c0d5ff]">
+                      <p className="text-[10px] font-bold text-[#335cff] uppercase tracking-wider mb-2 flex items-center gap-1.5 font-inter">
+                        <BookOpen className="w-3 h-3" />
+                        Theory / Explanation
+                      </p>
+                      <p className="text-[0.875rem] text-[#525866] leading-relaxed">
+                        {arg.explanation}
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-[#e0faec] border border-[#c2f5da]">
+                      <p className="text-[10px] font-bold text-[#1fc16b] uppercase tracking-wider mb-2 flex items-center gap-1.5 font-inter">
+                        <GraduationCap className="w-3 h-3" />
+                        Real-World Example
+                      </p>
+                      <p className="text-[0.875rem] text-[#525866] leading-relaxed">
+                        {arg.example}
+                      </p>
+                    </div>
                   </div>
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/30 border border-emerald-100">
-                    <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                      <GraduationCap className="w-3 h-3" />
-                      Real-World Example
+                ) : (
+                  <div className="p-4 rounded-xl bg-[#f5f7fa] border border-[#e1e4ea]">
+                    <p className="text-[0.875rem] font-medium font-inter text-[#0e121b]">
+                      {arg.point}
                     </p>
-                    <p className="text-sm text-neutral-600 leading-relaxed">{arg.example}</p>
                   </div>
-                </div>
-              ) : (
-                <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-100">
-                  <p className="text-sm font-medium text-neutral-800">{arg.point}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </div>
+            </div>
+          </motion.div>
         ))}
 
         {/* Evaluation */}
-        <Card className="overflow-hidden border-neutral-200/60 shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="border-b border-neutral-100 bg-gradient-to-r from-violet-50/50 to-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-violet-600 text-white text-sm font-semibold shadow-sm">
-                  {result.arguments.length + 2}
-                </span>
-                <div>
-                  <CardTitle className="text-lg font-semibold">Deeper Evaluation</CardTitle>
-                  <CardDescription className="text-xs mt-0.5">Critical analysis and limitations</CardDescription>
+        <motion.div variants={staggerItem}>
+          <div className="card-neura-hover overflow-hidden">
+            <div className="border-b border-[#cac0ff] bg-[#efebff] px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#7d52f4] text-white text-[0.875rem] font-medium font-inter">
+                    {result.arguments.length + 2}
+                  </span>
+                  <div>
+                    <h3 className="text-[1.125rem] font-medium font-inter text-[#0e121b]">
+                      Deeper Evaluation
+                    </h3>
+                    <p className="text-[0.75rem] text-[#525866] mt-0.5">
+                      Critical analysis and limitations
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex gap-1.5">
-                <AOBadge ao="ao3" />
-                <AOBadge ao="ao4" />
+                <div className="flex gap-1.5">
+                  <AOBadge ao="ao3" />
+                  <AOBadge ao="ao4" />
+                </div>
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="p-6 space-y-4">
-            {showDetailedPlan && (
-              <div className="p-5 rounded-xl bg-gradient-to-br from-violet-50 to-violet-100/30 border border-violet-100">
-                <p className="text-[10px] font-bold text-violet-600 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                  <Target className="w-3 h-3" />
-                  Evaluation Techniques
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {(result.deeperEvaluation?.techniques || [
-                    "Short run vs long run",
-                    "Elasticity conditions",
-                    "Magnitude/significance",
-                    "Challenging assumptions",
-                  ]).map((technique, i) => (
-                    <span key={i} className="px-3 py-1.5 bg-white rounded-lg text-xs text-violet-700 font-medium shadow-sm border border-violet-100">
-                      {technique}
-                    </span>
-                  ))}
+            <div className="p-6 space-y-4">
+              {showDetailedPlan && (
+                <div className="p-5 rounded-xl bg-[#efebff] border border-[#cac0ff]">
+                  <p className="text-[10px] font-bold text-[#7d52f4] uppercase tracking-wider mb-3 flex items-center gap-1.5 font-inter">
+                    <Target className="w-3 h-3" />
+                    Evaluation Techniques
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {(
+                      result.deeperEvaluation?.techniques || [
+                        "Short run vs long run",
+                        "Elasticity conditions",
+                        "Magnitude/significance",
+                        "Challenging assumptions",
+                      ]
+                    ).map((technique, i) => (
+                      <span
+                        key={i}
+                        className="px-3 py-1.5 bg-white rounded-lg text-[0.75rem] text-[#7d52f4] font-medium shadow-neura border border-[#cac0ff]"
+                      >
+                        {technique}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {result.evaluations.slice(0, showDetailedPlan ? 3 : 2).map((evaluation, index) => (
-              <div key={index} className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100/30 border border-amber-100">
-                <h5 className="text-sm font-semibold text-amber-800 mb-2">{evaluation.point}</h5>
-                {showDetailedPlan && (
-                  <p className="text-sm text-amber-700/80 leading-relaxed">{evaluation.development}</p>
-                )}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+              {result.evaluations
+                .slice(0, showDetailedPlan ? 3 : 2)
+                .map((evaluation, index) => (
+                  <div
+                    key={index}
+                    className="p-4 rounded-xl bg-[#fffaeb] border border-[#ffecc0]"
+                  >
+                    <h5 className="text-[0.875rem] font-medium font-inter text-amber-800 mb-2">
+                      {evaluation.point}
+                    </h5>
+                    {showDetailedPlan && (
+                      <p className="text-[0.875rem] text-amber-700/80 leading-relaxed">
+                        {evaluation.development}
+                      </p>
+                    )}
+                  </div>
+                ))}
+            </div>
+          </div>
+        </motion.div>
 
         {/* Diagram */}
         {result.diagram && result.diagram !== "none" && (
-          <Card className="overflow-hidden border-neutral-200/60 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="border-b border-neutral-100 bg-gradient-to-r from-indigo-50/50 to-white">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-sm">
-                  <BarChart3 className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <CardTitle className="text-sm font-semibold uppercase tracking-wide">
-                    Required Diagram
-                  </CardTitle>
-                  <CardDescription className="text-xs mt-0.5">
-                    {result.diagramSection?.name || result.diagram.replace("-", " ")}
-                  </CardDescription>
+          <motion.div variants={staggerItem}>
+            <div className="card-neura-hover overflow-hidden">
+              <div className="border-b border-[#c0eaff] bg-[#ebf8ff] px-6 py-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-[#47c2ff] flex items-center justify-center">
+                    <BarChart3 className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-[0.875rem] font-medium font-inter uppercase tracking-wide text-[#0e121b]">
+                      Required Diagram
+                    </h3>
+                    <p className="text-[0.75rem] text-[#99a0ae] mt-0.5">
+                      {result.diagramSection?.name ||
+                        result.diagram.replace("-", " ")}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              {showDetailedPlan && result.diagramSection?.keyLabels && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {result.diagramSection.keyLabels.map((label, i) => (
-                    <Badge key={i} variant="secondary" className="text-xs font-medium">
-                      {label}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-              {result.diagramExplanation && (
-                <p className="text-sm text-neutral-600 leading-relaxed">{result.diagramExplanation}</p>
-              )}
-            </CardContent>
-          </Card>
+              <div className="p-6">
+                {showDetailedPlan && result.diagramSection?.keyLabels && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {result.diagramSection.keyLabels.map((label, i) => (
+                      <Badge
+                        key={i}
+                        variant="secondary"
+                        className="text-[0.75rem] font-medium bg-[#f5f7fa] border border-[#e1e4ea]"
+                      >
+                        {label}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                {result.diagramExplanation && (
+                  <p className="text-[0.875rem] text-[#525866] leading-relaxed">
+                    {result.diagramExplanation}
+                  </p>
+                )}
+              </div>
+            </div>
+          </motion.div>
         )}
 
         {/* Conclusion */}
-        <Card className="overflow-hidden border-neutral-200/60 shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="border-b border-neutral-100 bg-gradient-to-r from-emerald-50/50 to-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-600 text-white text-sm font-semibold shadow-sm">
-                  {result.arguments.length + 3}
-                </span>
-                <div>
-                  <CardTitle className="text-lg font-semibold">Conclusion</CardTitle>
-                  <CardDescription className="text-xs mt-0.5">Weigh evidence and give your judgement</CardDescription>
+        <motion.div variants={staggerItem}>
+          <div className="card-neura-hover overflow-hidden">
+            <div className="border-b border-[#c2f5da] bg-[#e0faec] px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#1fc16b] text-white text-[0.875rem] font-medium font-inter">
+                    {result.arguments.length + 3}
+                  </span>
+                  <div>
+                    <h3 className="text-[1.125rem] font-medium font-inter text-[#0e121b]">
+                      Conclusion
+                    </h3>
+                    <p className="text-[0.75rem] text-[#525866] mt-0.5">
+                      Weigh evidence and give your judgement
+                    </p>
+                  </div>
                 </div>
+                <AOBadge ao="ao4" />
               </div>
-              <AOBadge ao="ao4" />
             </div>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="p-5 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/30 border border-emerald-100">
-              <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <CheckCircle2 className="w-3 h-3" />
-                Your Conclusion
-              </p>
-              <p className="text-sm text-neutral-700 leading-relaxed">{result.conclusion}</p>
+            <div className="p-6">
+              <div className="p-5 rounded-xl bg-[#e0faec] border border-[#c2f5da]">
+                <p className="text-[10px] font-bold text-[#1fc16b] uppercase tracking-wider mb-2 flex items-center gap-1.5 font-inter">
+                  <CheckCircle2 className="w-3 h-3" />
+                  Your Conclusion
+                </p>
+                <p className="text-[0.875rem] text-[#525866] leading-relaxed">
+                  {result.conclusion}
+                </p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -682,10 +903,7 @@ function DiagramUpload({
 
   const handleFile = useCallback(
     (file: File) => {
-      if (!file.type.startsWith("image/")) {
-        return;
-      }
-
+      if (!file.type.startsWith("image/")) return;
       const reader = new FileReader();
       reader.onload = (e) => {
         const base64 = e.target?.result as string;
@@ -700,18 +918,18 @@ function DiagramUpload({
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium text-neutral-700">Diagram Uploaded</Label>
-          <Button
-            variant="ghost"
-            size="sm"
+          <label className="text-[0.875rem] font-medium font-inter text-[#0e121b]">
+            Diagram Uploaded
+          </label>
+          <button
             onClick={onRemove}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 px-3"
+            className="flex items-center gap-1.5 text-[0.75rem] text-[#fb3748] hover:text-red-700 transition-colors"
           >
-            <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+            <Trash2 className="w-3.5 h-3.5" />
             Remove
-          </Button>
+          </button>
         </div>
-        <div className="rounded-xl overflow-hidden border border-neutral-200 bg-white">
+        <div className="rounded-xl overflow-hidden border border-[#e1e4ea] bg-white">
           <img
             src={image}
             alt="Uploaded diagram"
@@ -725,18 +943,26 @@ function DiagramUpload({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <Label className="text-sm font-medium text-neutral-700">Diagram Upload</Label>
-        <Badge variant="secondary" className="text-[10px] font-medium">Optional</Badge>
+        <label className="text-[0.875rem] font-medium font-inter text-[#0e121b]">
+          Diagram Upload
+        </label>
+        <span className="text-[10px] font-medium text-[#99a0ae] bg-[#f5f7fa] px-2 py-0.5 rounded-full border border-[#e1e4ea]">
+          Optional
+        </span>
       </div>
       <div
-        className="flex flex-col items-center justify-center p-8 rounded-xl cursor-pointer transition-all border-2 border-dashed border-neutral-200 hover:border-neutral-300 bg-neutral-50/50 hover:bg-neutral-50 group"
+        className="flex flex-col items-center justify-center p-8 rounded-xl cursor-pointer transition-all border-2 border-dashed border-[#e1e4ea] hover:border-[#cacfd8] bg-[#f5f7fa] hover:bg-[#e1e4ea] group"
         onClick={() => fileInputRef.current?.click()}
       >
-        <div className="w-12 h-12 rounded-full bg-neutral-100 group-hover:bg-neutral-200 flex items-center justify-center mb-3 transition-colors">
-          <Upload className="w-5 h-5 text-neutral-400 group-hover:text-neutral-500" />
+        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center mb-3 shadow-neura group-hover:bg-[#f5f7fa] transition-colors">
+          <Upload className="w-5 h-5 text-[#99a0ae] group-hover:text-[#525866]" />
         </div>
-        <span className="text-sm font-medium text-neutral-600 mb-1">Click to upload</span>
-        <span className="text-xs text-neutral-400">PNG, JPG up to 10MB</span>
+        <span className="text-[0.875rem] font-medium text-[#525866] mb-1">
+          Click to upload
+        </span>
+        <span className="text-[0.75rem] text-[#99a0ae]">
+          PNG, JPG up to 10MB
+        </span>
       </div>
       <input
         ref={fileInputRef}
@@ -784,23 +1010,32 @@ function GraderInputForm({
   onClear: () => void;
 }) {
   return (
-    <div className="max-w-2xl mx-auto">
+    <motion.div className="max-w-2xl mx-auto" {...pageTransition}>
       {/* Header */}
-      <div className="text-center mb-12">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-neutral-100 to-neutral-200 flex items-center justify-center mx-auto mb-6 shadow-sm">
-          <PenTool className="w-7 h-7 text-neutral-600" />
+      <div className="text-center mb-10">
+        <div className="flex justify-center items-center w-[4.5rem] h-[4.5rem] rounded-2xl bg-gradient-to-br from-[#f5f7fa] to-[#e1e4ea] mx-auto mb-5 shadow-neura">
+          <PenTool className="w-7 h-7 text-[#525866]" />
         </div>
-        <h2 className="text-2xl font-semibold text-neutral-900 tracking-tight mb-2">Grade Your Answer</h2>
-        <p className="text-sm text-neutral-500">Get AI-powered feedback aligned with Edexcel mark schemes</p>
+        <h2 className="text-[1.25rem] font-medium font-inter-display text-[#0e121b] tracking-tight mb-2">
+          Grade Your Answer
+        </h2>
+        <p className="text-[0.875rem] text-[#99a0ae]">
+          Get AI-powered feedback aligned with Edexcel mark schemes
+        </p>
       </div>
 
-      <Card className="overflow-hidden border-neutral-200/60 shadow-sm">
-        <CardContent className="p-8 space-y-7">
+      <div className="card-neura overflow-hidden">
+        <div className="p-7 space-y-6">
           {/* Question Type */}
-          <div className="space-y-2.5">
-            <Label className="text-sm font-medium text-neutral-700">Question Type</Label>
-            <Select value={questionType} onValueChange={(v) => setQuestionType(v as QuestionType)}>
-              <SelectTrigger className="h-11 rounded-xl bg-neutral-50 border-neutral-200 hover:bg-neutral-100 transition-colors">
+          <div className="space-y-2">
+            <label className="text-[0.875rem] font-medium font-inter text-[#0e121b]">
+              Question Type
+            </label>
+            <Select
+              value={questionType}
+              onValueChange={(v) => setQuestionType(v as QuestionType)}
+            >
+              <SelectTrigger className="h-12 rounded-xl bg-[#f5f7fa] border-[#e1e4ea] hover:bg-[#e1e4ea] transition-colors focus:!border-[#335cff]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -814,24 +1049,28 @@ function GraderInputForm({
           </div>
 
           {/* Exam Question */}
-          <div className="space-y-2.5">
-            <Label className="text-sm font-medium text-neutral-700">Exam Question</Label>
+          <div className="space-y-2">
+            <label className="text-[0.875rem] font-medium font-inter text-[#0e121b]">
+              Exam Question
+            </label>
             <Textarea
               placeholder="Paste the exam question here..."
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              className="min-h-[100px] resize-none rounded-xl bg-neutral-50 border-neutral-200 hover:bg-neutral-100/50 focus:bg-white transition-colors"
+              className="min-h-[100px] resize-none rounded-xl bg-[#f5f7fa] border-[#e1e4ea] text-[#0e121b] transition-colors outline-none focus:!border-[#335cff] focus:bg-white placeholder:text-[#99a0ae]"
             />
           </div>
 
           {/* Student Answer */}
-          <div className="space-y-2.5">
-            <Label className="text-sm font-medium text-neutral-700">Student Answer</Label>
+          <div className="space-y-2">
+            <label className="text-[0.875rem] font-medium font-inter text-[#0e121b]">
+              Student Answer
+            </label>
             <Textarea
               placeholder="Paste the student's answer here for grading..."
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
-              className="min-h-[200px] resize-none rounded-xl bg-neutral-50 border-neutral-200 hover:bg-neutral-100/50 focus:bg-white transition-colors"
+              className="min-h-[200px] resize-none rounded-xl bg-[#f5f7fa] border-[#e1e4ea] text-[#0e121b] transition-colors outline-none focus:!border-[#335cff] focus:bg-white placeholder:text-[#99a0ae]"
             />
           </div>
 
@@ -844,42 +1083,43 @@ function GraderInputForm({
 
           {/* Error */}
           {error && (
-            <Alert variant="destructive" className="rounded-xl">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+            <Alert
+              variant="destructive"
+              className="rounded-xl border-[#ffc0c5] bg-[#ffebec]"
+            >
+              <AlertCircle className="h-4 w-4 text-[#fb3748]" />
+              <AlertDescription className="text-[#fb3748]">
+                {error}
+              </AlertDescription>
             </Alert>
           )}
 
           {/* Actions */}
           <div className="flex gap-3 pt-2">
-            <Button
-              className="flex-1 h-12 rounded-xl text-sm font-semibold bg-neutral-900 hover:bg-neutral-800 transition-all shadow-sm hover:shadow-md"
+            <button
+              className="btn-neura-blue flex-1 h-12"
               onClick={onSubmit}
               disabled={loading}
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   Analyzing...
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 mr-2" />
+                  <Sparkles className="w-4 h-4" />
                   Grade Answer
                 </>
               )}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={onClear}
-              className="h-12 px-6 rounded-xl border-neutral-200 hover:bg-neutral-50"
-            >
+            </button>
+            <button className="btn-neura-stroke h-12 px-6" onClick={onClear}>
               Clear
-            </Button>
+            </button>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
@@ -907,23 +1147,32 @@ function PlannerInputForm({
   onClear: () => void;
 }) {
   return (
-    <div className="max-w-2xl mx-auto">
+    <motion.div className="max-w-2xl mx-auto" {...pageTransition}>
       {/* Header */}
-      <div className="text-center mb-12">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-neutral-100 to-neutral-200 flex items-center justify-center mx-auto mb-6 shadow-sm">
-          <FileText className="w-7 h-7 text-neutral-600" />
+      <div className="text-center mb-10">
+        <div className="flex justify-center items-center w-[4.5rem] h-[4.5rem] rounded-2xl bg-gradient-to-br from-[#f5f7fa] to-[#e1e4ea] mx-auto mb-5 shadow-neura">
+          <FileText className="w-7 h-7 text-[#525866]" />
         </div>
-        <h2 className="text-2xl font-semibold text-neutral-900 tracking-tight mb-2">Plan Your Essay</h2>
-        <p className="text-sm text-neutral-500">Generate a comprehensive A*-grade essay structure</p>
+        <h2 className="text-[1.25rem] font-medium font-inter-display text-[#0e121b] tracking-tight mb-2">
+          Plan Your Essay
+        </h2>
+        <p className="text-[0.875rem] text-[#99a0ae]">
+          Generate a comprehensive A*-grade essay structure
+        </p>
       </div>
 
-      <Card className="overflow-hidden border-neutral-200/60 shadow-sm">
-        <CardContent className="p-8 space-y-7">
+      <div className="card-neura overflow-hidden">
+        <div className="p-7 space-y-6">
           {/* Question Type */}
-          <div className="space-y-2.5">
-            <Label className="text-sm font-medium text-neutral-700">Question Type</Label>
-            <Select value={questionType} onValueChange={(v) => setQuestionType(v as QuestionType)}>
-              <SelectTrigger className="h-11 rounded-xl bg-neutral-50 border-neutral-200 hover:bg-neutral-100 transition-colors">
+          <div className="space-y-2">
+            <label className="text-[0.875rem] font-medium font-inter text-[#0e121b]">
+              Question Type
+            </label>
+            <Select
+              value={questionType}
+              onValueChange={(v) => setQuestionType(v as QuestionType)}
+            >
+              <SelectTrigger className="h-12 rounded-xl bg-[#f5f7fa] border-[#e1e4ea] hover:bg-[#e1e4ea] transition-colors focus:!border-[#335cff]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -937,54 +1186,57 @@ function PlannerInputForm({
           </div>
 
           {/* Essay Question */}
-          <div className="space-y-2.5">
-            <Label className="text-sm font-medium text-neutral-700">Essay Question</Label>
+          <div className="space-y-2">
+            <label className="text-[0.875rem] font-medium font-inter text-[#0e121b]">
+              Essay Question
+            </label>
             <Textarea
               placeholder="Type or paste the essay question here..."
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              className="min-h-[140px] resize-none rounded-xl bg-neutral-50 border-neutral-200 hover:bg-neutral-100/50 focus:bg-white transition-colors"
+              className="min-h-[140px] resize-none rounded-xl bg-[#f5f7fa] border-[#e1e4ea] text-[#0e121b] transition-colors outline-none focus:!border-[#335cff] focus:bg-white placeholder:text-[#99a0ae]"
             />
           </div>
 
           {/* Error */}
           {error && (
-            <Alert variant="destructive" className="rounded-xl">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+            <Alert
+              variant="destructive"
+              className="rounded-xl border-[#ffc0c5] bg-[#ffebec]"
+            >
+              <AlertCircle className="h-4 w-4 text-[#fb3748]" />
+              <AlertDescription className="text-[#fb3748]">
+                {error}
+              </AlertDescription>
             </Alert>
           )}
 
           {/* Actions */}
           <div className="flex gap-3 pt-2">
-            <Button
-              className="flex-1 h-12 rounded-xl text-sm font-semibold bg-neutral-900 hover:bg-neutral-800 transition-all shadow-sm hover:shadow-md"
+            <button
+              className="btn-neura-blue flex-1 h-12"
               onClick={onSubmit}
               disabled={loading}
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   Generating...
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 mr-2" />
+                  <Sparkles className="w-4 h-4" />
                   Generate Plan
                 </>
               )}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={onClear}
-              className="h-12 px-6 rounded-xl border-neutral-200 hover:bg-neutral-50"
-            >
+            </button>
+            <button className="btn-neura-stroke h-12 px-6" onClick={onClear}>
               Clear
-            </Button>
+            </button>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
@@ -994,14 +1246,21 @@ function PlannerInputForm({
 
 function LoadingView({ message }: { message: string }) {
   return (
-    <div className="max-w-md mx-auto text-center py-24">
+    <motion.div
+      className="max-w-md mx-auto text-center py-24"
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
+    >
       <div className="relative w-20 h-20 mx-auto mb-8">
-        <div className="absolute inset-0 rounded-full border-4 border-neutral-100" />
-        <div className="absolute inset-0 rounded-full border-4 border-neutral-900 border-t-transparent animate-spin" />
+        <div className="absolute inset-0 rounded-full border-4 border-[#e1e4ea]" />
+        <div className="absolute inset-0 rounded-full border-4 border-[#335cff] border-t-transparent animate-spin" />
       </div>
-      <h3 className="text-xl font-semibold text-neutral-900 mb-2">{message}</h3>
-      <p className="text-sm text-neutral-500">Powered by Claude AI</p>
-    </div>
+      <h3 className="text-[1.25rem] font-medium font-inter-display text-[#0e121b] mb-2">
+        {message}
+      </h3>
+      <p className="text-[0.875rem] text-[#99a0ae]">Powered by Claude AI</p>
+    </motion.div>
   );
 }
 
@@ -1010,21 +1269,28 @@ function LoadingView({ message }: { message: string }) {
 // ============================================================================
 
 export default function HomePage() {
-  const [activeMode, setActiveMode] = useState<"grader" | "planner">("grader");
+  const [activeMode, setActiveMode] = useState<"grader" | "planner">(
+    "grader"
+  );
+  const [sidebarVisible, setSidebarVisible] = useState(false);
 
   // Grader state
   const [graderQuestion, setGraderQuestion] = useState("");
   const [graderAnswer, setGraderAnswer] = useState("");
-  const [graderQuestionType, setGraderQuestionType] = useState<QuestionType>("evaluate-20");
+  const [graderQuestionType, setGraderQuestionType] =
+    useState<QuestionType>("evaluate-20");
   const [graderDiagram, setGraderDiagram] = useState<string | null>(null);
-  const [graderResult, setGraderResult] = useState<GradingResult | null>(null);
+  const [graderResult, setGraderResult] = useState<GradingResult | null>(
+    null
+  );
   const [graderLoading, setGraderLoading] = useState(false);
   const [graderError, setGraderError] = useState("");
   const [graderView, setGraderView] = useState<ViewState>("input");
 
   // Planner state
   const [plannerQuestion, setPlannerQuestion] = useState("");
-  const [plannerQuestionType, setPlannerQuestionType] = useState<QuestionType>("evaluate-20");
+  const [plannerQuestionType, setPlannerQuestionType] =
+    useState<QuestionType>("evaluate-20");
   const [plannerResult, setPlannerResult] = useState<PlanResult | null>(null);
   const [plannerLoading, setPlannerLoading] = useState(false);
   const [plannerError, setPlannerError] = useState("");
@@ -1062,7 +1328,9 @@ export default function HomePage() {
       setGraderView("results");
     } catch (error) {
       setGraderError(
-        error instanceof Error ? error.message : "An unexpected error occurred"
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred"
       );
       setGraderView("input");
     } finally {
@@ -1101,7 +1369,9 @@ export default function HomePage() {
       setPlannerView("results");
     } catch (error) {
       setPlannerError(
-        error instanceof Error ? error.message : "An unexpected error occurred"
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred"
       );
       setPlannerView("input");
     } finally {
@@ -1125,144 +1395,126 @@ export default function HomePage() {
     setPlannerView("input");
   };
 
-  const showTabs = (activeMode === "grader" && graderView === "input") ||
-                   (activeMode === "planner" && plannerView === "input");
+  const currentModeTitle =
+    activeMode === "grader" ? "Exam Grader" : "Essay Planner";
+  const currentModeDescription =
+    activeMode === "grader"
+      ? "AI-powered essay grading aligned with Edexcel mark schemes"
+      : "Generate comprehensive A*-grade essay structures";
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Premium Header */}
-      <header className="relative overflow-hidden border-b border-neutral-100">
-        {/* Subtle gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-neutral-50/80 to-white pointer-events-none" />
+      {/* Sidebar */}
+      <Sidebar
+        activeMode={activeMode}
+        onModeChange={(mode) => {
+          setActiveMode(mode);
+        }}
+        visible={sidebarVisible}
+        onClose={() => setSidebarVisible(false)}
+      />
 
-        <div className="relative max-w-7xl mx-auto px-6 py-10 text-center">
-          {/* Brand */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-neutral-100 text-[11px] font-medium text-neutral-500 uppercase tracking-widest mb-4">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            Pearson Edexcel IAL
-          </div>
-
-          <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 tracking-tight mb-2">
-            Economics
-          </h1>
-
-          <p className="text-sm text-neutral-400 font-medium">
-            AS & A Level · Units 1–4
-          </p>
-        </div>
-      </header>
-
-      {/* Mode Navigation */}
-      {showTabs && (
-        <nav className="border-b border-neutral-100 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-          <div className="max-w-7xl mx-auto px-6 py-4 flex justify-center">
-            <div className="inline-flex p-1 rounded-xl bg-neutral-100">
-              <button
-                onClick={() => setActiveMode("grader")}
-                className={cn(
-                  "flex items-center gap-2.5 px-5 py-2.5 rounded-lg text-sm font-medium transition-all",
-                  activeMode === "grader"
-                    ? "bg-white text-neutral-900 shadow-sm"
-                    : "text-neutral-500 hover:text-neutral-700"
-                )}
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                Exam Grader
-              </button>
-              <button
-                onClick={() => setActiveMode("planner")}
-                className={cn(
-                  "flex items-center gap-2.5 px-5 py-2.5 rounded-lg text-sm font-medium transition-all",
-                  activeMode === "planner"
-                    ? "bg-white text-neutral-900 shadow-sm"
-                    : "text-neutral-500 hover:text-neutral-700"
-                )}
-              >
-                <FileText className="w-4 h-4" />
-                Essay Planner
-              </button>
-            </div>
-          </div>
-        </nav>
-      )}
-
-      {/* Content */}
-      <main className="max-w-7xl mx-auto px-6 py-12">
-        {activeMode === "grader" ? (
-          <>
-            {graderView === "input" && (
-              <GraderInputForm
-                question={graderQuestion}
-                setQuestion={setGraderQuestion}
-                answer={graderAnswer}
-                setAnswer={setGraderAnswer}
-                questionType={graderQuestionType}
-                setQuestionType={setGraderQuestionType}
-                diagram={graderDiagram}
-                setDiagram={setGraderDiagram}
-                onSubmit={handleGrade}
-                loading={graderLoading}
-                error={graderError}
-                onClear={clearGrader}
-              />
-            )}
-            {graderView === "loading" && (
-              <LoadingView message="Analyzing your essay..." />
-            )}
-            {graderView === "results" && graderResult && (
-              <GradingResultDisplay
-                result={graderResult}
-                questionType={graderQuestionType}
-                essayText={graderAnswer}
-                onBack={() => setGraderView("input")}
-              />
-            )}
-          </>
-        ) : (
-          <>
-            {plannerView === "input" && (
-              <PlannerInputForm
-                question={plannerQuestion}
-                setQuestion={setPlannerQuestion}
-                questionType={plannerQuestionType}
-                setQuestionType={setPlannerQuestionType}
-                onSubmit={handlePlan}
-                loading={plannerLoading}
-                error={plannerError}
-                onClear={clearPlanner}
-              />
-            )}
-            {plannerView === "loading" && (
-              <LoadingView message="Generating essay plan..." />
-            )}
-            {plannerView === "results" && plannerResult && (
-              <PlanResultDisplay
-                result={plannerResult}
-                onBack={() => setPlannerView("input")}
-              />
-            )}
-          </>
-        )}
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-neutral-100 mt-auto">
-        <div className="max-w-7xl mx-auto px-6 py-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-neutral-400" />
-              </div>
-              <p className="text-xs text-neutral-400">
-                AI-powered grading aligned with Edexcel IAL Economics mark schemes
-              </p>
-            </div>
-            <p className="text-xs text-neutral-300">
-              Always verify with your teacher or official mark schemes
+      {/* Main Content Area — offset by sidebar */}
+      <div className="pl-[19rem] pt-9.5 pb-5 pr-5 transition-all max-lg:pl-5 max-md:pl-4 max-md:pr-4 max-md:pt-3 max-md:pb-4">
+        {/* Header Bar */}
+        <div className="flex items-center gap-4 mb-4">
+          <button
+            className="hidden max-lg:flex items-center justify-center w-10 h-10 rounded-xl hover:bg-white transition-colors"
+            onClick={() => setSidebarVisible(true)}
+          >
+            <Menu className="w-5 h-5 text-[#0e121b]" />
+          </button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-[1.5rem] font-medium font-inter text-[#0e121b] tracking-tight max-md:text-[1rem]">
+              {currentModeTitle}
+            </h1>
+            <p className="text-[0.875rem] font-medium text-[#525866] max-lg:hidden mt-0.5">
+              {currentModeDescription}
             </p>
           </div>
         </div>
-      </footer>
+
+        {/* Content Wrapper — NeuraTalk chat-wrapper pattern */}
+        <div className="content-wrapper min-h-[calc(100svh-8rem)] max-md:min-h-[calc(100svh-5rem)] max-md:rounded-xl">
+          <div className="flex-1 overflow-auto scrollbar-none p-7 max-md:p-4">
+            <AnimatePresence mode="wait">
+              {activeMode === "grader" ? (
+                <div key="grader">
+                  {graderView === "input" && (
+                    <GraderInputForm
+                      question={graderQuestion}
+                      setQuestion={setGraderQuestion}
+                      answer={graderAnswer}
+                      setAnswer={setGraderAnswer}
+                      questionType={graderQuestionType}
+                      setQuestionType={setGraderQuestionType}
+                      diagram={graderDiagram}
+                      setDiagram={setGraderDiagram}
+                      onSubmit={handleGrade}
+                      loading={graderLoading}
+                      error={graderError}
+                      onClear={clearGrader}
+                    />
+                  )}
+                  {graderView === "loading" && (
+                    <LoadingView message="Analyzing your essay..." />
+                  )}
+                  {graderView === "results" && graderResult && (
+                    <GradingResultDisplay
+                      result={graderResult}
+                      questionType={graderQuestionType}
+                      essayText={graderAnswer}
+                      onBack={() => setGraderView("input")}
+                    />
+                  )}
+                </div>
+              ) : (
+                <div key="planner">
+                  {plannerView === "input" && (
+                    <PlannerInputForm
+                      question={plannerQuestion}
+                      setQuestion={setPlannerQuestion}
+                      questionType={plannerQuestionType}
+                      setQuestionType={setPlannerQuestionType}
+                      onSubmit={handlePlan}
+                      loading={plannerLoading}
+                      error={plannerError}
+                      onClear={clearPlanner}
+                    />
+                  )}
+                  {plannerView === "loading" && (
+                    <LoadingView message="Generating essay plan..." />
+                  )}
+                  {plannerView === "results" && plannerResult && (
+                    <PlanResultDisplay
+                      result={plannerResult}
+                      onBack={() => setPlannerView("input")}
+                    />
+                  )}
+                </div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Footer inside content wrapper */}
+          <div className="shrink-0 border-t border-[#e1e4ea] px-7 py-4 max-md:px-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#335cff] to-[#97baff] flex items-center justify-center">
+                  <Sparkles className="w-3 h-3 text-white" />
+                </div>
+                <p className="text-[0.75rem] text-[#99a0ae]">
+                  AI-powered grading aligned with Edexcel IAL Economics mark
+                  schemes
+                </p>
+              </div>
+              <p className="text-[0.75rem] text-[#cacfd8]">
+                Always verify with your teacher or official mark schemes
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

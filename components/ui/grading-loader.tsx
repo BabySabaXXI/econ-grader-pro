@@ -31,7 +31,7 @@ export function GradingLoader({
   gridSize = 12,
   cellShape = "circle",
   cellGap = 4,
-  cellColor = "#d6d3d1",
+  cellColor = "#cacfd8",
   blinkSpeed = 1500,
 }: GradingLoaderProps) {
   const [gridCells, setGridCells] = useState<GridCell[]>([]);
@@ -140,9 +140,9 @@ export function GradingLoader({
 
           {/* Progress indicator */}
           {progress !== undefined && (
-            <div className="w-48 h-1.5 bg-stone-100 rounded-full overflow-hidden mb-4">
+            <div className="w-48 h-1.5 bg-[--bg-weak-50] rounded-full overflow-hidden mb-4 border border-[--stroke-soft-200]">
               <motion.div
-                className="h-full bg-gradient-to-r from-stone-400 to-stone-500 rounded-full"
+                className="h-full bg-gradient-to-r from-[--blue-500] to-[--blue-300] rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.3 }}
@@ -158,7 +158,7 @@ export function GradingLoader({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
-              className="text-sm text-stone-500 text-center"
+              className="text-p-sm text-[--text-soft-400] text-center font-inter"
             >
               {currentMessage}
             </motion.p>
@@ -166,7 +166,7 @@ export function GradingLoader({
 
           {/* Subtle pulsing ring */}
           <motion.div
-            className="absolute w-64 h-64 rounded-full border border-stone-200"
+            className="absolute w-64 h-64 rounded-full border border-[--stroke-soft-200]"
             animate={{
               scale: [1, 1.1, 1],
               opacity: [0.3, 0.1, 0.3],

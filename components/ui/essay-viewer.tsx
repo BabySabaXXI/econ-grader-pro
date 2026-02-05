@@ -4,9 +4,6 @@ import { useState, useMemo, useCallback, useRef } from "react";
 import { X, CheckCircle2, AlertCircle, ChevronDown, ChevronRight, List, Lightbulb, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MarkEarned, MarkLost } from "@/lib/types";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
@@ -42,12 +39,36 @@ interface ActiveFeedback {
   data: MarkEarned | MarkLost;
 }
 
-// AO Config
+// AO Config — mapped to NeuraTalk semantic palette
 const AO_CONFIG = {
-  ao1: { label: "Knowledge", color: "bg-blue-500", bgLight: "bg-blue-50", text: "text-blue-600", border: "border-blue-200" },
-  ao2: { label: "Application", color: "bg-emerald-500", bgLight: "bg-emerald-50", text: "text-emerald-600", border: "border-emerald-200" },
-  ao3: { label: "Analysis", color: "bg-violet-500", bgLight: "bg-violet-50", text: "text-violet-600", border: "border-violet-200" },
-  ao4: { label: "Evaluation", color: "bg-amber-500", bgLight: "bg-amber-50", text: "text-amber-600", border: "border-amber-200" },
+  ao1: {
+    label: "Knowledge",
+    color: "bg-[--information-base]",
+    bgLight: "bg-[--information-lighter]",
+    text: "text-[--information-base]",
+    border: "border-[--information-light]",
+  },
+  ao2: {
+    label: "Application",
+    color: "bg-[--success-base]",
+    bgLight: "bg-[--success-lighter]",
+    text: "text-[--success-base]",
+    border: "border-[--success-light]",
+  },
+  ao3: {
+    label: "Analysis",
+    color: "bg-[--feature-base]",
+    bgLight: "bg-[--feature-lighter]",
+    text: "text-[--feature-base]",
+    border: "border-[--feature-light]",
+  },
+  ao4: {
+    label: "Evaluation",
+    color: "bg-[--away-base]",
+    bgLight: "bg-[--away-lighter]",
+    text: "text-[--away-base]",
+    border: "border-[--away-light]",
+  },
 };
 
 // AO Badge Component
@@ -56,10 +77,9 @@ function AOBadge({ ao, className }: { ao: string; className?: string }) {
   if (!config) return null;
 
   return (
-    <Badge
-      variant="outline"
+    <span
       className={cn(
-        "text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5",
+        "inline-flex items-center text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border",
         config.text,
         config.bgLight,
         config.border,
@@ -67,7 +87,7 @@ function AOBadge({ ao, className }: { ao: string; className?: string }) {
       )}
     >
       {ao.toUpperCase()}
-    </Badge>
+    </span>
   );
 }
 
@@ -223,69 +243,69 @@ export function EssayViewer({
   return (
     <div className={cn("relative space-y-5", className)} ref={containerRef}>
       {/* Filter Controls */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-neutral-50 rounded-2xl border border-neutral-100">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-[--bg-weak-50] rounded-2xl border border-[--stroke-soft-200]">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider mr-2">View:</span>
-          <Button
-            variant={viewMode === "all" ? "default" : "outline"}
-            size="sm"
+          <span className="text-label-xs font-inter text-[--text-soft-400] uppercase tracking-wider mr-2">View:</span>
+          <button
             onClick={() => setViewMode("all")}
             className={cn(
-              "h-8 text-xs rounded-lg",
-              viewMode === "all" && "bg-neutral-900"
+              "h-8 px-3.5 text-xs font-medium rounded-full transition-all border",
+              viewMode === "all"
+                ? "bg-[--strong-950] text-white border-transparent"
+                : "bg-white text-[--text-sub-600] border-[--stroke-soft-200] hover:border-[--stroke-sub-300]"
             )}
           >
             All
-          </Button>
-          <Button
-            variant={viewMode === "earned" ? "default" : "outline"}
-            size="sm"
+          </button>
+          <button
             onClick={() => setViewMode("earned")}
             className={cn(
-              "h-8 text-xs gap-1.5 rounded-lg",
-              viewMode === "earned" && "bg-emerald-600 hover:bg-emerald-700"
+              "h-8 px-3.5 text-xs font-medium rounded-full transition-all border inline-flex items-center gap-1.5",
+              viewMode === "earned"
+                ? "bg-[--success-base] text-white border-transparent"
+                : "bg-white text-[--text-sub-600] border-[--stroke-soft-200] hover:border-[--stroke-sub-300]"
             )}
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span className={cn("font-semibold", viewMode !== "earned" && "text-emerald-600")}>+{totalEarnedPoints}</span>
-            <span className={cn("text-xs opacity-70")}>({earnedCount})</span>
-          </Button>
-          <Button
-            variant={viewMode === "lost" ? "default" : "outline"}
-            size="sm"
+            <span className={cn("font-semibold", viewMode !== "earned" && "text-[--success-base]")}>+{totalEarnedPoints}</span>
+            <span className="text-xs opacity-70">({earnedCount})</span>
+          </button>
+          <button
             onClick={() => setViewMode("lost")}
             className={cn(
-              "h-8 text-xs gap-1.5 rounded-lg",
-              viewMode === "lost" && "bg-red-600 hover:bg-red-700"
+              "h-8 px-3.5 text-xs font-medium rounded-full transition-all border inline-flex items-center gap-1.5",
+              viewMode === "lost"
+                ? "bg-[--error-base] text-white border-transparent"
+                : "bg-white text-[--text-sub-600] border-[--stroke-soft-200] hover:border-[--stroke-sub-300]"
             )}
           >
             <AlertCircle className="w-3.5 h-3.5" />
-            <span className={cn("font-semibold", viewMode !== "lost" && "text-red-600")}>Issues</span>
-            <span className={cn("text-xs opacity-70")}>({lostCount})</span>
-          </Button>
+            <span className={cn("font-semibold", viewMode !== "lost" && "text-[--error-base]")}>Issues</span>
+            <span className="text-xs opacity-70">({lostCount})</span>
+          </button>
         </div>
 
         {onToggleDetailedFeedback && (
-          <div className="flex items-center gap-3 pl-4 border-l border-neutral-200">
+          <div className="flex items-center gap-3 pl-4 border-l border-[--stroke-soft-200]">
             {showDetailedFeedback ? (
-              <Eye className="w-4 h-4 text-neutral-600" />
+              <Eye className="w-4 h-4 text-[--text-sub-600]" />
             ) : (
-              <EyeOff className="w-4 h-4 text-neutral-400" />
+              <EyeOff className="w-4 h-4 text-[--text-soft-400]" />
             )}
-            <span className="text-xs font-medium text-neutral-600">Details</span>
+            <span className="text-label-xs font-inter text-[--text-sub-600]">Details</span>
             <Switch
               checked={showDetailedFeedback}
               onCheckedChange={onToggleDetailedFeedback}
-              className="data-[state=checked]:bg-neutral-900"
+              className="data-[state=checked]:bg-[--blue-500]"
             />
           </div>
         )}
       </div>
 
       {/* Essay Content */}
-      <Card className="border-neutral-200/60 overflow-hidden">
-        <CardContent className="p-6">
-          <p className="text-[15px] leading-[1.9] text-neutral-700 whitespace-pre-wrap font-[system-ui]">
+      <div className="card-neura overflow-hidden">
+        <div className="p-6">
+          <p className="text-[15px] leading-[1.9] text-[--text-sub-600] whitespace-pre-wrap font-[system-ui]">
             {visibleSegments.map((segment, index) => {
               if (segment.type === "normal") {
                 return <span key={index}>{segment.text}</span>;
@@ -306,13 +326,13 @@ export function EssayViewer({
                   }
                   className={cn(
                     "relative inline cursor-pointer rounded-sm px-1 py-0.5 transition-all duration-200",
-                    isEarned && "bg-emerald-100/80 hover:bg-emerald-200/80 text-emerald-900 border-b-2 border-emerald-500",
-                    isLost && "bg-red-100/80 hover:bg-red-200/80 text-red-900 border-b-2 border-red-500"
+                    isEarned && "highlight-earned",
+                    isLost && "highlight-lost"
                   )}
                 >
                   {segment.text}
                   {isLost && !showDetailedFeedback && (
-                    <span className="ml-0.5 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold bg-red-500 text-white rounded-full align-middle shadow-sm">
+                    <span className="ml-0.5 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold bg-[--error-base] text-white rounded-full align-middle shadow-sm">
                       !
                     </span>
                   )}
@@ -320,22 +340,22 @@ export function EssayViewer({
               );
             })}
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Detailed Feedback Panel */}
       {showDetailedFeedback && (
         <div className="space-y-5">
           {/* Lost Marks Section */}
           {marksLost.length > 0 && (
-            <Card className="border-red-200/60 bg-gradient-to-br from-red-50/50 to-white overflow-hidden">
-              <CardHeader className="pb-3 border-b border-red-100">
-                <CardTitle className="text-sm font-semibold text-red-700 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            <div className="rounded-xl border border-[--error-light] bg-gradient-to-br from-[--error-lighter] to-white overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-[--error-light]">
+                <h3 className="text-label-sm font-inter text-[--error-base] flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[--error-base] animate-pulse" />
                   Issues Found ({marksLost.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4 space-y-3">
+                </h3>
+              </div>
+              <div className="p-4 space-y-3">
                 {marksLost.map((item, idx) => {
                   const itemId = `lost-${idx}`;
                   const isExpanded = expandedItems.has(itemId);
@@ -345,64 +365,64 @@ export function EssayViewer({
                       open={isExpanded}
                       onOpenChange={() => toggleExpanded(itemId)}
                     >
-                      <Card className="border-red-200/60 bg-white overflow-hidden">
+                      <div className="rounded-xl border border-[--error-light] bg-white overflow-hidden">
                         <CollapsibleTrigger asChild>
-                          <button className="w-full p-4 text-left flex items-start gap-3 hover:bg-red-50/50 transition-colors">
+                          <button className="w-full p-4 text-left flex items-start gap-3 hover:bg-[--error-lighter]/50 transition-colors">
                             <span className="flex-shrink-0 mt-0.5">
                               {isExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-red-500" />
+                                <ChevronDown className="w-4 h-4 text-[--error-base]" />
                               ) : (
-                                <ChevronRight className="w-4 h-4 text-red-500" />
+                                <ChevronRight className="w-4 h-4 text-[--error-base]" />
                               )}
                             </span>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1.5">
                                 <AOBadge ao={item.ao} />
-                                <Badge variant="destructive" className="text-[10px] font-medium">
+                                <span className="inline-flex items-center text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[--error-lighter] text-[--error-base] border border-[--error-light]">
                                   Issue
-                                </Badge>
+                                </span>
                               </div>
-                              <p className="text-sm text-neutral-600 italic line-clamp-2">
+                              <p className="text-p-sm text-[--text-sub-600] italic line-clamp-2">
                                 &ldquo;{item.quote}&rdquo;
                               </p>
                             </div>
                           </button>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                          <div className="px-4 pb-4 pt-0 space-y-3 border-t border-red-100">
-                            <div className="pt-3 p-4 rounded-xl bg-gradient-to-br from-red-50 to-red-100/30 border border-red-100">
-                              <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-2">
+                          <div className="px-4 pb-4 pt-0 space-y-3 border-t border-[--error-light]">
+                            <div className="pt-3 p-4 rounded-xl bg-gradient-to-br from-[--error-lighter] to-white border border-[--error-light]">
+                              <p className="text-[10px] font-bold text-[--error-base] uppercase tracking-wider mb-2">
                                 Issue
                               </p>
-                              <p className="text-sm text-neutral-700 leading-relaxed">{item.issue}</p>
+                              <p className="text-p-sm text-[--text-sub-600] leading-relaxed">{item.issue}</p>
                             </div>
-                            <div className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100/30 border border-amber-200">
-                              <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <div className="p-4 rounded-xl bg-gradient-to-br from-[--away-lighter] to-white border border-[--away-light]">
+                              <p className="text-[10px] font-bold text-[--away-base] uppercase tracking-wider mb-2 flex items-center gap-1.5">
                                 <Lightbulb className="w-3 h-3" />
                                 How to Fix
                               </p>
-                              <p className="text-sm text-neutral-700 leading-relaxed">{item.howToFix}</p>
+                              <p className="text-p-sm text-[--text-sub-600] leading-relaxed">{item.howToFix}</p>
                             </div>
                           </div>
                         </CollapsibleContent>
-                      </Card>
+                      </div>
                     </Collapsible>
                   );
                 })}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
 
           {/* Earned Marks Section */}
           {marksEarned.length > 0 && (
-            <Card className="border-emerald-200/60 bg-gradient-to-br from-emerald-50/50 to-white overflow-hidden">
-              <CardHeader className="pb-3 border-b border-emerald-100">
-                <CardTitle className="text-sm font-semibold text-emerald-700 flex items-center gap-2">
+            <div className="rounded-xl border border-[--success-light] bg-gradient-to-br from-[--success-lighter] to-white overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-[--success-light]">
+                <h3 className="text-label-sm font-inter text-[--success-base] flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" />
                   Marks Earned (+{totalEarnedPoints} from {marksEarned.length} items)
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4 space-y-3">
+                </h3>
+              </div>
+              <div className="p-4 space-y-3">
                 {marksEarned.map((item, idx) => {
                   const itemId = `earned-${idx}`;
                   const isExpanded = expandedItems.has(itemId);
@@ -412,45 +432,45 @@ export function EssayViewer({
                       open={isExpanded}
                       onOpenChange={() => toggleExpanded(itemId)}
                     >
-                      <Card className="border-emerald-200/60 bg-white overflow-hidden">
+                      <div className="rounded-xl border border-[--success-light] bg-white overflow-hidden">
                         <CollapsibleTrigger asChild>
-                          <button className="w-full p-4 text-left flex items-start gap-3 hover:bg-emerald-50/50 transition-colors">
+                          <button className="w-full p-4 text-left flex items-start gap-3 hover:bg-[--success-lighter]/50 transition-colors">
                             <span className="flex-shrink-0 mt-0.5">
                               {isExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-emerald-500" />
+                                <ChevronDown className="w-4 h-4 text-[--success-base]" />
                               ) : (
-                                <ChevronRight className="w-4 h-4 text-emerald-500" />
+                                <ChevronRight className="w-4 h-4 text-[--success-base]" />
                               )}
                             </span>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1.5">
                                 <AOBadge ao={item.ao} />
-                                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 text-[10px] font-semibold">
+                                <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[--success-lighter] text-[--success-base] border border-[--success-light]">
                                   +{item.points}
-                                </Badge>
+                                </span>
                               </div>
-                              <p className="text-sm text-neutral-600 italic line-clamp-2">
+                              <p className="text-p-sm text-[--text-sub-600] italic line-clamp-2">
                                 &ldquo;{item.quote}&rdquo;
                               </p>
                             </div>
                           </button>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                          <div className="px-4 pb-4 pt-0 border-t border-emerald-100">
-                            <div className="pt-3 p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/30 border border-emerald-100">
-                              <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-2">
+                          <div className="px-4 pb-4 pt-0 border-t border-[--success-light]">
+                            <div className="pt-3 p-4 rounded-xl bg-gradient-to-br from-[--success-lighter] to-white border border-[--success-light]">
+                              <p className="text-[10px] font-bold text-[--success-base] uppercase tracking-wider mb-2">
                                 Why This Earned Marks
                               </p>
-                              <p className="text-sm text-neutral-700 leading-relaxed">{item.reason}</p>
+                              <p className="text-p-sm text-[--text-sub-600] leading-relaxed">{item.reason}</p>
                             </div>
                           </div>
                         </CollapsibleContent>
-                      </Card>
+                      </div>
                     </Collapsible>
                   );
                 })}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
         </div>
       )}
@@ -458,19 +478,19 @@ export function EssayViewer({
       {/* Feedback Modal */}
       <Dialog open={!!activeFeedback} onOpenChange={() => setActiveFeedback(null)}>
         <DialogContent className={cn(
-          "sm:max-w-md rounded-2xl",
-          activeFeedback?.type === "earned" ? "border-emerald-200" : "border-red-200"
+          "sm:max-w-md rounded-2xl border",
+          activeFeedback?.type === "earned" ? "border-[--success-light]" : "border-[--error-light]"
         )}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <AOBadge ao={activeFeedback?.data.ao || ""} />
               {activeFeedback?.type === "earned" ? (
-                <span className="text-emerald-600 font-semibold flex items-center gap-1.5">
+                <span className="text-[--success-base] font-semibold flex items-center gap-1.5 text-sm">
                   <CheckCircle2 className="w-4 h-4" />
                   +{(activeFeedback?.data as MarkEarned)?.points} marks
                 </span>
               ) : (
-                <span className="text-red-600 font-semibold flex items-center gap-1.5">
+                <span className="text-[--error-base] font-semibold flex items-center gap-1.5 text-sm">
                   <AlertCircle className="w-4 h-4" />
                   Issue Found
                 </span>
@@ -480,38 +500,38 @@ export function EssayViewer({
 
           <div className="space-y-4 mt-2">
             {/* Quote */}
-            <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200">
-              <p className="text-sm italic text-neutral-600 leading-relaxed">
+            <div className="p-4 rounded-xl bg-[--bg-weak-50] border border-[--stroke-soft-200]">
+              <p className="text-p-sm italic text-[--text-sub-600] leading-relaxed">
                 &ldquo;{activeFeedback?.data.quote}&rdquo;
               </p>
             </div>
 
             {/* Feedback content */}
             {activeFeedback?.type === "earned" ? (
-              <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/30 border border-emerald-100">
-                <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-2">
+              <div className="p-4 rounded-xl bg-gradient-to-br from-[--success-lighter] to-white border border-[--success-light]">
+                <p className="text-[10px] font-bold text-[--success-base] uppercase tracking-wider mb-2">
                   Why this earned marks
                 </p>
-                <p className="text-sm text-neutral-700 leading-relaxed">
+                <p className="text-p-sm text-[--text-sub-600] leading-relaxed">
                   {(activeFeedback?.data as MarkEarned)?.reason}
                 </p>
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="p-4 rounded-xl bg-gradient-to-br from-red-50 to-red-100/30 border border-red-200">
-                  <p className="text-[10px] font-bold text-red-700 uppercase tracking-wider mb-2">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-[--error-lighter] to-white border border-[--error-light]">
+                  <p className="text-[10px] font-bold text-[--error-base] uppercase tracking-wider mb-2">
                     Issue
                   </p>
-                  <p className="text-sm text-neutral-700 leading-relaxed">
+                  <p className="text-p-sm text-[--text-sub-600] leading-relaxed">
                     {(activeFeedback?.data as MarkLost)?.issue}
                   </p>
                 </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100/30 border border-amber-200">
-                  <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-[--away-lighter] to-white border border-[--away-light]">
+                  <p className="text-[10px] font-bold text-[--away-base] uppercase tracking-wider mb-2 flex items-center gap-1.5">
                     <Lightbulb className="w-3 h-3" />
                     How to Fix
                   </p>
-                  <p className="text-sm text-neutral-700 leading-relaxed">
+                  <p className="text-p-sm text-[--text-sub-600] leading-relaxed">
                     {(activeFeedback?.data as MarkLost)?.howToFix}
                   </p>
                 </div>
@@ -522,13 +542,13 @@ export function EssayViewer({
       </Dialog>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-neutral-400 pt-2">
+      <div className="flex flex-wrap items-center justify-center gap-6 text-p-xs text-[--text-soft-400] pt-2">
         <div className="flex items-center gap-2">
-          <span className="w-4 h-2 rounded bg-emerald-200 border border-emerald-400" />
+          <span className="w-4 h-2 rounded-full bg-[--success-lighter] border border-[--success-light]" />
           <span>Marks Earned</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-4 h-2 rounded bg-red-200 border border-red-400" />
+          <span className="w-4 h-2 rounded-full bg-[--error-lighter] border border-[--error-light]" />
           <span>Issues (click for details)</span>
         </div>
       </div>
