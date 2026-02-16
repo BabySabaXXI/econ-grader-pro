@@ -365,8 +365,9 @@
     }
 
     activeHighlights = nonOverlapping;
-    // Canvas mode sets up its own lightweight scroll sync;
-    // classic mode needs the full reposition-on-scroll handler.
+    // Canvas mode uses absolute positioning inside .kix-rotatingtilemanager
+    // so overlays scroll naturally — no scroll handler needed.
+    // Classic mode uses fixed positioning and needs reposition on scroll.
     if (!usedCanvasMode) {
       setupRepositionHandlers(marksEarned, marksLost);
     }
@@ -405,13 +406,14 @@
   }
 
   /**
-   * Canvas mode highlighting — estimate positions based on text offset.
+   * Canvas mode highlighting — uses offscreen measurement for accurate positioning.
    *
-   * Strategy: Convert character offsets to visual Y positions by simulating
-   * word-wrap. Each paragraph (\n-delimited) wraps into multiple visual lines
-   * based on an estimated chars-per-line. We position overlays using fixed
-   * positioning and keep them in sync with scrolling via a scroll listener
-   * on .kix-appview-editor (the actual scroll container).
+   * Strategy:
+   *   1. Create an invisible div matching Google Docs' font/layout
+   *   2. Render each paragraph in it to measure exact pixel heights
+   *   3. Place overlays as absolute-positioned children of .kix-rotatingtilemanager
+   *      → this makes them scroll naturally with the document (no scroll sync needed!)
+   *   4. Use thin left-margin accent bars for clarity (not full-width blocks)
    *
    * Key DOM structure in canvas mode:
    *   .kix-appview-editor  (scroll container, overflow: auto)
@@ -421,42 +423,46 @@
    */
   function applyCanvasHighlights(highlights, fullText) {
     const tileManager = document.querySelector(".kix-rotatingtilemanager");
-    const scrollContainer = document.querySelector(".kix-appview-editor");
-    if (!tileManager || !scrollContainer) {
-      console.log("EconGrader: Missing tile manager or scroll container");
+    if (!tileManager) {
+      console.log("EconGrader: Missing tile manager for canvas highlights");
       return;
     }
 
+    // --- Measure layout dimensions from tile manager ---
     const tmRect = tileManager.getBoundingClientRect();
-    const scRect = scrollContainer.getBoundingClientRect();
+    const tmStyle = window.getComputedStyle(tileManager);
 
-    // --- Dynamically measure text area from the tile manager width ---
-    // Google Docs standard page: 8.5" at 96dpi = 816px text area with 1" margins
-    // The tile manager width varies; text margins are proportional.
-    // Measured: text occupies roughly the middle 71.5% of the tile manager width.
-    // Left margin ≈ 16.7% of TM width, text width ≈ 71.5% of TM width.
-    const marginLeft = Math.round(tmRect.width * 0.167);
-    const textWidth = Math.round(tmRect.width * 0.715);
+    // Google Docs page: text area occupies a predictable region within the TM.
+    // Standard letter page (8.5 × 11") at 96 DPI = 816px wide with 1" (96px) margins.
+    // Proportional: left margin ≈ 11.8% (96/816), text width ≈ 76.5% (624/816).
+    // But the TM is wider than the page (includes page chrome). Measured proportions:
+    const marginLeftPx = Math.round(tmRect.width * 0.167);   // ~160px on typical 960px TM
+    const textWidthPx = Math.round(tmRect.width * 0.715);    // ~685px on typical 960px TM
 
-    // --- Visual line geometry ---
-    // Roboto/Arial 10.5pt with Google Docs default 1.15 line spacing → ~18px per visual line
-    const visualLineHeight = 18;
-    // Paragraph spacing (blank \n between paragraphs) → ~30px gap
-    const paragraphSpacing = 30;
-    // Top padding: distance from tile manager top to the first text baseline (~46px)
-    const topPadding = 46;
+    // --- Create offscreen measurement div matching Google Docs text rendering ---
+    const measureDiv = document.createElement("div");
+    measureDiv.style.cssText = `
+      position: absolute;
+      top: -99999px;
+      left: -99999px;
+      width: ${textWidthPx}px;
+      font-family: "Docs-Roboto", Roboto, Arial, sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.35;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+      visibility: hidden;
+      padding: 0;
+      margin: 0;
+      border: none;
+    `;
+    document.body.appendChild(measureDiv);
 
-    // --- Estimate characters per visual line ---
-    // Average character width for Roboto 10.5pt ≈ 6.35px
-    // Word-wrap breaks at word boundaries, so effective chars ≈ 95% of theoretical
-    const avgCharWidth = 6.35;
-    const charsPerVisualLine = Math.floor((textWidth / avgCharWidth) * 0.95);
-
-    // --- Build a visual-line position map ---
+    // --- Measure each paragraph's height ---
     const paragraphs = fullText.split("\n");
     const paraMap = [];
     let charOffset = 0;
-    let cumulativeY = 0; // Track Y in pixels (not visual line count) for precision
 
     for (let i = 0; i < paragraphs.length; i++) {
       const para = paragraphs[i];
@@ -464,52 +470,109 @@
       const paraEnd = charOffset + para.length;
 
       if (para.trim().length === 0) {
-        // Empty paragraph: add paragraph spacing gap
         paraMap.push({
           startChar: paraStart,
           endChar: paraEnd,
-          yStart: cumulativeY,
-          visualLineCount: 0,
+          measuredHeight: 0,
           isEmpty: true,
         });
-        cumulativeY += paragraphSpacing;
       } else {
-        const wrappedLines = Math.max(1, Math.ceil(para.length / charsPerVisualLine));
+        // Measure actual rendered height
+        measureDiv.textContent = para;
+        const measuredHeight = measureDiv.offsetHeight;
         paraMap.push({
           startChar: paraStart,
           endChar: paraEnd,
-          yStart: cumulativeY,
-          visualLineCount: wrappedLines,
+          measuredHeight,
           isEmpty: false,
         });
-        cumulativeY += wrappedLines * visualLineHeight;
       }
 
       charOffset += para.length + 1; // +1 for \n
     }
 
+    // Clean up measurement div
+    document.body.removeChild(measureDiv);
+
+    // --- Calculate total measured content height and scale to actual page ---
+    // Sum of all measured paragraph heights
+    const totalMeasuredHeight = paraMap.reduce((s, p) => s + p.measuredHeight, 0);
+    const nonEmptyCount = paraMap.filter((p) => !p.isEmpty).length;
+    const emptyCount = paraMap.filter((p) => p.isEmpty).length;
+
+    // Google Docs page geometry constants (derived empirically):
+    // Top padding from TM top to first text line: ~96px (1 inch top margin)
+    // Bottom margin: ~96px
+    // Paragraph-after spacing: Google Docs default is 8pt ≈ 10.67px, plus ~4px gap ≈ 15px
+    const topPadding = 96;
+    const bottomMargin = 96;
+    const emptyParaHeight = 18;  // Height of an empty line in Google Docs (~1 line)
+    const paraAfterSpacing = 12; // Space after each non-empty paragraph
+
+    // Total available content area
+    const availableHeight = tmRect.height - topPadding - bottomMargin;
+    // Total estimated height using measured paragraphs + spacing
+    const estimatedTotalHeight =
+      totalMeasuredHeight +
+      emptyCount * emptyParaHeight +
+      (nonEmptyCount > 0 ? (nonEmptyCount - 1) * paraAfterSpacing : 0);
+
+    // Scale factor to map our measured heights to actual page coordinates
+    // If estimate is close to available, scale ≈ 1.0; otherwise adjust
+    const scaleFactor = availableHeight > 0 && estimatedTotalHeight > 0
+      ? Math.min(1.3, Math.max(0.7, availableHeight / estimatedTotalHeight))
+      : 1.0;
+
+    // --- Build Y-position map for each paragraph ---
+    let cumulativeY = topPadding;
+    for (let i = 0; i < paraMap.length; i++) {
+      const p = paraMap[i];
+      p.yStart = cumulativeY;
+
+      if (p.isEmpty) {
+        p.displayHeight = emptyParaHeight * scaleFactor;
+      } else {
+        p.displayHeight = p.measuredHeight * scaleFactor;
+      }
+
+      cumulativeY += p.displayHeight;
+      // Add inter-paragraph spacing (except after last paragraph)
+      if (!p.isEmpty && i < paraMap.length - 1) {
+        cumulativeY += paraAfterSpacing * scaleFactor;
+      }
+    }
+
+    // --- Calculate per-character Y positions using line height ---
+    const lineHeightPx = 18 * scaleFactor; // Base line height ~18px, scaled
+
     console.log(
       `EconGrader: Canvas highlight — ${paragraphs.length} paras, ` +
-      `${charsPerVisualLine} chars/line, totalY: ${Math.round(cumulativeY)}px, ` +
+      `measuredTotal: ${Math.round(totalMeasuredHeight)}px, ` +
+      `available: ${Math.round(availableHeight)}px, ` +
+      `scale: ${scaleFactor.toFixed(3)}, ` +
       `TM: ${Math.round(tmRect.width)}×${Math.round(tmRect.height)}`
     );
 
-    // --- Place highlight overlays ---
-    const overlayData = [];
+    // --- Place highlight overlays as ABSOLUTE children of tile manager ---
+    // Ensure tile manager can host absolutely positioned children
+    const tmCurrentPosition = tmStyle.position;
+    if (tmCurrentPosition === "static") {
+      tileManager.style.position = "relative";
+    }
 
     highlights.forEach((highlight) => {
-      // Find starting paragraph
-      let para = null;
+      // Find which paragraph this highlight starts in
+      let startPara = null;
       for (const p of paraMap) {
         if (highlight.start >= p.startChar && highlight.start <= p.endChar) {
-          para = p;
+          startPara = p;
           break;
         }
       }
-      if (!para || para.isEmpty) return;
+      if (!startPara || startPara.isEmpty) return;
 
-      // Find ending paragraph
-      let endPara = para;
+      // Find which paragraph this highlight ends in
+      let endPara = startPara;
       for (const p of paraMap) {
         if (highlight.end >= p.startChar && highlight.end <= p.endChar) {
           endPara = p;
@@ -517,80 +580,134 @@
         }
       }
 
-      // Which visual line within the paragraph does the highlight start/end?
-      const charInPara = highlight.start - para.startChar;
-      const startVisLine = Math.floor(charInPara / charsPerVisualLine);
+      // Calculate Y offset within the start paragraph
+      const charInPara = highlight.start - startPara.startChar;
+      const paraTextLen = startPara.endChar - startPara.startChar;
+      const fractionIntoPara = paraTextLen > 0 ? charInPara / paraTextLen : 0;
+      const yOffsetInPara = fractionIntoPara * startPara.displayHeight;
 
-      const endCharInPara = highlight.end - endPara.startChar;
-      const endVisLine = Math.floor(endCharInPara / charsPerVisualLine);
-
-      // Calculate highlight height in visual lines
-      let highlightVisualLines;
-      if (para === endPara) {
-        highlightVisualLines = endVisLine - startVisLine + 1;
+      // Calculate height of highlighted region
+      let highlightHeight;
+      if (startPara === endPara) {
+        const endCharInPara = highlight.end - startPara.startChar;
+        const endFraction = paraTextLen > 0 ? endCharInPara / paraTextLen : 1;
+        highlightHeight = (endFraction - fractionIntoPara) * startPara.displayHeight;
       } else {
-        highlightVisualLines = (para.visualLineCount - startVisLine) + (endVisLine + 1);
+        // Spans multiple paragraphs
+        const remainingInStart = startPara.displayHeight - yOffsetInPara;
+        const endCharInEnd = highlight.end - endPara.startChar;
+        const endFraction = (endPara.endChar - endPara.startChar) > 0
+          ? endCharInEnd / (endPara.endChar - endPara.startChar) : 1;
+        const inEnd = endFraction * endPara.displayHeight;
+        highlightHeight = remainingInStart + inEnd;
+        // Add any full paragraphs in between
+        for (const p of paraMap) {
+          if (p !== startPara && p !== endPara &&
+              p.startChar > startPara.startChar && p.endChar < endPara.endChar) {
+            highlightHeight += p.displayHeight + paraAfterSpacing * scaleFactor;
+          }
+        }
       }
-      highlightVisualLines = Math.max(1, Math.min(highlightVisualLines, 8));
 
-      // Document Y (pixels relative to tile manager top)
-      const docY = topPadding + para.yStart + startVisLine * visualLineHeight;
-      const overlayHeight = highlightVisualLines * visualLineHeight;
+      // Clamp height: minimum 1 line, maximum reasonable
+      highlightHeight = Math.max(lineHeightPx, Math.min(highlightHeight, 200));
 
-      overlayData.push({ docY, height: overlayHeight, highlight });
+      // Final Y position relative to tile manager top
+      const docY = startPara.yStart + yOffsetInPara;
 
-      // Initial viewport position
-      createHighlightOverlay(
-        tmRect.left + marginLeft,
-        tmRect.top + docY,
-        textWidth,
-        overlayHeight,
+      // Create the accent bar overlay (thin left-margin indicator)
+      createCanvasOverlay(
+        marginLeftPx,
+        docY,
+        textWidthPx,
+        highlightHeight,
         highlight,
-        "fixed"
+        tileManager
       );
     });
 
-    // --- Scroll sync ---
-    canvasOverlayData = overlayData;
-    canvasLayoutInfo = { marginLeft, textWidth };
-
-    const syncScroll = () => {
-      const tm = document.querySelector(".kix-rotatingtilemanager");
-      const sc = document.querySelector(".kix-appview-editor");
-      if (!tm || !sc) return;
-      const curTm = tm.getBoundingClientRect();
-      const curSc = sc.getBoundingClientRect();
-
-      highlightOverlays.forEach((overlay, idx) => {
-        if (idx >= canvasOverlayData.length) return;
-        const data = canvasOverlayData[idx];
-        const newY = curTm.top + data.docY;
-        // Clip to visible scroll area
-        if (newY + data.height < curSc.top || newY > curSc.bottom) {
-          overlay.style.display = "none";
-        } else {
-          overlay.style.display = "";
-          overlay.style.top = `${newY}px`;
-          overlay.style.left = `${curTm.left + canvasLayoutInfo.marginLeft}px`;
-        }
-      });
-    };
-
-    scrollHandler = syncScroll;
-    scrollContainer.addEventListener("scroll", syncScroll, { passive: true });
-    document.addEventListener("scroll", syncScroll, true);
-    window.addEventListener("resize", syncScroll);
+    console.log(`EconGrader: Placed ${highlightOverlays.length} canvas highlight overlays`);
   }
 
-  // State for canvas overlay scroll syncing
-  let canvasOverlayData = [];
-  let canvasLayoutInfo = {};
+  /**
+   * Create a canvas-mode overlay as an absolute-positioned child of the tile manager.
+   * Uses a thin left-border accent bar style for clarity.
+   */
+  function createCanvasOverlay(left, top, textWidth, height, highlight, parentEl) {
+    const overlay = document.createElement("div");
+
+    // Style: thin accent bar in the left margin + subtle background
+    const isEarned = highlight.type === "earned";
+    const accentColor = isEarned ? "rgba(74, 139, 127, 0.85)" : "rgba(191, 107, 107, 0.85)";
+    const bgColor = isEarned ? "rgba(74, 139, 127, 0.06)" : "rgba(191, 107, 107, 0.06)";
+
+    overlay.className = `econgrader-overlay econgrader-overlay-${highlight.type}`;
+    overlay.style.cssText = `
+      position: absolute;
+      left: ${left - 12}px;
+      top: ${Math.round(top)}px;
+      width: 4px;
+      height: ${Math.round(height)}px;
+      background: ${accentColor};
+      border-radius: 2px;
+      pointer-events: auto;
+      cursor: pointer;
+      z-index: 999;
+      transition: width 0.15s ease, background 0.15s ease;
+    `;
+
+    // Also create a subtle background highlight over the text area
+    const bgOverlay = document.createElement("div");
+    bgOverlay.style.cssText = `
+      position: absolute;
+      left: ${left}px;
+      top: ${Math.round(top)}px;
+      width: ${textWidth}px;
+      height: ${Math.round(height)}px;
+      background: ${bgColor};
+      border-radius: 2px;
+      pointer-events: none;
+      z-index: 998;
+    `;
+
+    overlay.dataset.type = highlight.type;
+    overlay.dataset.highlightData = JSON.stringify(highlight.data);
+
+    // Hover: expand the accent bar + intensify background
+    overlay.addEventListener("mouseenter", (e) => {
+      overlay.style.width = "6px";
+      overlay.style.background = isEarned ? "rgba(74, 139, 127, 1)" : "rgba(191, 107, 107, 1)";
+      bgOverlay.style.background = isEarned ? "rgba(74, 139, 127, 0.12)" : "rgba(191, 107, 107, 0.12)";
+      showHighlightTooltip(e, highlight);
+    });
+    overlay.addEventListener("mouseleave", () => {
+      overlay.style.width = "4px";
+      overlay.style.background = accentColor;
+      bgOverlay.style.background = bgColor;
+      hideHighlightTooltip();
+    });
+
+    // Click: notify side panel
+    overlay.addEventListener("click", (e) => {
+      e.stopPropagation();
+      chrome.runtime.sendMessage({
+        type: "HIGHLIGHT_CLICKED",
+        payload: { highlightType: highlight.type, data: highlight.data },
+      });
+    });
+
+    parentEl.appendChild(bgOverlay);
+    parentEl.appendChild(overlay);
+    highlightOverlays.push(overlay);
+    highlightOverlays.push(bgOverlay);
+  }
 
   /**
-   * Create a single highlight overlay element.
+   * Create a single highlight overlay element (used for classic DOM-based highlights).
    */
   function createHighlightOverlay(left, top, width, height, highlight, position, parentEl) {
     const overlay = document.createElement("div");
+    const isEarned = highlight.type === "earned";
     overlay.className = `econgrader-overlay econgrader-overlay-${highlight.type}`;
     overlay.style.cssText = `
       position: ${position};
@@ -603,15 +720,9 @@
       transition: opacity 0.2s;
       border-radius: 3px;
       z-index: 1000;
+      background-color: ${isEarned ? "rgba(74, 139, 127, 0.12)" : "rgba(191, 107, 107, 0.12)"};
+      border-left: 3px solid ${isEarned ? "rgba(74, 139, 127, 0.7)" : "rgba(191, 107, 107, 0.7)"};
     `;
-
-    if (highlight.type === "earned") {
-      overlay.style.backgroundColor = "rgba(74, 139, 127, 0.18)";
-      overlay.style.borderLeft = "3px solid rgba(74, 139, 127, 0.7)";
-    } else {
-      overlay.style.backgroundColor = "rgba(191, 107, 107, 0.18)";
-      overlay.style.borderLeft = "3px solid rgba(191, 107, 107, 0.7)";
-    }
 
     overlay.dataset.type = highlight.type;
     overlay.dataset.highlightData = JSON.stringify(highlight.data);
@@ -628,11 +739,9 @@
     // Hover: show tooltip
     overlay.addEventListener("mouseenter", (e) => {
       showHighlightTooltip(e, highlight);
-      overlay.style.opacity = "0.9";
     });
     overlay.addEventListener("mouseleave", () => {
       hideHighlightTooltip();
-      overlay.style.opacity = "1";
     });
 
     const container = parentEl || document.body;
@@ -748,11 +857,9 @@
     highlightOverlays.forEach((el) => el.remove());
     highlightOverlays = [];
     activeHighlights = [];
-    canvasOverlayData = [];
     hideHighlightTooltip();
 
     if (scrollHandler) {
-      // Remove from both the editor scroll container and document
       const editorEl = document.querySelector(".kix-appview-editor");
       if (editorEl) editorEl.removeEventListener("scroll", scrollHandler);
       document.removeEventListener("scroll", scrollHandler, true);

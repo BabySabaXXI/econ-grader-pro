@@ -56,27 +56,20 @@
    HIGHLIGHT OVERLAYS
    ============================================= */
 
+/* Base overlay — no blend mode (canvas content is underneath) */
 .econgrader-overlay {
-  mix-blend-mode: multiply;
-  transition: opacity 0.15s ease, background-color 0.15s ease;
+  transition: width 0.15s ease, background 0.15s ease, opacity 0.15s ease;
 }
 
+/* Classic mode overrides (DOM-based highlights use border-left style) */
 .econgrader-overlay-earned {
-  background-color: rgba(74, 139, 127, 0.18) !important;
-  border-left: 3px solid rgba(74, 139, 127, 0.7) !important;
-}
-
-.econgrader-overlay-earned:hover {
-  background-color: rgba(74, 139, 127, 0.32) !important;
+  /* Styles applied inline by JS for canvas mode;
+     CSS provides defaults for classic mode only */
 }
 
 .econgrader-overlay-lost {
-  background-color: rgba(191, 107, 107, 0.18) !important;
-  border-left: 3px solid rgba(191, 107, 107, 0.7) !important;
-}
-
-.econgrader-overlay-lost:hover {
-  background-color: rgba(191, 107, 107, 0.32) !important;
+  /* Styles applied inline by JS for canvas mode;
+     CSS provides defaults for classic mode only */
 }
 
 /* =============================================
