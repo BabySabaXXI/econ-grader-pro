@@ -400,15 +400,27 @@
 
   /**
    * Canvas mode highlighting — estimate positions based on text offset.
-   * Maps character offsets to page positions using line counting.
+   * Maps character offsets to positions within the tile manager container.
+   *
+   * Canvas-mode Google Docs DOM structure:
+   *   .kix-appview-editor
+   *     .kix-rotatingtilemanager  (the scrollable content area)
+   *       .kix-rotatingtilemanager-content
+   *         div > canvas.kix-canvas-tile-content  (multiple tiles, stacked)
+   *
+   * There are no .kix-page elements in canvas mode.
+   * We use the tile manager as our coordinate reference and place
+   * absolutely-positioned overlays inside it.
    */
   function applyCanvasHighlights(highlights, fullText) {
-    // Get all page elements
-    const pages = document.querySelectorAll(".kix-page");
-    if (pages.length === 0) {
-      console.log("EconGrader: No .kix-page elements found for canvas highlights");
+    // Find the tile manager — the main content container in canvas mode
+    const tileManager = document.querySelector(".kix-rotatingtilemanager");
+    if (!tileManager) {
+      console.log("EconGrader: No .kix-rotatingtilemanager found for canvas highlights");
       return;
     }
+
+    const tmRect = tileManager.getBoundingClientRect();
 
     // Split text into lines to estimate vertical positions
     const lines = fullText.split("\n");
@@ -426,25 +438,41 @@
       charPos += lines[i].length + 1; // +1 for \n
     }
 
-    // Estimate lines per page
-    const linesPerPage = Math.max(1, Math.ceil(totalLines / pages.length));
+    // Filter out empty lines for line height estimation
+    // (blank lines between paragraphs shouldn't count as full content lines)
+    const nonEmptyLines = lines.filter(l => l.trim().length > 0);
 
-    // Get page dimensions (from the first page)
-    const firstPage = pages[0];
-    const pageRect = firstPage.getBoundingClientRect();
+    // Google Docs canvas renders with approximately 18-20px line height
+    // The tile manager height contains all the text content
+    // We use a fixed line height and calculate top margin from the remaining space
+    const lineHeight = 20;
+    const totalContentHeight = nonEmptyLines.length * lineHeight;
+    const topPadding = Math.max(70, (tmRect.height - totalContentHeight) / 3);
 
-    // Typical Google Docs page content area (accounting for margins)
-    // Standard margins are about 72pt (96px) top/bottom, content area is ~670px high on a letter-size page
-    const pageMarginTop = 96;
-    const pageMarginBottom = 72;
-    const pageContentHeight = pageRect.height - pageMarginTop - pageMarginBottom;
-    const lineHeight = Math.max(16, pageContentHeight / linesPerPage);
+    // Left/right margins in canvas mode (Google Docs default ~1 inch = ~96px)
+    const marginLeft = 96;
+    const textWidth = tmRect.width - marginLeft * 2;
 
-    // Typical text content area (left/right margins ~72pt = ~96px)
-    const pageMarginLeft = 96;
-    const textWidth = pageRect.width - pageMarginLeft * 2;
+    console.log(`EconGrader: Canvas highlight — ${totalLines} lines (${nonEmptyLines.length} non-empty), ` +
+      `tileManager: ${Math.round(tmRect.width)}×${Math.round(tmRect.height)}, lineHeight: ${lineHeight}px`);
 
-    console.log(`EconGrader: Canvas highlight — ${totalLines} lines, ${pages.length} pages, ~${linesPerPage} lines/page`);
+    // Make tile manager position:relative so we can position overlays inside it
+    if (getComputedStyle(tileManager).position === "static") {
+      tileManager.style.position = "relative";
+    }
+
+    // Track cumulative line position accounting for blank lines
+    // Blank lines get reduced spacing (half height)
+    const lineYPositions = [];
+    let yPos = 0;
+    for (let i = 0; i < lines.length; i++) {
+      lineYPositions.push(yPos);
+      if (lines[i].trim().length === 0) {
+        yPos += lineHeight * 0.5; // blank lines get half spacing
+      } else {
+        yPos += lineHeight;
+      }
+    }
 
     highlights.forEach((highlight) => {
       // Find which line this highlight starts on
@@ -466,25 +494,19 @@
         }
       }
 
-      // Calculate which page and position within the page
-      const pageIdx = Math.min(Math.floor(lineIdx / linesPerPage), pages.length - 1);
-      const lineWithinPage = lineIdx - (pageIdx * linesPerPage);
       const numHighlightLines = endLineIdx - lineIdx + 1;
+      const overlayTop = topPadding + lineYPositions[lineIdx];
+      const overlayHeight = Math.max(lineHeight, Math.min(numHighlightLines * lineHeight, lineHeight * 4));
 
-      const page = pages[pageIdx];
-      const pageR = page.getBoundingClientRect();
-
-      const highlightTop = pageR.top + pageMarginTop + (lineWithinPage * lineHeight);
-      const highlightHeight = Math.max(lineHeight, numHighlightLines * lineHeight);
-
-      // Create the overlay bar
+      // Create overlay positioned absolutely within the tile manager
       createHighlightOverlay(
-        pageR.left + pageMarginLeft,
-        highlightTop,
+        marginLeft,
+        overlayTop,
         textWidth,
-        Math.min(highlightHeight, lineHeight * 3), // Cap at 3 lines height
+        overlayHeight,
         highlight,
-        "fixed"
+        "absolute",
+        tileManager
       );
     });
   }
@@ -492,7 +514,7 @@
   /**
    * Create a single highlight overlay element.
    */
-  function createHighlightOverlay(left, top, width, height, highlight, position) {
+  function createHighlightOverlay(left, top, width, height, highlight, position, parentEl) {
     const overlay = document.createElement("div");
     overlay.className = `econgrader-overlay econgrader-overlay-${highlight.type}`;
     overlay.style.cssText = `
@@ -538,7 +560,8 @@
       overlay.style.opacity = "1";
     });
 
-    document.body.appendChild(overlay);
+    const container = parentEl || document.body;
+    container.appendChild(overlay);
     highlightOverlays.push(overlay);
   }
 
