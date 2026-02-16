@@ -16,6 +16,7 @@
   // =============================================
   let activeHighlights = [];
   let highlightOverlays = [];
+  let lastFullText = "";
   let scrollHandler = null;
   let resizeHandler = null;
   let isCanvasMode = false;
@@ -272,70 +273,72 @@
   }
 
   // =============================================
-  // HIGHLIGHT OVERLAY SYSTEM
+  // HIGHLIGHT OVERLAY SYSTEM (CANVAS MODE COMPATIBLE)
   // =============================================
 
-  function getOrCreateOverlayContainer() {
-    let container = document.getElementById("econgrader-highlight-container");
-    if (!container) {
-      container = document.createElement("div");
-      container.id = "econgrader-highlight-container";
-      container.style.cssText =
-        "position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999;";
-
-      const editor =
-        document.querySelector(".kix-appview-editor") ||
-        document.querySelector(".docs-editor-container") ||
-        document.body;
-      editor.style.position = editor.style.position || "relative";
-      editor.appendChild(container);
-    }
-    return container;
-  }
-
-  function applyHighlightsToDoc(marksEarned, marksLost) {
+  /**
+   * Apply highlights to the Google Doc.
+   * Works in both classic DOM mode and canvas rendering mode.
+   *
+   * Canvas mode strategy:
+   *   1. Get full document text (from modelChunks or cached)
+   *   2. Find where each quote appears in the text (character offset)
+   *   3. Split text into lines to estimate vertical position
+   *   4. Map line positions to page elements (.kix-page)
+   *   5. Create colored overlay bars at estimated positions
+   *   6. Add tooltip popups on hover/click
+   */
+  function applyHighlightsToDoc(marksEarned, marksLost, providedText) {
     clearHighlightsFromDoc();
 
-    const textNodeMap = buildTextNodeMap();
-    if (textNodeMap.length === 0) return;
+    // Use provided text first, fall back to extraction
+    let fullText = providedText || "";
+    if (!fullText || fullText.length < 10) {
+      fullText = extractDocText();
+    }
+    if (!fullText || fullText.length < 10) {
+      console.log("EconGrader: No text available for highlighting");
+      return 0;
+    }
+    lastFullText = fullText;
+    console.log("EconGrader: Highlighting with", fullText.length, "chars of text");
 
-    const fullText = extractDocText();
     const fullTextLower = fullText.toLowerCase();
-    const container = getOrCreateOverlayContainer();
 
+    // Build highlight list with text positions
     const highlights = [];
 
-    marksEarned.forEach((mark) => {
+    (marksEarned || []).forEach((mark) => {
       if (!mark.quote) return;
       const quoteLower = mark.quote.toLowerCase();
-      let idx = fullTextLower.indexOf(quoteLower);
-      while (idx !== -1) {
+      const idx = fullTextLower.indexOf(quoteLower);
+      if (idx !== -1) {
         highlights.push({
           start: idx,
           end: idx + mark.quote.length,
           type: "earned",
           data: mark,
         });
-        idx = fullTextLower.indexOf(quoteLower, idx + 1);
       }
     });
 
-    marksLost.forEach((mark) => {
+    (marksLost || []).forEach((mark) => {
       if (!mark.quote) return;
       const quoteLower = mark.quote.toLowerCase();
-      let idx = fullTextLower.indexOf(quoteLower);
-      while (idx !== -1) {
+      const idx = fullTextLower.indexOf(quoteLower);
+      if (idx !== -1) {
         highlights.push({
           start: idx,
           end: idx + mark.quote.length,
           type: "lost",
           data: mark,
         });
-        idx = fullTextLower.indexOf(quoteLower, idx + 1);
       }
     });
 
     highlights.sort((a, b) => a.start - b.start);
+
+    // Remove overlapping highlights
     const nonOverlapping = [];
     let lastEnd = 0;
     for (const h of highlights) {
@@ -345,9 +348,31 @@
       }
     }
 
-    nonOverlapping.forEach((highlight) => {
-      const ranges = findDOMRangesForTextRange(textNodeMap, highlight.start, highlight.end);
+    if (nonOverlapping.length === 0) {
+      console.log("EconGrader: No matching quotes found in document text");
+      return 0;
+    }
 
+    // Try classic DOM-based highlighting first
+    const textNodeMap = buildTextNodeMap();
+    if (textNodeMap.length > 0) {
+      applyClassicHighlights(nonOverlapping, textNodeMap, fullText);
+    } else {
+      // Canvas mode: use position-estimated page overlays
+      applyCanvasHighlights(nonOverlapping, fullText);
+    }
+
+    activeHighlights = nonOverlapping;
+    setupRepositionHandlers(marksEarned, marksLost);
+    return highlightOverlays.length;
+  }
+
+  /**
+   * Classic DOM-based highlighting (works when word nodes exist).
+   */
+  function applyClassicHighlights(highlights, textNodeMap, fullText) {
+    highlights.forEach((highlight) => {
+      const ranges = findDOMRangesForTextRange(textNodeMap, highlight.start, highlight.end);
       ranges.forEach((rangeInfo) => {
         try {
           const range = document.createRange();
@@ -356,11 +381,7 @@
 
           const nodeOffset = highlight.start - rangeInfo.nodeStart;
           const startInNode = Math.max(0, nodeOffset);
-          const endInNode = Math.min(
-            textNode.length,
-            startInNode + (highlight.end - highlight.start)
-          );
-
+          const endInNode = Math.min(textNode.length, startInNode + (highlight.end - highlight.start));
           if (startInNode >= textNode.length || endInNode <= startInNode) return;
 
           range.setStart(textNode, startInNode);
@@ -368,57 +389,242 @@
 
           const rects = range.getClientRects();
           for (const rect of rects) {
-            const overlay = document.createElement("div");
-            overlay.className = `econgrader-overlay econgrader-overlay-${highlight.type}`;
-            overlay.style.cssText = `
-              position: fixed;
-              left: ${rect.left}px;
-              top: ${rect.top}px;
-              width: ${rect.width}px;
-              height: ${rect.height}px;
-              pointer-events: auto;
-              cursor: pointer;
-              transition: opacity 0.2s;
-              border-radius: 2px;
-              z-index: 1000;
-            `;
-
-            if (highlight.type === "earned") {
-              overlay.style.backgroundColor = "rgba(74, 139, 127, 0.15)";
-              overlay.style.borderBottom = "2px solid rgba(74, 139, 127, 0.5)";
-            } else {
-              overlay.style.backgroundColor = "rgba(191, 107, 107, 0.15)";
-              overlay.style.borderBottom = "2px solid rgba(191, 107, 107, 0.5)";
-            }
-
-            overlay.dataset.type = highlight.type;
-            overlay.dataset.highlightData = JSON.stringify(highlight.data);
-
-            overlay.addEventListener("click", (e) => {
-              e.stopPropagation();
-              chrome.runtime.sendMessage({
-                type: "HIGHLIGHT_CLICKED",
-                payload: {
-                  highlightType: highlight.type,
-                  data: highlight.data,
-                },
-              });
-            });
-
-            overlay.addEventListener("mouseenter", () => { overlay.style.opacity = "0.8"; });
-            overlay.addEventListener("mouseleave", () => { overlay.style.opacity = "1"; });
-
-            document.body.appendChild(overlay);
-            highlightOverlays.push(overlay);
+            createHighlightOverlay(rect.left, rect.top, rect.width, rect.height, highlight, "fixed");
           }
         } catch (e) {
-          console.debug("EconGrader: Skipping highlight range", e);
+          console.debug("EconGrader: Skipping classic highlight range", e);
         }
       });
     });
+  }
 
-    activeHighlights = nonOverlapping;
-    setupRepositionHandlers(marksEarned, marksLost);
+  /**
+   * Canvas mode highlighting — estimate positions based on text offset.
+   * Maps character offsets to page positions using line counting.
+   */
+  function applyCanvasHighlights(highlights, fullText) {
+    // Get all page elements
+    const pages = document.querySelectorAll(".kix-page");
+    if (pages.length === 0) {
+      console.log("EconGrader: No .kix-page elements found for canvas highlights");
+      return;
+    }
+
+    // Split text into lines to estimate vertical positions
+    const lines = fullText.split("\n");
+    const totalLines = lines.length;
+
+    // Build a line offset map: lineIndex → { startChar, endChar }
+    const lineOffsets = [];
+    let charPos = 0;
+    for (let i = 0; i < lines.length; i++) {
+      lineOffsets.push({
+        startChar: charPos,
+        endChar: charPos + lines[i].length,
+        text: lines[i],
+      });
+      charPos += lines[i].length + 1; // +1 for \n
+    }
+
+    // Estimate lines per page
+    const linesPerPage = Math.max(1, Math.ceil(totalLines / pages.length));
+
+    // Get page dimensions (from the first page)
+    const firstPage = pages[0];
+    const pageRect = firstPage.getBoundingClientRect();
+
+    // Typical Google Docs page content area (accounting for margins)
+    // Standard margins are about 72pt (96px) top/bottom, content area is ~670px high on a letter-size page
+    const pageMarginTop = 96;
+    const pageMarginBottom = 72;
+    const pageContentHeight = pageRect.height - pageMarginTop - pageMarginBottom;
+    const lineHeight = Math.max(16, pageContentHeight / linesPerPage);
+
+    // Typical text content area (left/right margins ~72pt = ~96px)
+    const pageMarginLeft = 96;
+    const textWidth = pageRect.width - pageMarginLeft * 2;
+
+    console.log(`EconGrader: Canvas highlight — ${totalLines} lines, ${pages.length} pages, ~${linesPerPage} lines/page`);
+
+    highlights.forEach((highlight) => {
+      // Find which line this highlight starts on
+      let lineIdx = -1;
+      for (let i = 0; i < lineOffsets.length; i++) {
+        if (highlight.start >= lineOffsets[i].startChar && highlight.start <= lineOffsets[i].endChar) {
+          lineIdx = i;
+          break;
+        }
+      }
+      if (lineIdx === -1) return;
+
+      // Find which line the highlight ends on
+      let endLineIdx = lineIdx;
+      for (let i = lineIdx; i < lineOffsets.length; i++) {
+        if (highlight.end <= lineOffsets[i].endChar) {
+          endLineIdx = i;
+          break;
+        }
+      }
+
+      // Calculate which page and position within the page
+      const pageIdx = Math.min(Math.floor(lineIdx / linesPerPage), pages.length - 1);
+      const lineWithinPage = lineIdx - (pageIdx * linesPerPage);
+      const numHighlightLines = endLineIdx - lineIdx + 1;
+
+      const page = pages[pageIdx];
+      const pageR = page.getBoundingClientRect();
+
+      const highlightTop = pageR.top + pageMarginTop + (lineWithinPage * lineHeight);
+      const highlightHeight = Math.max(lineHeight, numHighlightLines * lineHeight);
+
+      // Create the overlay bar
+      createHighlightOverlay(
+        pageR.left + pageMarginLeft,
+        highlightTop,
+        textWidth,
+        Math.min(highlightHeight, lineHeight * 3), // Cap at 3 lines height
+        highlight,
+        "fixed"
+      );
+    });
+  }
+
+  /**
+   * Create a single highlight overlay element.
+   */
+  function createHighlightOverlay(left, top, width, height, highlight, position) {
+    const overlay = document.createElement("div");
+    overlay.className = `econgrader-overlay econgrader-overlay-${highlight.type}`;
+    overlay.style.cssText = `
+      position: ${position};
+      left: ${left}px;
+      top: ${top}px;
+      width: ${width}px;
+      height: ${height}px;
+      pointer-events: auto;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      border-radius: 3px;
+      z-index: 1000;
+    `;
+
+    if (highlight.type === "earned") {
+      overlay.style.backgroundColor = "rgba(74, 139, 127, 0.18)";
+      overlay.style.borderLeft = "3px solid rgba(74, 139, 127, 0.7)";
+    } else {
+      overlay.style.backgroundColor = "rgba(191, 107, 107, 0.18)";
+      overlay.style.borderLeft = "3px solid rgba(191, 107, 107, 0.7)";
+    }
+
+    overlay.dataset.type = highlight.type;
+    overlay.dataset.highlightData = JSON.stringify(highlight.data);
+
+    // Click handler: notify side panel
+    overlay.addEventListener("click", (e) => {
+      e.stopPropagation();
+      chrome.runtime.sendMessage({
+        type: "HIGHLIGHT_CLICKED",
+        payload: { highlightType: highlight.type, data: highlight.data },
+      });
+    });
+
+    // Hover: show tooltip
+    overlay.addEventListener("mouseenter", (e) => {
+      showHighlightTooltip(e, highlight);
+      overlay.style.opacity = "0.9";
+    });
+    overlay.addEventListener("mouseleave", () => {
+      hideHighlightTooltip();
+      overlay.style.opacity = "1";
+    });
+
+    document.body.appendChild(overlay);
+    highlightOverlays.push(overlay);
+  }
+
+  /**
+   * Show a tooltip popup near the highlight overlay on hover.
+   */
+  function showHighlightTooltip(event, highlight) {
+    hideHighlightTooltip();
+
+    const tooltip = document.createElement("div");
+    tooltip.id = "econgrader-active-tooltip";
+    tooltip.className = "econgrader-tooltip";
+
+    const data = highlight.data;
+    const typeLabel = highlight.type === "earned" ? "✓ Mark Earned" : "✗ Issue Found";
+    const typeColor = highlight.type === "earned" ? "#3A7266" : "#BF6B6B";
+    const aoLabel = (data.ao || "").toUpperCase();
+
+    let bodyHtml = "";
+    if (highlight.type === "earned") {
+      bodyHtml = `
+        <div style="font-weight:600;color:${typeColor};margin-bottom:4px;font-size:11px;">${typeLabel} · ${aoLabel}</div>
+        <div style="font-size:12px;color:#2E3545;margin-bottom:4px;">"${escapeHtmlStr(data.quote || "")}"</div>
+        <div style="font-size:11px;color:#5A6478;">${escapeHtmlStr(data.reason || "")}</div>
+      `;
+    } else {
+      bodyHtml = `
+        <div style="font-weight:600;color:${typeColor};margin-bottom:4px;font-size:11px;">${typeLabel} · ${aoLabel}</div>
+        <div style="font-size:12px;color:#2E3545;margin-bottom:4px;">"${escapeHtmlStr(data.quote || "")}"</div>
+        <div style="font-size:11px;color:#BF6B6B;margin-bottom:3px;"><b>Issue:</b> ${escapeHtmlStr(data.issue || "")}</div>
+        <div style="font-size:11px;color:#3A7266;"><b>Fix:</b> ${escapeHtmlStr(data.howToFix || "")}</div>
+      `;
+    }
+
+    tooltip.innerHTML = bodyHtml;
+    tooltip.style.cssText = `
+      position: fixed;
+      z-index: 10001;
+      background: white;
+      border: 1px solid #DDE2EB;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 300px;
+      box-shadow: 0 8px 24px -6px rgba(22,27,38,0.18);
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.15s, transform 0.15s;
+    `;
+
+    document.body.appendChild(tooltip);
+
+    // Position the tooltip above or below the highlight
+    const rect = event.target.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+    let tooltipTop = rect.bottom + 6;
+    let tooltipLeft = rect.left;
+
+    // If tooltip would go below viewport, show above
+    if (tooltipTop + tooltipRect.height > window.innerHeight) {
+      tooltipTop = rect.top - tooltipRect.height - 6;
+    }
+    // Keep within viewport horizontally
+    if (tooltipLeft + tooltipRect.width > window.innerWidth - 16) {
+      tooltipLeft = window.innerWidth - tooltipRect.width - 16;
+    }
+
+    tooltip.style.top = `${tooltipTop}px`;
+    tooltip.style.left = `${tooltipLeft}px`;
+
+    // Animate in
+    requestAnimationFrame(() => {
+      tooltip.style.opacity = "1";
+      tooltip.style.transform = "translateY(0)";
+    });
+  }
+
+  function hideHighlightTooltip() {
+    const existing = document.getElementById("econgrader-active-tooltip");
+    if (existing) existing.remove();
+  }
+
+  function escapeHtmlStr(str) {
+    const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+    return String(str).replace(/[&<>"']/g, (c) => map[c]);
   }
 
   function findDOMRangesForTextRange(textNodeMap, start, end) {
@@ -444,6 +650,7 @@
     highlightOverlays.forEach((el) => el.remove());
     highlightOverlays = [];
     activeHighlights = [];
+    hideHighlightTooltip();
 
     if (scrollHandler) {
       document.removeEventListener("scroll", scrollHandler, true);
@@ -461,8 +668,8 @@
       clearTimeout(timeout);
       timeout = setTimeout(() => {
         clearHighlightsFromDoc();
-        applyHighlightsToDoc(marksEarned, marksLost);
-      }, 150);
+        applyHighlightsToDoc(marksEarned, marksLost, lastFullText);
+      }, 200);
     };
 
     scrollHandler = reposition;
@@ -528,9 +735,9 @@
       }
 
       case "APPLY_HIGHLIGHTS": {
-        const { marksEarned, marksLost } = message.payload;
-        applyHighlightsToDoc(marksEarned || [], marksLost || []);
-        sendResponse({ success: true, count: highlightOverlays.length });
+        const { marksEarned, marksLost, fullText } = message.payload;
+        const count = applyHighlightsToDoc(marksEarned || [], marksLost || [], fullText || "");
+        sendResponse({ success: true, count: count || highlightOverlays.length });
         break;
       }
 

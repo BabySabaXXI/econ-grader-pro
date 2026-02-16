@@ -121,9 +121,10 @@ You must respond with ONLY a valid JSON object in this exact format (no markdown
 IMPORTANT for marksEarned and marksLost:
 - Include 3-6 items in marksEarned showing specific phrases/sentences that demonstrated good economics
 - Include 2-4 items in marksLost showing specific weaknesses or missing elements
-- For marksLost, ALWAYS quote actual essay text — the quote must appear verbatim in the essay. If something is missing, quote the nearest sentence where it should have been added
-- Each quote should be a SHORT excerpt (10-80 characters) - just enough to uniquely identify the location in the essay
-- Be specific about which AO each point relates to`;
+- CRITICAL: Every "quote" MUST be an EXACT VERBATIM substring copied directly from the student's essay text — do NOT paraphrase, rephrase, or add words. The quote must appear character-for-character in the essay so it can be highlighted in the document. If a section is weak, quote the actual weak text. If something is missing entirely, quote the nearest sentence where it should have been added and explain what's missing in the "issue" field.
+- Each quote should be 10-80 characters — just enough to uniquely identify the location in the essay
+- Be specific about which AO each point relates to
+- For marksLost: NEVER use descriptions like "No content provided" as the quote — always quote actual essay text`;
 
 export const PLANNER_PROMPT = `You are an expert Edexcel IAL Economics tutor helping students plan A*-grade essays. Create detailed essay plans that will help students structure high-quality responses.
 

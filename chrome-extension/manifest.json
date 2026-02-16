@@ -7,7 +7,9 @@
     "sidePanel",
     "storage",
     "activeTab",
-    "scripting"
+    "scripting",
+    "clipboardRead",
+    "clipboardWrite"
   ],
   "host_permissions": [
     "https://docs.google.com/*"

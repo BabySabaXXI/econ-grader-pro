@@ -29,35 +29,30 @@
       </button>
     </header>
 
-    <!-- API KEY SETUP (shown if no key) -->
-    <div id="view-setup" class="view">
-      <div class="setup-card">
-        <div class="setup-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-          </svg>
-        </div>
-        <h2>API Key Required</h2>
-        <p>Enter your Anthropic API key to start grading essays.</p>
-        <input type="password" id="setup-api-key" placeholder="sk-ant-..." class="field" autocomplete="off">
-        <button id="setup-save-btn" class="btn-primary">Save & Continue</button>
-        <p class="setup-note">Your key is stored locally in your browser and never sent anywhere except the Anthropic API.</p>
-      </div>
-    </div>
-
     <!-- INPUT VIEW -->
-    <div id="view-input" class="view" style="display:none;">
+    <div id="view-input" class="view">
       <!-- Doc Status Bar -->
       <div id="doc-status" class="doc-status">
         <div class="doc-status-row">
           <span class="doc-status-label">Document</span>
-          <span id="doc-word-count" class="doc-status-value">--</span>
+          <span id="doc-word-count" class="doc-status-value">Scanning...</span>
+        </div>
+        <div class="doc-status-row">
+          <span class="doc-status-label">Question</span>
+          <span id="doc-question-status" class="doc-status-value">Detecting...</span>
         </div>
         <div class="doc-status-row">
           <span class="doc-status-label">Diagram</span>
           <span id="doc-diagram-status" class="doc-status-value">Scanning...</span>
         </div>
+      </div>
+
+      <!-- Detected Question Preview -->
+      <div id="question-preview" class="question-preview" style="display:none;">
+        <div class="question-preview-header">
+          <span class="field-label">Detected Question</span>
+        </div>
+        <div id="question-preview-text" class="question-preview-text"></div>
       </div>
 
       <!-- Diagram Banner (shown if no diagram found) -->
@@ -95,13 +90,6 @@
         <img id="diagram-preview-img" alt="Uploaded diagram" />
       </div>
 
-      <!-- Question Input -->
-      <div class="input-section">
-        <label class="field-label">Question</label>
-        <textarea id="input-question" class="field field-textarea" rows="3"
-          placeholder="Evaluate the extent to which supply-side policies are effective in promoting economic growth..."></textarea>
-      </div>
-
       <!-- Question Type -->
       <div class="input-section">
         <label class="field-label">Question Type</label>
@@ -118,15 +106,6 @@
         </svg>
         Grade This Essay
       </button>
-
-      <!-- Essay preview -->
-      <div id="essay-preview" class="essay-preview" style="display:none;">
-        <div class="essay-preview-header">
-          <span class="field-label">Extracted Text</span>
-          <button id="essay-preview-toggle" class="btn-sm btn-ghost">Show</button>
-        </div>
-        <div id="essay-preview-content" class="essay-preview-content" style="display:none;"></div>
-      </div>
     </div>
 
     <!-- LOADING VIEW -->
@@ -342,8 +321,8 @@
         </div>
         <div class="modal-body">
           <div class="input-section">
-            <label class="field-label">Anthropic API Key</label>
-            <input type="password" id="settings-api-key" class="field" placeholder="sk-ant-..." autocomplete="off">
+            <label class="field-label">API Server URL</label>
+            <input type="text" id="settings-api-url" class="field" placeholder="https://econ-grader-pro.vercel.app" autocomplete="off">
           </div>
           <div class="modal-actions">
             <button id="settings-save-btn" class="btn-primary">Save</button>

@@ -58,43 +58,58 @@
 
 .econgrader-overlay {
   mix-blend-mode: multiply;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
 }
 
 .econgrader-overlay-earned {
-  background-color: rgba(74, 139, 127, 0.15) !important;
-  border-bottom: 2px solid rgba(74, 139, 127, 0.5) !important;
+  background-color: rgba(74, 139, 127, 0.18) !important;
+  border-left: 3px solid rgba(74, 139, 127, 0.7) !important;
 }
 
 .econgrader-overlay-earned:hover {
-  background-color: rgba(74, 139, 127, 0.28) !important;
+  background-color: rgba(74, 139, 127, 0.32) !important;
 }
 
 .econgrader-overlay-lost {
-  background-color: rgba(191, 107, 107, 0.15) !important;
-  border-bottom: 2px solid rgba(191, 107, 107, 0.5) !important;
+  background-color: rgba(191, 107, 107, 0.18) !important;
+  border-left: 3px solid rgba(191, 107, 107, 0.7) !important;
 }
 
 .econgrader-overlay-lost:hover {
-  background-color: rgba(191, 107, 107, 0.28) !important;
+  background-color: rgba(191, 107, 107, 0.32) !important;
 }
 
 /* =============================================
-   TOOLTIP (shown on hover)
+   TOOLTIP (shown on hover over highlights)
    ============================================= */
+
+#econgrader-active-tooltip {
+  position: fixed;
+  z-index: 10001;
+  background: white;
+  border: 1px solid #DDE2EB;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  color: #2E3545;
+  box-shadow: 0 8px 24px -6px rgba(22, 27, 38, 0.18);
+  max-width: 300px;
+  pointer-events: none;
+}
 
 .econgrader-tooltip {
   position: fixed;
   z-index: 10001;
   background: white;
   border: 1px solid #DDE2EB;
-  border-radius: 8px;
-  padding: 8px 12px;
+  border-radius: 10px;
+  padding: 10px 14px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 12px;
   color: #2E3545;
-  box-shadow: 0 4px 16px -4px rgba(22, 27, 38, 0.12);
-  max-width: 240px;
+  box-shadow: 0 8px 24px -6px rgba(22, 27, 38, 0.18);
+  max-width: 300px;
   pointer-events: none;
   opacity: 0;
   transform: translateY(4px);
