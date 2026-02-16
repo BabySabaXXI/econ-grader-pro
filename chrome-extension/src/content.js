@@ -406,14 +406,15 @@
   }
 
   /**
-   * Canvas mode highlighting.
+   * Canvas mode highlighting — uses CANVAS PIXEL SCANNING for exact positions.
    *
-   * Strategy: Use the ACTUAL page element (.kix-page) or tile manager's
-   * internal structure to find real page boundaries, then use an offscreen
-   * measurement div to calculate proportional Y positions within the page.
-   *
-   * The overlays are absolute-positioned children of the tile manager,
-   * so they scroll naturally with the document.
+   * Strategy:
+   *   1. Read pixel data from Google Docs' own canvas tiles
+   *   2. Scan each row for non-white/non-transparent pixels (= rendered text)
+   *   3. Group text rows into visual lines, then lines into visual paragraphs
+   *   4. Match extracted text paragraphs to visual paragraphs
+   *   5. Place overlays at the EXACT pixel positions where text actually renders
+   *   6. Overlays are absolute-positioned in the tile manager → scroll naturally
    */
   function applyCanvasHighlights(highlights, fullText) {
     const tileManager = document.querySelector(".kix-rotatingtilemanager");
@@ -424,137 +425,136 @@
 
     const tmRect = tileManager.getBoundingClientRect();
     const tmStyle = window.getComputedStyle(tileManager);
-
-    // --- DIAGNOSTIC: dump real DOM structure to understand the page layout ---
-    // Look for all positioned children inside the TM to find the actual page
-    const tmContent = tileManager.querySelector(".kix-rotatingtilemanager-content");
     const allCanvases = tileManager.querySelectorAll("canvas.kix-canvas-tile-content");
 
-    // Each canvas tile has a parent div with explicit top/left/width/height styles.
-    // These tile positions reveal the actual page layout.
-    let minTileLeft = Infinity, maxTileRight = 0;
-    let minTileTop = Infinity, maxTileBottom = 0;
+    if (allCanvases.length === 0) {
+      console.log("EconGrader: No canvas tiles found");
+      return;
+    }
+
+    // --- Step 1: Get tile offsets relative to tile manager ---
+    const deviceRatio = allCanvases[0].width / parseInt(allCanvases[0].parentElement.style.width);
+    const tileOffsets = [];
     allCanvases.forEach((c) => {
-      const parent = c.parentElement;
-      if (parent) {
-        const r = parent.getBoundingClientRect();
-        const relLeft = r.left - tmRect.left;
-        const relTop = r.top - tmRect.top;
-        if (relLeft < minTileLeft) minTileLeft = relLeft;
-        if (relLeft + r.width > maxTileRight) maxTileRight = relLeft + r.width;
-        if (relTop < minTileTop) minTileTop = relTop;
-        if (relTop + r.height > maxTileBottom) maxTileBottom = relTop + r.height;
+      const p = c.parentElement;
+      const r = p.getBoundingClientRect();
+      tileOffsets.push({
+        tmX: Math.round(r.left - tmRect.left),
+        tmY: Math.round(r.top - tmRect.top),
+      });
+    });
+
+    // --- Step 2: Scan all canvas tiles for text pixel positions ---
+    const allTextYs = [];
+    let textLeftMin = Infinity, textRightMax = 0;
+
+    allCanvases.forEach((canvas, ti) => {
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      const W = canvas.width, H = canvas.height;
+      const off = tileOffsets[ti];
+
+      for (let yDev = 0; yDev < H; yDev += 2) {
+        const row = ctx.getImageData(0, yDev, W, 1).data;
+        let firstText = -1, lastText = -1;
+        for (let x = 0; x < W; x++) {
+          const r = row[x * 4], g = row[x * 4 + 1], b = row[x * 4 + 2], a = row[x * 4 + 3];
+          if (a > 200 && (r < 240 || g < 240 || b < 240)) {
+            if (firstText === -1) firstText = x;
+            lastText = x;
+          }
+        }
+        if (firstText >= 0) {
+          const tmY = Math.round(off.tmY + yDev / deviceRatio);
+          const tmL = Math.round(off.tmX + firstText / deviceRatio);
+          const tmR = Math.round(off.tmX + lastText / deviceRatio);
+          allTextYs.push(tmY);
+          if (tmL < textLeftMin) textLeftMin = tmL;
+          if (tmR > textRightMax) textRightMax = tmR;
+        }
       }
     });
 
-    // The tile area represents the actual rendered page content area
-    // (the canvas tiles tile the entire page including margins)
-    const tileAreaLeft = minTileLeft === Infinity ? 0 : minTileLeft;
-    const tileAreaWidth = maxTileRight > 0 ? maxTileRight - tileAreaLeft : tmRect.width;
-    const tileAreaTop = minTileTop === Infinity ? 0 : minTileTop;
-    const tileAreaHeight = maxTileBottom > 0 ? maxTileBottom - tileAreaTop : tmRect.height;
-
-    console.log(
-      `EconGrader: Tile area — left:${Math.round(tileAreaLeft)} top:${Math.round(tileAreaTop)} ` +
-      `w:${Math.round(tileAreaWidth)} h:${Math.round(tileAreaHeight)} ` +
-      `TM: ${Math.round(tmRect.width)}×${Math.round(tmRect.height)} ` +
-      `tiles: ${allCanvases.length}`
-    );
-
-    // Page dimensions: the tile area IS the full page (canvas covers everything).
-    // Standard Google Docs page: 8.5" × 11" at 96 DPI = 816 × 1056 px
-    // Default margins: 1" on all sides = 96px
-    // Text content area: starts at (96, 96) relative to page, 624px wide, 864px tall
-    //
-    // The page width tells us the DPI scaling factor:
-    const pageWidth = tileAreaWidth;
-    const pageHeight = tileAreaHeight || tmRect.height;
-    const dpiScale = pageWidth / 816; // 1.0 at standard 96dpi
-
-    // Text area boundaries (relative to tile manager)
-    const textLeft = tileAreaLeft + Math.round(96 * dpiScale);
-    const textTop = tileAreaTop + Math.round(96 * dpiScale);
-    const textWidth = Math.round(624 * dpiScale);
-    const textBottom = tileAreaTop + pageHeight - Math.round(96 * dpiScale);
-    const textHeight = textBottom - textTop;
-
-    console.log(
-      `EconGrader: Text area — left:${textLeft} top:${textTop} ` +
-      `w:${textWidth} h:${textHeight} dpiScale:${dpiScale.toFixed(3)}`
-    );
-
-    // --- Measure paragraph heights with offscreen div ---
-    const measureDiv = document.createElement("div");
-    measureDiv.style.cssText = `
-      position: absolute; top: -99999px; left: -99999px;
-      width: ${textWidth}px;
-      font-family: "Docs-Roboto", Roboto, Arial, sans-serif;
-      font-size: 10.5pt;
-      line-height: 1.35;
-      word-wrap: break-word; overflow-wrap: break-word;
-      white-space: pre-wrap;
-      visibility: hidden; padding: 0; margin: 0; border: none;
-    `;
-    document.body.appendChild(measureDiv);
-
-    const paragraphs = fullText.split("\n");
-    const paraMap = [];
-    let charOffset = 0;
-
-    for (let i = 0; i < paragraphs.length; i++) {
-      const para = paragraphs[i];
-      const paraStart = charOffset;
-      const paraEnd = charOffset + para.length;
-
-      if (para.trim().length === 0) {
-        paraMap.push({ startChar: paraStart, endChar: paraEnd, measuredHeight: 0, isEmpty: true });
-      } else {
-        measureDiv.textContent = para;
-        const h = measureDiv.offsetHeight;
-        paraMap.push({ startChar: paraStart, endChar: paraEnd, measuredHeight: h, isEmpty: false });
-      }
-      charOffset += para.length + 1;
+    if (allTextYs.length === 0) {
+      console.log("EconGrader: No text pixels found in canvas");
+      return;
     }
-    document.body.removeChild(measureDiv);
 
-    // --- Map measured heights to actual page text area ---
-    const totalMeasured = paraMap.reduce((s, p) => s + p.measuredHeight, 0);
-    const nonEmpty = paraMap.filter((p) => !p.isEmpty);
-    const emptyCount = paraMap.filter((p) => p.isEmpty).length;
+    allTextYs.sort((a, b) => a - b);
 
-    // Google Docs paragraph spacing: default is 0pt before, ~8pt after ≈ 10.67px at 96dpi
-    // Empty line: ~1 line height ≈ 18-19px at 96dpi
-    const lineH = Math.round(19 * dpiScale);
-    const paraSpacing = Math.round(11 * dpiScale);
+    // Text area boundaries (consistent left/right from 10th/90th percentile)
+    const sortedLefts = [...new Set(allTextYs)]; // unique Ys, use global left/right
+    const textLeft = textLeftMin;
+    const textRight = textRightMax;
+    const textWidth = textRight - textLeft;
 
-    // Total estimated content height
-    const totalEstimated = totalMeasured + emptyCount * lineH + nonEmpty.length * paraSpacing;
-
-    // Scale: map our estimated total to the actual available text height
-    const scale = textHeight > 0 && totalEstimated > 0
-      ? textHeight / totalEstimated
-      : 1.0;
-
-    // Build Y map — all positions relative to tile manager top
-    let y = textTop;
-    for (let i = 0; i < paraMap.length; i++) {
-      const p = paraMap[i];
-      p.yStart = y;
-      if (p.isEmpty) {
-        p.displayHeight = lineH * scale;
-        y += p.displayHeight;
+    // --- Step 3: Group text rows into visual lines ---
+    const lines = [];
+    let lineStart = allTextYs[0], lineEnd = allTextYs[0];
+    for (let i = 1; i < allTextYs.length; i++) {
+      if (allTextYs[i] - lineEnd <= 3) {
+        lineEnd = allTextYs[i];
       } else {
-        p.displayHeight = p.measuredHeight * scale;
-        y += p.displayHeight + paraSpacing * scale;
+        lines.push({ top: lineStart, bottom: lineEnd });
+        lineStart = allTextYs[i];
+        lineEnd = allTextYs[i];
       }
     }
-    const contentEnd = y;
+    lines.push({ top: lineStart, bottom: lineEnd });
+
+    // --- Step 4: Group lines into visual paragraphs (gap > 12px) ---
+    const visualParas = [];
+    let paraLines = [lines[0]];
+    for (let i = 1; i < lines.length; i++) {
+      const gap = lines[i].top - paraLines[paraLines.length - 1].bottom;
+      if (gap > 12) {
+        visualParas.push({
+          top: paraLines[0].top,
+          bottom: paraLines[paraLines.length - 1].bottom,
+          lineCount: paraLines.length,
+        });
+        paraLines = [lines[i]];
+      } else {
+        paraLines.push(lines[i]);
+      }
+    }
+    visualParas.push({
+      top: paraLines[0].top,
+      bottom: paraLines[paraLines.length - 1].bottom,
+      lineCount: paraLines.length,
+    });
+
+    // --- Step 5: Match text paragraphs to visual paragraphs ---
+    // Split fullText into paragraphs, skip empty ones, match by order
+    const textParas = fullText.split("\n");
+    const nonEmptyTextParas = [];
+    let charOff = 0;
+    for (let i = 0; i < textParas.length; i++) {
+      const p = textParas[i];
+      if (p.trim().length > 0) {
+        nonEmptyTextParas.push({ startChar: charOff, endChar: charOff + p.length, text: p });
+      }
+      charOff += p.length + 1;
+    }
+
+    // Build mapping: textPara index → visualPara index (1:1 by order)
+    const paraMapping = [];
+    const mapCount = Math.min(nonEmptyTextParas.length, visualParas.length);
+    for (let i = 0; i < mapCount; i++) {
+      paraMapping.push({
+        startChar: nonEmptyTextParas[i].startChar,
+        endChar: nonEmptyTextParas[i].endChar,
+        top: visualParas[i].top,
+        bottom: visualParas[i].bottom,
+        height: visualParas[i].bottom - visualParas[i].top,
+        lineCount: visualParas[i].lineCount,
+      });
+    }
 
     console.log(
-      `EconGrader: Layout — ${paragraphs.length} paras, ` +
-      `totalMeasured:${Math.round(totalMeasured)} totalEstimated:${Math.round(totalEstimated)} ` +
-      `textHeight:${Math.round(textHeight)} scale:${scale.toFixed(3)} ` +
-      `contentEnd:${Math.round(contentEnd)} textBottom:${Math.round(textBottom)}`
+      `EconGrader: Canvas scan — ${lines.length} lines, ${visualParas.length} visual paras, ` +
+      `${nonEmptyTextParas.length} text paras, textArea: L${textLeft} R${textRight} W${textWidth}, ` +
+      `mapped: ${mapCount}`
     );
 
     // Ensure tile manager accepts absolute children
@@ -562,38 +562,30 @@
       tileManager.style.position = "relative";
     }
 
-    // --- Place highlights ---
+    // --- Step 6: Place highlights at EXACT visual paragraph positions ---
     highlights.forEach((highlight) => {
-      // Find paragraph containing the highlight start
-      let startPara = null;
-      for (const p of paraMap) {
-        if (highlight.start >= p.startChar && highlight.start <= p.endChar) {
-          startPara = p;
-          break;
+      // Find which mapped paragraph contains this highlight
+      let startPara = null, endPara = null;
+      for (const pm of paraMapping) {
+        if (highlight.start >= pm.startChar && highlight.start < pm.endChar) {
+          startPara = pm;
+        }
+        if (highlight.end > pm.startChar && highlight.end <= pm.endChar) {
+          endPara = pm;
         }
       }
-      if (!startPara || startPara.isEmpty) return;
+      if (!startPara) return;
+      if (!endPara) endPara = startPara;
 
-      // Find paragraph containing the highlight end
-      let endPara = startPara;
-      for (const p of paraMap) {
-        if (highlight.end >= p.startChar && highlight.end <= p.endChar) {
-          endPara = p;
-          break;
-        }
-      }
+      // Use exact visual paragraph boundaries
+      const top = startPara.top;
+      const bottom = endPara.bottom;
+      const height = bottom - top;
 
-      // Use full paragraph height
-      const docY = startPara.yStart;
-      let highlightHeight = startPara === endPara
-        ? startPara.displayHeight
-        : (endPara.yStart + endPara.displayHeight) - startPara.yStart;
+      // Skip if height is unreasonable (ghost highlight protection)
+      if (height <= 0 || height > tmRect.height * 0.8) return;
 
-      // Don't place beyond text area
-      if (docY > textBottom || docY + highlightHeight < textTop) return;
-      highlightHeight = Math.max(lineH * scale * 0.8, highlightHeight);
-
-      createCanvasOverlay(textLeft, docY, textWidth, highlightHeight, highlight, tileManager);
+      createCanvasOverlay(textLeft, top, textWidth, height, highlight, tileManager);
     });
 
     console.log(`EconGrader: Placed ${highlightOverlays.length} canvas highlight overlays`);
