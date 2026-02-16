@@ -7,7 +7,7 @@ export const GRADING_PROMPT = `You are an expert Edexcel IAL Economics examiner 
 - Show understanding of economic models and their components
 - Reference relevant economists and their contributions where appropriate
 
-**AO2 - Application**
+**AO2 - Application*
 - Apply economic knowledge to real-world contexts and situations
 - Use relevant data, statistics, and current examples
 - Connect theoretical concepts to practical scenarios
@@ -110,7 +110,7 @@ You must respond with ONLY a valid JSON object in this exact format (no markdown
   ],
   "marksLost": [
     {
-      "quote": "<exact short quote from essay OR description of what was missing/weak>",
+      "quote": "<EXACT verbatim quote from the essay text that is weak or where content is missing - MUST appear in the essay>",
       "ao": "<ao1|ao2|ao3|ao4>",
       "issue": "<what was wrong or missing>",
       "howToFix": "<specific actionable advice to improve>"
@@ -121,8 +121,8 @@ You must respond with ONLY a valid JSON object in this exact format (no markdown
 IMPORTANT for marksEarned and marksLost:
 - Include 3-6 items in marksEarned showing specific phrases/sentences that demonstrated good economics
 - Include 2-4 items in marksLost showing specific weaknesses or missing elements
-- For marksLost, quote the weak section if identifiable, or describe what should have been included
-- Each quote should be a SHORT excerpt (under 100 characters ideally) - just enough to identify the section
+- For marksLost, ALWAYS quote actual essay text — the quote must appear verbatim in the essay. If something is missing, quote the nearest sentence where it should have been added
+- Each quote should be a SHORT excerpt (10-80 characters) - just enough to uniquely identify the location in the essay
 - Be specific about which AO each point relates to`;
 
 export const PLANNER_PROMPT = `You are an expert Edexcel IAL Economics tutor helping students plan A*-grade essays. Create detailed essay plans that will help students structure high-quality responses.
