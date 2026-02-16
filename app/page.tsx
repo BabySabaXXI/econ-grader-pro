@@ -27,6 +27,7 @@ import {
   Sparkles,
   Target,
   Zap,
+  Download,
 } from "lucide-react";
 import {
   QUESTION_TYPE_OPTIONS,
@@ -35,6 +36,7 @@ import {
 } from "@/lib/constants";
 import { GradingResult, PlanResult, QuestionType } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { exportGradingPdf } from "@/lib/export-pdf";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -252,11 +254,13 @@ function GradingResultDisplay({
   result,
   questionType,
   essayText,
+  questionText,
   onBack,
 }: {
   result: GradingResult;
   questionType: QuestionType;
   essayText: string;
+  questionText: string;
   onBack: () => void;
 }) {
   const [showDetailedFeedback, setShowDetailedFeedback] = useState(false);
@@ -272,23 +276,40 @@ function GradingResultDisplay({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: naturalEase }}
     >
-      {/* Back Button */}
-      <button
-        onClick={onBack}
-        className="group flex items-center gap-2 text-base2 font-inter font-medium text-n-4 hover:text-n-7 transition-all duration-300 mb-6"
-      >
-        <div
-          className="flex items-center justify-center w-7 h-7 transition-all duration-300 group-hover:shadow-jp-sm"
+      {/* Top Bar — Back + Export */}
+      <div className="flex items-center justify-between mb-6">
+        <button
+          onClick={onBack}
+          className="group flex items-center gap-2 text-base2 font-inter font-medium text-n-4 hover:text-n-7 transition-all duration-300"
+        >
+          <div
+            className="flex items-center justify-center w-7 h-7 transition-all duration-300 group-hover:shadow-jp-sm"
+            style={{
+              borderRadius: "0.375rem",
+              background: "var(--n-2)",
+              border: "1px solid var(--n-3)",
+            }}
+          >
+            <ArrowLeft className="w-3.5 h-3.5 transition-transform duration-300 group-hover:-translate-x-0.5" />
+          </div>
+          <span>Edit Answer</span>
+        </button>
+
+        <button
+          onClick={() =>
+            exportGradingPdf(result, questionType, questionText, essayText)
+          }
+          className="group flex items-center gap-2 text-base2 font-inter font-medium transition-all duration-300 px-4 py-2 hover:shadow-jp-sm"
           style={{
-            borderRadius: "0.375rem",
-            background: "var(--n-2)",
-            border: "1px solid var(--n-3)",
+            borderRadius: "0.5rem",
+            background: "var(--n-7)",
+            color: "white",
           }}
         >
-          <ArrowLeft className="w-3.5 h-3.5 transition-transform duration-300 group-hover:-translate-x-0.5" />
-        </div>
-        <span>Edit Answer</span>
-      </button>
+          <Download className="w-3.5 h-3.5" />
+          <span>Export PDF</span>
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Left Column — Essay View */}
@@ -1753,6 +1774,7 @@ export default function HomePage() {
                       result={graderResult}
                       questionType={graderQuestionType}
                       essayText={graderAnswer}
+                      questionText={graderQuestion}
                       onBack={() => setGraderView("input")}
                     />
                   )}

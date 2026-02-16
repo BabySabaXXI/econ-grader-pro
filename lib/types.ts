@@ -128,6 +128,7 @@ export type QuestionType =
   | "explain-6"
   | "explain-8"
   | "assess-12"
+  | "evaluate-14"
   | "evaluate-15"
   | "evaluate-20"
   | "evaluate-25";
