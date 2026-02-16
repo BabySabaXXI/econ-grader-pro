@@ -185,6 +185,10 @@ function bindEvents() {
     if (msg.type === "HIGHLIGHT_CLICKED") {
       showHighlightDetail(msg.payload.highlightType, msg.payload.data);
     }
+    // When the active tab changes or page reloads, reset the sidepanel
+    if (msg.type === "TAB_DOC_CHANGED") {
+      resetSidepanel();
+    }
   });
 }
 
@@ -724,6 +728,61 @@ function gradeAgain() {
 
   extractDocContent();
   showView("input");
+}
+
+/**
+ * Fully reset the sidepanel when the user navigates to a different doc,
+ * refreshes the page, or switches tabs. Clears all state, results,
+ * highlights, and goes back to the input view with fresh extraction.
+ */
+function resetSidepanel() {
+  // Clear highlights on the old page (best effort — page may have unloaded)
+  chrome.runtime.sendMessage({ type: "CLEAR_HIGHLIGHTS" });
+
+  // Reset all state
+  currentEssayText = "";
+  currentFullText = "";
+  detectedQuestion = "";
+  currentDiagramInfo = "none";
+  currentDiagramBase64 = null;
+  gradingResult = null;
+  highlightMode = "all";
+  extractRetryCount = 0;
+
+  // Reset loading steps
+  ["step-extract", "step-analyse", "step-grade", "step-highlight"].forEach((id) => {
+    const el = $(`#${id}`);
+    if (el) el.classList.remove("active", "done");
+  });
+
+  // Reset UI elements
+  const questionType = $("#input-question-type");
+  if (questionType) questionType.value = "";
+
+  const questionPreview = $("#question-preview");
+  if (questionPreview) questionPreview.style.display = "none";
+
+  const diagramPreview = $("#diagram-preview");
+  if (diagramPreview) diagramPreview.style.display = "none";
+
+  const diagramUpload = $("#diagram-upload");
+  if (diagramUpload) diagramUpload.value = "";
+
+  const diagramFeedback = $("#diagram-feedback-section");
+  if (diagramFeedback) diagramFeedback.style.display = "none";
+
+  // Reset highlight buttons
+  $$(".highlight-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.mode === "all");
+  });
+
+  // Go back to input view and re-extract from the new document
+  showView("input");
+
+  // Small delay to let the new page content load before extracting
+  setTimeout(() => {
+    extractDocContent();
+  }, 1000);
 }
 
 // =============================================

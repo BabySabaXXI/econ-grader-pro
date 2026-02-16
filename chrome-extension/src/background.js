@@ -23,7 +23,7 @@ chrome.action.onClicked.addListener(async (tab) => {
   }
 });
 
-// Enable side panel only on Google Docs
+// Enable side panel only on Google Docs + notify sidepanel on page changes
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (!tab.url) return;
   const isGoogleDoc = tab.url.includes("docs.google.com/document");
@@ -32,6 +32,31 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     path: "src/sidepanel.html",
     enabled: isGoogleDoc,
   });
+
+  // When the URL changes or page finishes loading on a Google Doc tab,
+  // notify the sidepanel to reset and re-extract content
+  if (changeInfo.status === "complete" && isGoogleDoc) {
+    chrome.runtime.sendMessage({
+      type: "TAB_DOC_CHANGED",
+      payload: { tabId, url: tab.url },
+    }).catch(() => {
+      // Sidepanel might not be open — that's fine
+    });
+  }
+});
+
+// When user switches to a different tab, notify sidepanel to reset
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  try {
+    const tab = await chrome.tabs.get(activeInfo.tabId);
+    const isGoogleDoc = tab.url && tab.url.includes("docs.google.com/document");
+    chrome.runtime.sendMessage({
+      type: "TAB_DOC_CHANGED",
+      payload: { tabId: activeInfo.tabId, url: tab.url || "", isGoogleDoc },
+    }).catch(() => {});
+  } catch (e) {
+    // Tab might not exist
+  }
 });
 
 // Message handler
