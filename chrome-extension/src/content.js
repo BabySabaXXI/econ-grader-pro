@@ -355,15 +355,21 @@
 
     // Try classic DOM-based highlighting first
     const textNodeMap = buildTextNodeMap();
+    let usedCanvasMode = false;
     if (textNodeMap.length > 0) {
       applyClassicHighlights(nonOverlapping, textNodeMap, fullText);
     } else {
       // Canvas mode: use position-estimated page overlays
       applyCanvasHighlights(nonOverlapping, fullText);
+      usedCanvasMode = true;
     }
 
     activeHighlights = nonOverlapping;
-    setupRepositionHandlers(marksEarned, marksLost);
+    // Canvas mode sets up its own lightweight scroll sync;
+    // classic mode needs the full reposition-on-scroll handler.
+    if (!usedCanvasMode) {
+      setupRepositionHandlers(marksEarned, marksLost);
+    }
     return highlightOverlays.length;
   }
 
@@ -400,116 +406,204 @@
 
   /**
    * Canvas mode highlighting — estimate positions based on text offset.
-   * Maps character offsets to positions within the tile manager container.
    *
-   * Canvas-mode Google Docs DOM structure:
-   *   .kix-appview-editor
-   *     .kix-rotatingtilemanager  (the scrollable content area)
+   * Strategy: Convert character offsets to visual Y positions by simulating
+   * word-wrap. Each paragraph (\n-delimited) wraps into multiple visual lines
+   * based on an estimated chars-per-line. We position overlays using fixed
+   * positioning and keep them in sync with scrolling via a scroll listener
+   * on .kix-appview-editor (the actual scroll container).
+   *
+   * Key DOM structure in canvas mode:
+   *   .kix-appview-editor  (scroll container, overflow: auto)
+   *     .kix-rotatingtilemanager  (positioned content, overflow: hidden)
    *       .kix-rotatingtilemanager-content
-   *         div > canvas.kix-canvas-tile-content  (multiple tiles, stacked)
-   *
-   * There are no .kix-page elements in canvas mode.
-   * We use the tile manager as our coordinate reference and place
-   * absolutely-positioned overlays inside it.
+   *         div > canvas.kix-canvas-tile-content  (rendered tiles)
    */
   function applyCanvasHighlights(highlights, fullText) {
-    // Find the tile manager — the main content container in canvas mode
     const tileManager = document.querySelector(".kix-rotatingtilemanager");
-    if (!tileManager) {
-      console.log("EconGrader: No .kix-rotatingtilemanager found for canvas highlights");
+    const scrollContainer = document.querySelector(".kix-appview-editor");
+    if (!tileManager || !scrollContainer) {
+      console.log("EconGrader: Missing tile manager or scroll container");
       return;
     }
 
     const tmRect = tileManager.getBoundingClientRect();
+    const scRect = scrollContainer.getBoundingClientRect();
 
-    // Split text into lines to estimate vertical positions
-    const lines = fullText.split("\n");
-    const totalLines = lines.length;
-
-    // Build a line offset map: lineIndex → { startChar, endChar }
-    const lineOffsets = [];
-    let charPos = 0;
-    for (let i = 0; i < lines.length; i++) {
-      lineOffsets.push({
-        startChar: charPos,
-        endChar: charPos + lines[i].length,
-        text: lines[i],
-      });
-      charPos += lines[i].length + 1; // +1 for \n
-    }
-
-    // Filter out empty lines for line height estimation
-    // (blank lines between paragraphs shouldn't count as full content lines)
-    const nonEmptyLines = lines.filter(l => l.trim().length > 0);
-
-    // Google Docs canvas renders with approximately 18-20px line height
-    // The tile manager height contains all the text content
-    // We use a fixed line height and calculate top margin from the remaining space
-    const lineHeight = 20;
-    const totalContentHeight = nonEmptyLines.length * lineHeight;
-    const topPadding = Math.max(70, (tmRect.height - totalContentHeight) / 3);
-
-    // Left/right margins in canvas mode (Google Docs default ~1 inch = ~96px)
+    // --- Layout constants (measured from actual Google Docs canvas rendering) ---
+    // Google Docs default 1-inch margins ≈ 96px each side
     const marginLeft = 96;
     const textWidth = tmRect.width - marginLeft * 2;
 
-    console.log(`EconGrader: Canvas highlight — ${totalLines} lines (${nonEmptyLines.length} non-empty), ` +
-      `tileManager: ${Math.round(tmRect.width)}×${Math.round(tmRect.height)}, lineHeight: ${lineHeight}px`);
+    // Visual line height: Roboto/Arial 10.5–11pt with default line spacing ≈ 19px
+    const visualLineHeight = 19;
 
-    // Make tile manager position:relative so we can position overlays inside it
-    if (getComputedStyle(tileManager).position === "static") {
-      tileManager.style.position = "relative";
-    }
+    // Paragraph spacing: blank line between paragraphs ≈ 28px
+    const paragraphSpacing = 28;
 
-    // Track cumulative line position accounting for blank lines
-    // Blank lines get reduced spacing (half height)
-    const lineYPositions = [];
-    let yPos = 0;
-    for (let i = 0; i < lines.length; i++) {
-      lineYPositions.push(yPos);
-      if (lines[i].trim().length === 0) {
-        yPos += lineHeight * 0.5; // blank lines get half spacing
+    // Characters per visual line: text area width / avg char width
+    // Roboto 10.5pt average char ≈ 7.8px → ~textWidth/7.8
+    // But word-wrap breaks at word boundaries, so effective is ~85-90% of theoretical
+    const charsPerVisualLine = Math.floor((textWidth / 7.8) * 0.88);
+
+    // Top padding: distance from tile manager top to first text line (~36px measured)
+    const topPadding = 36;
+
+    // --- Build a visual-line position map ---
+    // For each character offset, compute the Y position within the tile manager
+    const paragraphs = fullText.split("\n");
+    // For each paragraph, store: { startChar, endChar, visualLineStart, visualLineCount }
+    const paraMap = [];
+    let charOffset = 0;
+    let visualLine = 0;
+
+    for (let i = 0; i < paragraphs.length; i++) {
+      const para = paragraphs[i];
+      const paraStart = charOffset;
+      const paraEnd = charOffset + para.length;
+
+      if (para.trim().length === 0) {
+        // Empty line: just add paragraph spacing
+        paraMap.push({
+          startChar: paraStart,
+          endChar: paraEnd,
+          visualLineStart: visualLine,
+          visualLineCount: 0,
+          isEmpty: true,
+        });
+        // Paragraph gap adds ~1.5 visual lines worth of space
+        visualLine += paragraphSpacing / visualLineHeight;
       } else {
-        yPos += lineHeight;
+        // Estimate how many visual lines this paragraph wraps to
+        const wrappedLines = Math.max(1, Math.ceil(para.length / charsPerVisualLine));
+        paraMap.push({
+          startChar: paraStart,
+          endChar: paraEnd,
+          visualLineStart: visualLine,
+          visualLineCount: wrappedLines,
+          isEmpty: false,
+        });
+        visualLine += wrappedLines;
       }
+
+      charOffset += para.length + 1; // +1 for \n
     }
+
+    const totalVisualLines = visualLine;
+
+    console.log(
+      `EconGrader: Canvas highlight — ${paragraphs.length} paras, ` +
+      `~${Math.round(totalVisualLines)} visual lines, ` +
+      `${charsPerVisualLine} chars/line, ` +
+      `TM: ${Math.round(tmRect.width)}×${Math.round(tmRect.height)}`
+    );
+
+    // --- Place highlight overlays ---
+    // We use fixed positioning so overlays sit over the visible viewport,
+    // then adjust for scroll via a scroll listener.
+
+    // Calculate the "document Y" for each highlight (relative to tile manager top)
+    const overlayData = []; // Store data for scroll syncing
 
     highlights.forEach((highlight) => {
-      // Find which line this highlight starts on
-      let lineIdx = -1;
-      for (let i = 0; i < lineOffsets.length; i++) {
-        if (highlight.start >= lineOffsets[i].startChar && highlight.start <= lineOffsets[i].endChar) {
-          lineIdx = i;
+      // Find which paragraph this highlight falls in
+      let para = null;
+      for (const p of paraMap) {
+        if (highlight.start >= p.startChar && highlight.start <= p.endChar) {
+          para = p;
           break;
         }
       }
-      if (lineIdx === -1) return;
+      if (!para || para.isEmpty) return;
 
-      // Find which line the highlight ends on
-      let endLineIdx = lineIdx;
-      for (let i = lineIdx; i < lineOffsets.length; i++) {
-        if (highlight.end <= lineOffsets[i].endChar) {
-          endLineIdx = i;
+      // Find end paragraph
+      let endPara = para;
+      for (const p of paraMap) {
+        if (highlight.end >= p.startChar && highlight.end <= p.endChar) {
+          endPara = p;
           break;
         }
       }
 
-      const numHighlightLines = endLineIdx - lineIdx + 1;
-      const overlayTop = topPadding + lineYPositions[lineIdx];
-      const overlayHeight = Math.max(lineHeight, Math.min(numHighlightLines * lineHeight, lineHeight * 4));
+      // Character offset within the starting paragraph
+      const charInPara = highlight.start - para.startChar;
+      // Which visual line within this paragraph does the highlight start?
+      const visualLineInPara = Math.floor(charInPara / charsPerVisualLine);
 
-      // Create overlay positioned absolutely within the tile manager
+      // Character offset within the ending paragraph
+      const endCharInPara = highlight.end - endPara.startChar;
+      const endVisualLineInPara = Math.floor(endCharInPara / charsPerVisualLine);
+
+      // Total visual lines this highlight spans
+      let highlightVisualLines;
+      if (para === endPara) {
+        highlightVisualLines = endVisualLineInPara - visualLineInPara + 1;
+      } else {
+        // Spans multiple paragraphs
+        const linesInFirstPara = para.visualLineCount - visualLineInPara;
+        const linesInLastPara = endVisualLineInPara + 1;
+        highlightVisualLines = linesInFirstPara + linesInLastPara;
+      }
+      highlightVisualLines = Math.max(1, Math.min(highlightVisualLines, 6));
+
+      // Document Y position (relative to tile manager top, in px)
+      const docY = topPadding + (para.visualLineStart + visualLineInPara) * visualLineHeight;
+      const overlayHeight = highlightVisualLines * visualLineHeight;
+
+      const overlayInfo = { docY, height: overlayHeight, highlight };
+      overlayData.push(overlayInfo);
+
+      // Calculate initial viewport position
+      const viewportY = tmRect.top + docY;
       createHighlightOverlay(
-        marginLeft,
-        overlayTop,
+        tmRect.left + marginLeft,
+        viewportY,
         textWidth,
         overlayHeight,
         highlight,
-        "absolute",
-        tileManager
+        "fixed"
       );
     });
+
+    // --- Scroll sync ---
+    // Store overlay data for the scroll handler to reposition
+    canvasOverlayData = overlayData;
+    canvasLayoutInfo = { tmSelector: ".kix-rotatingtilemanager", marginLeft, textWidth };
+
+    // Set up scroll listener on the actual scroll container
+    const syncScroll = () => {
+      const tm = document.querySelector(".kix-rotatingtilemanager");
+      if (!tm) return;
+      const currentTmRect = tm.getBoundingClientRect();
+
+      highlightOverlays.forEach((overlay, idx) => {
+        if (idx < canvasOverlayData.length) {
+          const data = canvasOverlayData[idx];
+          const newY = currentTmRect.top + data.docY;
+          // Only show if within the scroll container's visible area
+          const scR = document.querySelector(".kix-appview-editor")?.getBoundingClientRect();
+          if (scR && (newY + data.height < scR.top || newY > scR.bottom)) {
+            overlay.style.display = "none";
+          } else {
+            overlay.style.display = "";
+            overlay.style.top = `${newY}px`;
+            overlay.style.left = `${currentTmRect.left + canvasLayoutInfo.marginLeft}px`;
+          }
+        }
+      });
+    };
+
+    // Attach scroll listener to the .kix-appview-editor scroll container
+    scrollHandler = syncScroll;
+    scrollContainer.addEventListener("scroll", syncScroll, { passive: true });
+    // Also handle window scroll/resize
+    document.addEventListener("scroll", syncScroll, true);
+    window.addEventListener("resize", syncScroll);
   }
+
+  // State for canvas overlay scroll syncing
+  let canvasOverlayData = [];
+  let canvasLayoutInfo = {};
 
   /**
    * Create a single highlight overlay element.
@@ -673,9 +767,13 @@
     highlightOverlays.forEach((el) => el.remove());
     highlightOverlays = [];
     activeHighlights = [];
+    canvasOverlayData = [];
     hideHighlightTooltip();
 
     if (scrollHandler) {
+      // Remove from both the editor scroll container and document
+      const editorEl = document.querySelector(".kix-appview-editor");
+      if (editorEl) editorEl.removeEventListener("scroll", scrollHandler);
       document.removeEventListener("scroll", scrollHandler, true);
       scrollHandler = null;
     }
