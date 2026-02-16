@@ -46,6 +46,7 @@ export interface GradingResult {
   marksLost?: MarkLost[];
   detailedFeedback?: DetailedAOFeedback;
   diagramFeedback?: DiagramFeedback;
+    markScheme?: MarkScheme;
 }
 
 export interface DiagramFeedback {
