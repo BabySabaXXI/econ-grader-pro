@@ -430,32 +430,33 @@
     const tmRect = tileManager.getBoundingClientRect();
     const scRect = scrollContainer.getBoundingClientRect();
 
-    // --- Layout constants (measured from actual Google Docs canvas rendering) ---
-    // Google Docs default 1-inch margins ≈ 96px each side
-    const marginLeft = 96;
-    const textWidth = tmRect.width - marginLeft * 2;
+    // --- Dynamically measure text area from the tile manager width ---
+    // Google Docs standard page: 8.5" at 96dpi = 816px text area with 1" margins
+    // The tile manager width varies; text margins are proportional.
+    // Measured: text occupies roughly the middle 71.5% of the tile manager width.
+    // Left margin ≈ 16.7% of TM width, text width ≈ 71.5% of TM width.
+    const marginLeft = Math.round(tmRect.width * 0.167);
+    const textWidth = Math.round(tmRect.width * 0.715);
 
-    // Visual line height: Roboto/Arial 10.5–11pt with default line spacing ≈ 19px
-    const visualLineHeight = 19;
+    // --- Visual line geometry ---
+    // Roboto/Arial 10.5pt with Google Docs default 1.15 line spacing → ~18px per visual line
+    const visualLineHeight = 18;
+    // Paragraph spacing (blank \n between paragraphs) → ~30px gap
+    const paragraphSpacing = 30;
+    // Top padding: distance from tile manager top to the first text baseline (~46px)
+    const topPadding = 46;
 
-    // Paragraph spacing: blank line between paragraphs ≈ 28px
-    const paragraphSpacing = 28;
-
-    // Characters per visual line: text area width / avg char width
-    // Roboto 10.5pt average char ≈ 7.8px → ~textWidth/7.8
-    // But word-wrap breaks at word boundaries, so effective is ~85-90% of theoretical
-    const charsPerVisualLine = Math.floor((textWidth / 7.8) * 0.88);
-
-    // Top padding: distance from tile manager top to first text line (~36px measured)
-    const topPadding = 36;
+    // --- Estimate characters per visual line ---
+    // Average character width for Roboto 10.5pt ≈ 6.35px
+    // Word-wrap breaks at word boundaries, so effective chars ≈ 95% of theoretical
+    const avgCharWidth = 6.35;
+    const charsPerVisualLine = Math.floor((textWidth / avgCharWidth) * 0.95);
 
     // --- Build a visual-line position map ---
-    // For each character offset, compute the Y position within the tile manager
     const paragraphs = fullText.split("\n");
-    // For each paragraph, store: { startChar, endChar, visualLineStart, visualLineCount }
     const paraMap = [];
     let charOffset = 0;
-    let visualLine = 0;
+    let cumulativeY = 0; // Track Y in pixels (not visual line count) for precision
 
     for (let i = 0; i < paragraphs.length; i++) {
       const para = paragraphs[i];
@@ -463,50 +464,41 @@
       const paraEnd = charOffset + para.length;
 
       if (para.trim().length === 0) {
-        // Empty line: just add paragraph spacing
+        // Empty paragraph: add paragraph spacing gap
         paraMap.push({
           startChar: paraStart,
           endChar: paraEnd,
-          visualLineStart: visualLine,
+          yStart: cumulativeY,
           visualLineCount: 0,
           isEmpty: true,
         });
-        // Paragraph gap adds ~1.5 visual lines worth of space
-        visualLine += paragraphSpacing / visualLineHeight;
+        cumulativeY += paragraphSpacing;
       } else {
-        // Estimate how many visual lines this paragraph wraps to
         const wrappedLines = Math.max(1, Math.ceil(para.length / charsPerVisualLine));
         paraMap.push({
           startChar: paraStart,
           endChar: paraEnd,
-          visualLineStart: visualLine,
+          yStart: cumulativeY,
           visualLineCount: wrappedLines,
           isEmpty: false,
         });
-        visualLine += wrappedLines;
+        cumulativeY += wrappedLines * visualLineHeight;
       }
 
       charOffset += para.length + 1; // +1 for \n
     }
 
-    const totalVisualLines = visualLine;
-
     console.log(
       `EconGrader: Canvas highlight — ${paragraphs.length} paras, ` +
-      `~${Math.round(totalVisualLines)} visual lines, ` +
-      `${charsPerVisualLine} chars/line, ` +
+      `${charsPerVisualLine} chars/line, totalY: ${Math.round(cumulativeY)}px, ` +
       `TM: ${Math.round(tmRect.width)}×${Math.round(tmRect.height)}`
     );
 
     // --- Place highlight overlays ---
-    // We use fixed positioning so overlays sit over the visible viewport,
-    // then adjust for scroll via a scroll listener.
-
-    // Calculate the "document Y" for each highlight (relative to tile manager top)
-    const overlayData = []; // Store data for scroll syncing
+    const overlayData = [];
 
     highlights.forEach((highlight) => {
-      // Find which paragraph this highlight falls in
+      // Find starting paragraph
       let para = null;
       for (const p of paraMap) {
         if (highlight.start >= p.startChar && highlight.start <= p.endChar) {
@@ -516,7 +508,7 @@
       }
       if (!para || para.isEmpty) return;
 
-      // Find end paragraph
+      // Find ending paragraph
       let endPara = para;
       for (const p of paraMap) {
         if (highlight.end >= p.startChar && highlight.end <= p.endChar) {
@@ -525,39 +517,32 @@
         }
       }
 
-      // Character offset within the starting paragraph
+      // Which visual line within the paragraph does the highlight start/end?
       const charInPara = highlight.start - para.startChar;
-      // Which visual line within this paragraph does the highlight start?
-      const visualLineInPara = Math.floor(charInPara / charsPerVisualLine);
+      const startVisLine = Math.floor(charInPara / charsPerVisualLine);
 
-      // Character offset within the ending paragraph
       const endCharInPara = highlight.end - endPara.startChar;
-      const endVisualLineInPara = Math.floor(endCharInPara / charsPerVisualLine);
+      const endVisLine = Math.floor(endCharInPara / charsPerVisualLine);
 
-      // Total visual lines this highlight spans
+      // Calculate highlight height in visual lines
       let highlightVisualLines;
       if (para === endPara) {
-        highlightVisualLines = endVisualLineInPara - visualLineInPara + 1;
+        highlightVisualLines = endVisLine - startVisLine + 1;
       } else {
-        // Spans multiple paragraphs
-        const linesInFirstPara = para.visualLineCount - visualLineInPara;
-        const linesInLastPara = endVisualLineInPara + 1;
-        highlightVisualLines = linesInFirstPara + linesInLastPara;
+        highlightVisualLines = (para.visualLineCount - startVisLine) + (endVisLine + 1);
       }
-      highlightVisualLines = Math.max(1, Math.min(highlightVisualLines, 6));
+      highlightVisualLines = Math.max(1, Math.min(highlightVisualLines, 8));
 
-      // Document Y position (relative to tile manager top, in px)
-      const docY = topPadding + (para.visualLineStart + visualLineInPara) * visualLineHeight;
+      // Document Y (pixels relative to tile manager top)
+      const docY = topPadding + para.yStart + startVisLine * visualLineHeight;
       const overlayHeight = highlightVisualLines * visualLineHeight;
 
-      const overlayInfo = { docY, height: overlayHeight, highlight };
-      overlayData.push(overlayInfo);
+      overlayData.push({ docY, height: overlayHeight, highlight });
 
-      // Calculate initial viewport position
-      const viewportY = tmRect.top + docY;
+      // Initial viewport position
       createHighlightOverlay(
         tmRect.left + marginLeft,
-        viewportY,
+        tmRect.top + docY,
         textWidth,
         overlayHeight,
         highlight,
@@ -566,37 +551,33 @@
     });
 
     // --- Scroll sync ---
-    // Store overlay data for the scroll handler to reposition
     canvasOverlayData = overlayData;
-    canvasLayoutInfo = { tmSelector: ".kix-rotatingtilemanager", marginLeft, textWidth };
+    canvasLayoutInfo = { marginLeft, textWidth };
 
-    // Set up scroll listener on the actual scroll container
     const syncScroll = () => {
       const tm = document.querySelector(".kix-rotatingtilemanager");
-      if (!tm) return;
-      const currentTmRect = tm.getBoundingClientRect();
+      const sc = document.querySelector(".kix-appview-editor");
+      if (!tm || !sc) return;
+      const curTm = tm.getBoundingClientRect();
+      const curSc = sc.getBoundingClientRect();
 
       highlightOverlays.forEach((overlay, idx) => {
-        if (idx < canvasOverlayData.length) {
-          const data = canvasOverlayData[idx];
-          const newY = currentTmRect.top + data.docY;
-          // Only show if within the scroll container's visible area
-          const scR = document.querySelector(".kix-appview-editor")?.getBoundingClientRect();
-          if (scR && (newY + data.height < scR.top || newY > scR.bottom)) {
-            overlay.style.display = "none";
-          } else {
-            overlay.style.display = "";
-            overlay.style.top = `${newY}px`;
-            overlay.style.left = `${currentTmRect.left + canvasLayoutInfo.marginLeft}px`;
-          }
+        if (idx >= canvasOverlayData.length) return;
+        const data = canvasOverlayData[idx];
+        const newY = curTm.top + data.docY;
+        // Clip to visible scroll area
+        if (newY + data.height < curSc.top || newY > curSc.bottom) {
+          overlay.style.display = "none";
+        } else {
+          overlay.style.display = "";
+          overlay.style.top = `${newY}px`;
+          overlay.style.left = `${curTm.left + canvasLayoutInfo.marginLeft}px`;
         }
       });
     };
 
-    // Attach scroll listener to the .kix-appview-editor scroll container
     scrollHandler = syncScroll;
     scrollContainer.addEventListener("scroll", syncScroll, { passive: true });
-    // Also handle window scroll/resize
     document.addEventListener("scroll", syncScroll, true);
     window.addEventListener("resize", syncScroll);
   }
