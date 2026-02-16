@@ -406,20 +406,14 @@
   }
 
   /**
-   * Canvas mode highlighting — uses offscreen measurement for accurate positioning.
+   * Canvas mode highlighting.
    *
-   * Strategy:
-   *   1. Create an invisible div matching Google Docs' font/layout
-   *   2. Render each paragraph in it to measure exact pixel heights
-   *   3. Place overlays as absolute-positioned children of .kix-rotatingtilemanager
-   *      → this makes them scroll naturally with the document (no scroll sync needed!)
-   *   4. Use thin left-margin accent bars for clarity (not full-width blocks)
+   * Strategy: Use the ACTUAL page element (.kix-page) or tile manager's
+   * internal structure to find real page boundaries, then use an offscreen
+   * measurement div to calculate proportional Y positions within the page.
    *
-   * Key DOM structure in canvas mode:
-   *   .kix-appview-editor  (scroll container, overflow: auto)
-   *     .kix-rotatingtilemanager  (positioned content, overflow: hidden)
-   *       .kix-rotatingtilemanager-content
-   *         div > canvas.kix-canvas-tile-content  (rendered tiles)
+   * The overlays are absolute-positioned children of the tile manager,
+   * so they scroll naturally with the document.
    */
   function applyCanvasHighlights(highlights, fullText) {
     const tileManager = document.querySelector(".kix-rotatingtilemanager");
@@ -431,48 +425,78 @@
     const tmRect = tileManager.getBoundingClientRect();
     const tmStyle = window.getComputedStyle(tileManager);
 
-    // --- Detect page geometry from canvas tiles ---
-    // The canvas tiles reveal the actual rendered page dimensions.
-    const canvasTiles = tileManager.querySelectorAll("canvas.kix-canvas-tile-content");
-    let pageLeft = 0, pageWidth = 0;
-    if (canvasTiles.length > 0) {
-      // Canvas tiles are positioned within the tile manager
-      const firstCanvas = canvasTiles[0];
-      const canvasRect = firstCanvas.getBoundingClientRect();
-      pageLeft = canvasRect.left - tmRect.left;
-      pageWidth = canvasRect.width;
-    }
+    // --- DIAGNOSTIC: dump real DOM structure to understand the page layout ---
+    // Look for all positioned children inside the TM to find the actual page
+    const tmContent = tileManager.querySelector(".kix-rotatingtilemanager-content");
+    const allCanvases = tileManager.querySelectorAll("canvas.kix-canvas-tile-content");
 
-    // Google Docs standard page: 8.5" = 816px at 96dpi
-    // With 1" margins on each side: text area = 6.5" = 624px
-    // Left margin as fraction of page: 96/816 = 0.1176
-    // Text width as fraction of page: 624/816 = 0.7647
-    // If no canvas found, use tile manager proportions
-    const effectivePageWidth = pageWidth || tmRect.width;
-    const marginLeftPx = pageLeft + Math.round(effectivePageWidth * 0.1176);
-    const textWidthPx = Math.round(effectivePageWidth * 0.7647);
+    // Each canvas tile has a parent div with explicit top/left/width/height styles.
+    // These tile positions reveal the actual page layout.
+    let minTileLeft = Infinity, maxTileRight = 0;
+    let minTileTop = Infinity, maxTileBottom = 0;
+    allCanvases.forEach((c) => {
+      const parent = c.parentElement;
+      if (parent) {
+        const r = parent.getBoundingClientRect();
+        const relLeft = r.left - tmRect.left;
+        const relTop = r.top - tmRect.top;
+        if (relLeft < minTileLeft) minTileLeft = relLeft;
+        if (relLeft + r.width > maxTileRight) maxTileRight = relLeft + r.width;
+        if (relTop < minTileTop) minTileTop = relTop;
+        if (relTop + r.height > maxTileBottom) maxTileBottom = relTop + r.height;
+      }
+    });
 
-    // --- Create offscreen measurement div matching Google Docs text rendering ---
+    // The tile area represents the actual rendered page content area
+    // (the canvas tiles tile the entire page including margins)
+    const tileAreaLeft = minTileLeft === Infinity ? 0 : minTileLeft;
+    const tileAreaWidth = maxTileRight > 0 ? maxTileRight - tileAreaLeft : tmRect.width;
+    const tileAreaTop = minTileTop === Infinity ? 0 : minTileTop;
+    const tileAreaHeight = maxTileBottom > 0 ? maxTileBottom - tileAreaTop : tmRect.height;
+
+    console.log(
+      `EconGrader: Tile area — left:${Math.round(tileAreaLeft)} top:${Math.round(tileAreaTop)} ` +
+      `w:${Math.round(tileAreaWidth)} h:${Math.round(tileAreaHeight)} ` +
+      `TM: ${Math.round(tmRect.width)}×${Math.round(tmRect.height)} ` +
+      `tiles: ${allCanvases.length}`
+    );
+
+    // Page dimensions: the tile area IS the full page (canvas covers everything).
+    // Standard Google Docs page: 8.5" × 11" at 96 DPI = 816 × 1056 px
+    // Default margins: 1" on all sides = 96px
+    // Text content area: starts at (96, 96) relative to page, 624px wide, 864px tall
+    //
+    // The page width tells us the DPI scaling factor:
+    const pageWidth = tileAreaWidth;
+    const pageHeight = tileAreaHeight || tmRect.height;
+    const dpiScale = pageWidth / 816; // 1.0 at standard 96dpi
+
+    // Text area boundaries (relative to tile manager)
+    const textLeft = tileAreaLeft + Math.round(96 * dpiScale);
+    const textTop = tileAreaTop + Math.round(96 * dpiScale);
+    const textWidth = Math.round(624 * dpiScale);
+    const textBottom = tileAreaTop + pageHeight - Math.round(96 * dpiScale);
+    const textHeight = textBottom - textTop;
+
+    console.log(
+      `EconGrader: Text area — left:${textLeft} top:${textTop} ` +
+      `w:${textWidth} h:${textHeight} dpiScale:${dpiScale.toFixed(3)}`
+    );
+
+    // --- Measure paragraph heights with offscreen div ---
     const measureDiv = document.createElement("div");
     measureDiv.style.cssText = `
-      position: absolute;
-      top: -99999px;
-      left: -99999px;
-      width: ${textWidthPx}px;
+      position: absolute; top: -99999px; left: -99999px;
+      width: ${textWidth}px;
       font-family: "Docs-Roboto", Roboto, Arial, sans-serif;
       font-size: 10.5pt;
       line-height: 1.35;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
+      word-wrap: break-word; overflow-wrap: break-word;
       white-space: pre-wrap;
-      visibility: hidden;
-      padding: 0;
-      margin: 0;
-      border: none;
+      visibility: hidden; padding: 0; margin: 0; border: none;
     `;
     document.body.appendChild(measureDiv);
 
-    // --- Measure each paragraph's rendered height ---
     const paragraphs = fullText.split("\n");
     const paraMap = [];
     let charOffset = 0;
@@ -483,129 +507,93 @@
       const paraEnd = charOffset + para.length;
 
       if (para.trim().length === 0) {
-        paraMap.push({
-          startChar: paraStart,
-          endChar: paraEnd,
-          measuredHeight: 0,
-          isEmpty: true,
-        });
+        paraMap.push({ startChar: paraStart, endChar: paraEnd, measuredHeight: 0, isEmpty: true });
       } else {
         measureDiv.textContent = para;
-        const measuredHeight = measureDiv.offsetHeight;
-        paraMap.push({
-          startChar: paraStart,
-          endChar: paraEnd,
-          measuredHeight,
-          isEmpty: false,
-        });
+        const h = measureDiv.offsetHeight;
+        paraMap.push({ startChar: paraStart, endChar: paraEnd, measuredHeight: h, isEmpty: false });
       }
-      charOffset += para.length + 1; // +1 for \n
+      charOffset += para.length + 1;
     }
     document.body.removeChild(measureDiv);
 
-    // --- Calculate layout with scaling ---
-    const totalMeasuredHeight = paraMap.reduce((s, p) => s + p.measuredHeight, 0);
-    const nonEmptyParas = paraMap.filter((p) => !p.isEmpty);
-    const emptyParas = paraMap.filter((p) => p.isEmpty);
+    // --- Map measured heights to actual page text area ---
+    const totalMeasured = paraMap.reduce((s, p) => s + p.measuredHeight, 0);
+    const nonEmpty = paraMap.filter((p) => !p.isEmpty);
+    const emptyCount = paraMap.filter((p) => p.isEmpty).length;
 
-    // Google Docs page geometry:
-    // The tile manager height IS the page height (including margins).
-    // Standard letter: 11" = 1056px. Top margin 1" = 96px, bottom margin 1" = 96px.
-    // Content area = 1056 - 96 - 96 = 864px.
-    // Google Docs default paragraph spacing: 0pt before, 8pt after = ~10.67px
-    // Empty paragraph height: ~1 line = ~19px
-    const topMargin = Math.round(effectivePageWidth * 0.1176); // 1" margin ≈ same as left
-    const bottomMargin = topMargin;
-    const emptyLineHeight = 19;
-    const paraGap = 11; // 8pt after-paragraph spacing
+    // Google Docs paragraph spacing: default is 0pt before, ~8pt after ≈ 10.67px at 96dpi
+    // Empty line: ~1 line height ≈ 18-19px at 96dpi
+    const lineH = Math.round(19 * dpiScale);
+    const paraSpacing = Math.round(11 * dpiScale);
 
-    const contentArea = tmRect.height - topMargin - bottomMargin;
-    const totalSpacing = nonEmptyParas.length * paraGap + emptyParas.length * emptyLineHeight;
-    const estimatedContentHeight = totalMeasuredHeight + totalSpacing;
+    // Total estimated content height
+    const totalEstimated = totalMeasured + emptyCount * lineH + nonEmpty.length * paraSpacing;
 
-    // Scale factor maps our measured layout to the actual page content area
-    const scale = contentArea > 0 && estimatedContentHeight > 0
-      ? contentArea / estimatedContentHeight
+    // Scale: map our estimated total to the actual available text height
+    const scale = textHeight > 0 && totalEstimated > 0
+      ? textHeight / totalEstimated
       : 1.0;
 
-    // --- Build Y position map ---
-    let y = topMargin;
+    // Build Y map — all positions relative to tile manager top
+    let y = textTop;
     for (let i = 0; i < paraMap.length; i++) {
       const p = paraMap[i];
       p.yStart = y;
       if (p.isEmpty) {
-        p.displayHeight = emptyLineHeight * scale;
+        p.displayHeight = lineH * scale;
         y += p.displayHeight;
       } else {
         p.displayHeight = p.measuredHeight * scale;
-        y += p.displayHeight + paraGap * scale;
+        y += p.displayHeight + paraSpacing * scale;
       }
     }
-
-    const totalContentEnd = y;
+    const contentEnd = y;
 
     console.log(
-      `EconGrader: Canvas layout — ${paragraphs.length} paras, ` +
-      `measured: ${Math.round(totalMeasuredHeight)}px, ` +
-      `contentArea: ${Math.round(contentArea)}px, ` +
-      `scale: ${scale.toFixed(3)}, ` +
-      `page: ${Math.round(effectivePageWidth)}×${Math.round(tmRect.height)}, ` +
-      `margins: L${marginLeftPx} T${topMargin} textW${textWidthPx}`
+      `EconGrader: Layout — ${paragraphs.length} paras, ` +
+      `totalMeasured:${Math.round(totalMeasured)} totalEstimated:${Math.round(totalEstimated)} ` +
+      `textHeight:${Math.round(textHeight)} scale:${scale.toFixed(3)} ` +
+      `contentEnd:${Math.round(contentEnd)} textBottom:${Math.round(textBottom)}`
     );
 
-    // --- Ensure tile manager accepts absolute children ---
+    // Ensure tile manager accepts absolute children
     if (tmStyle.position === "static") {
       tileManager.style.position = "relative";
     }
 
-    // --- Place highlights — highlight entire paragraph(s) where quote appears ---
+    // --- Place highlights ---
     highlights.forEach((highlight) => {
-      // Find the paragraph(s) that contain this highlight
+      // Find paragraph containing the highlight start
       let startPara = null;
-      let endPara = null;
       for (const p of paraMap) {
-        if (!startPara && highlight.start >= p.startChar && highlight.start < p.startChar + Math.max(p.endChar - p.startChar, 1)) {
+        if (highlight.start >= p.startChar && highlight.start <= p.endChar) {
           startPara = p;
-        }
-        if (highlight.end > p.startChar && highlight.end <= p.endChar + 1) {
-          endPara = p;
+          break;
         }
       }
-      // Fallback: search more flexibly
-      if (!startPara) {
-        for (const p of paraMap) {
-          if (highlight.start >= p.startChar && highlight.start <= p.endChar) {
-            startPara = p;
-            break;
-          }
-        }
-      }
-      if (!endPara) endPara = startPara;
       if (!startPara || startPara.isEmpty) return;
 
-      // Highlight the full paragraph(s) where the quote appears
-      // This ensures the highlight always aligns perfectly with text lines
-      const docY = startPara.yStart;
-      let highlightHeight;
-      if (startPara === endPara) {
-        highlightHeight = startPara.displayHeight;
-      } else {
-        // Spans multiple paragraphs: from start of first to end of last
-        highlightHeight = (endPara.yStart + endPara.displayHeight) - startPara.yStart;
+      // Find paragraph containing the highlight end
+      let endPara = startPara;
+      for (const p of paraMap) {
+        if (highlight.end >= p.startChar && highlight.end <= p.endChar) {
+          endPara = p;
+          break;
+        }
       }
 
-      // Safety: don't place highlights beyond the content area
-      if (docY + highlightHeight > totalContentEnd + 20) return;
-      highlightHeight = Math.max(16, highlightHeight);
+      // Use full paragraph height
+      const docY = startPara.yStart;
+      let highlightHeight = startPara === endPara
+        ? startPara.displayHeight
+        : (endPara.yStart + endPara.displayHeight) - startPara.yStart;
 
-      createCanvasOverlay(
-        marginLeftPx,
-        docY,
-        textWidthPx,
-        highlightHeight,
-        highlight,
-        tileManager
-      );
+      // Don't place beyond text area
+      if (docY > textBottom || docY + highlightHeight < textTop) return;
+      highlightHeight = Math.max(lineH * scale * 0.8, highlightHeight);
+
+      createCanvasOverlay(textLeft, docY, textWidth, highlightHeight, highlight, tileManager);
     });
 
     console.log(`EconGrader: Placed ${highlightOverlays.length} canvas highlight overlays`);
@@ -616,45 +604,44 @@
    * Uses a thin left-border accent bar style for clarity.
    */
   function createCanvasOverlay(left, top, textWidth, height, highlight, parentEl) {
-    // Style: left accent bar + tinted background over the text area
     const isEarned = highlight.type === "earned";
-    const accentColor = isEarned ? "rgba(52, 120, 108, 0.9)" : "rgba(180, 80, 80, 0.9)";
-    const bgColor = isEarned ? "rgba(74, 139, 127, 0.13)" : "rgba(191, 107, 107, 0.13)";
-    const bgHoverColor = isEarned ? "rgba(74, 139, 127, 0.22)" : "rgba(191, 107, 107, 0.22)";
 
-    // Background tint over the text area
-    const bgOverlay = document.createElement("div");
-    bgOverlay.style.cssText = `
+    // Colors — visible but not overpowering
+    const barColor = isEarned ? "#3A7D6E" : "#C45C5C";
+    const bgColor = isEarned ? "rgba(58, 125, 110, 0.10)" : "rgba(196, 92, 92, 0.10)";
+    const bgHover = isEarned ? "rgba(58, 125, 110, 0.18)" : "rgba(196, 92, 92, 0.18)";
+
+    // Single overlay: slim left accent bar + light background tint
+    const el = document.createElement("div");
+    el.style.cssText = `
       position: absolute;
-      left: ${left}px;
+      left: ${Math.round(left)}px;
       top: ${Math.round(top)}px;
-      width: ${textWidth}px;
+      width: ${Math.round(textWidth)}px;
       height: ${Math.round(height)}px;
       background: ${bgColor};
-      border-left: 4px solid ${accentColor};
-      border-radius: 3px;
+      border-left: 3px solid ${barColor};
+      border-radius: 2px;
       pointer-events: auto;
       cursor: pointer;
       z-index: 998;
       transition: background 0.15s ease;
+      box-sizing: border-box;
     `;
 
-    bgOverlay.className = `econgrader-overlay econgrader-overlay-${highlight.type}`;
-    bgOverlay.dataset.type = highlight.type;
-    bgOverlay.dataset.highlightData = JSON.stringify(highlight.data);
+    el.className = `econgrader-overlay econgrader-overlay-${highlight.type}`;
+    el.dataset.type = highlight.type;
+    el.dataset.highlightData = JSON.stringify(highlight.data);
 
-    // Hover: intensify background
-    bgOverlay.addEventListener("mouseenter", (e) => {
-      bgOverlay.style.background = bgHoverColor;
+    el.addEventListener("mouseenter", (e) => {
+      el.style.background = bgHover;
       showHighlightTooltip(e, highlight);
     });
-    bgOverlay.addEventListener("mouseleave", () => {
-      bgOverlay.style.background = bgColor;
+    el.addEventListener("mouseleave", () => {
+      el.style.background = bgColor;
       hideHighlightTooltip();
     });
-
-    // Click: notify side panel
-    bgOverlay.addEventListener("click", (e) => {
+    el.addEventListener("click", (e) => {
       e.stopPropagation();
       chrome.runtime.sendMessage({
         type: "HIGHLIGHT_CLICKED",
@@ -662,8 +649,8 @@
       });
     });
 
-    parentEl.appendChild(bgOverlay);
-    highlightOverlays.push(bgOverlay);
+    parentEl.appendChild(el);
+    highlightOverlays.push(el);
   }
 
   /**
