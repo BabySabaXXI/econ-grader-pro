@@ -1,10 +1,10 @@
 /**
  * EconGrader Chrome Extension — Side Panel Logic
- * Orchestrates grading flow, UI rendering, highlighting, and push-to-review.
+ * Auto-detects question from Google Doc. User only picks question type + optional diagram.
  */
 
 // =============================================
-// CONSTANTS (inline to avoid module issues in side panel)
+// CONSTANTS
 // =============================================
 
 const QUESTION_TYPE_OPTIONS = [
@@ -19,19 +19,27 @@ const QUESTION_TYPE_OPTIONS = [
 ];
 
 const LEVEL_DESCRIPTORS = { 1: "Limited", 2: "Basic", 3: "Sound", 4: "Good", 5: "Excellent" };
-
 const AO_LABELS = { ao1: "Knowledge", ao2: "Application", ao3: "Analysis", ao4: "Evaluation" };
-
 const LEVEL_BADGE_CLASSES = {
   5: "badge-level-5", 4: "badge-level-4", 3: "badge-level-3",
   2: "badge-level-2", 1: "badge-level-1",
 };
+
+// Question detection keywords — lines containing these are likely exam questions
+const QUESTION_KEYWORDS = [
+  "evaluate", "assess", "discuss", "explain", "define", "analyse", "analyze",
+  "to what extent", "with the help of", "examine", "consider", "outline",
+  "distinguish", "compare", "contrast", "justify", "calculate", "using a diagram",
+  "with reference to", "account for",
+];
 
 // =============================================
 // STATE
 // =============================================
 
 let currentEssayText = "";
+let currentFullText = "";
+let detectedQuestion = "";
 let currentDiagramInfo = "none";
 let currentDiagramBase64 = null;
 let gradingResult = null;
@@ -51,7 +59,7 @@ const $$ = (sel) => document.querySelectorAll(sel);
 document.addEventListener("DOMContentLoaded", () => {
   initQuestionTypeSelect();
   bindEvents();
-  checkAndShowSetup();
+  showView("input");
   extractDocContent();
 });
 
@@ -66,12 +74,73 @@ function initQuestionTypeSelect() {
 }
 
 // =============================================
-// SETUP / API CHECK
+// QUESTION AUTO-DETECTION
 // =============================================
 
-function checkAndShowSetup() {
-  // No API key setup needed — backend handles it on Vercel
-  showView("input");
+/**
+ * Detect the exam question from the document text.
+ * Strategy:
+ * 1. Look for lines containing question keywords (evaluate, assess, explain, etc.)
+ * 2. Look for lines ending with a question mark
+ * 3. Look for lines with mark indicators like (25 marks), [12]
+ * 4. Fall back to the first non-empty line
+ */
+function detectQuestion(fullText) {
+  if (!fullText) return "";
+
+  const lines = fullText.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+  if (lines.length === 0) return "";
+
+  // Strategy 1: Find lines with question keywords + question mark or marks indicator
+  for (const line of lines) {
+    const lower = line.toLowerCase();
+    const hasKeyword = QUESTION_KEYWORDS.some(kw => lower.includes(kw));
+    const hasQuestionMark = line.includes("?");
+    const hasMarksIndicator = /\(\d+\s*marks?\)|\[\d+\]/.test(lower);
+
+    if (hasKeyword && (hasQuestionMark || hasMarksIndicator)) {
+      return line;
+    }
+  }
+
+  // Strategy 2: Find lines with question keywords (even without ? or marks)
+  for (const line of lines) {
+    const lower = line.toLowerCase();
+    const hasKeyword = QUESTION_KEYWORDS.some(kw => lower.includes(kw));
+    if (hasKeyword && line.length > 20) {
+      return line;
+    }
+  }
+
+  // Strategy 3: Lines ending with question mark
+  for (const line of lines) {
+    if (line.endsWith("?") && line.length > 15) {
+      return line;
+    }
+  }
+
+  // Strategy 4: Lines with mark indicators
+  for (const line of lines) {
+    if (/\(\d+\s*marks?\)|\[\d+\]/.test(line.toLowerCase())) {
+      return line;
+    }
+  }
+
+  // Strategy 5: First line (often the question/title)
+  return lines[0];
+}
+
+/**
+ * Extract the essay body (everything after the detected question line).
+ */
+function extractEssayBody(fullText, questionLine) {
+  if (!questionLine || !fullText) return fullText;
+
+  const idx = fullText.indexOf(questionLine);
+  if (idx === -1) return fullText;
+
+  const afterQuestion = fullText.substring(idx + questionLine.length).trim();
+  return afterQuestion || fullText;
 }
 
 // =============================================
@@ -80,20 +149,16 @@ function checkAndShowSetup() {
 
 function bindEvents() {
   // Settings modal
-  $("#settings-btn").addEventListener("click", () => showModal("settings-modal"));
+  $("#settings-btn").addEventListener("click", openSettings);
   $("#settings-close-btn").addEventListener("click", () => hideModal("settings-modal"));
   $("#settings-save-btn").addEventListener("click", saveSettings);
   $("#settings-cancel-btn").addEventListener("click", () => hideModal("settings-modal"));
 
-  // Grade button enable/disable
-  $("#input-question").addEventListener("input", updateGradeButton);
+  // Question type enables grade button
   $("#input-question-type").addEventListener("change", updateGradeButton);
 
   // Grade button
   $("#grade-btn").addEventListener("click", startGrading);
-
-  // Essay preview toggle
-  $("#essay-preview-toggle").addEventListener("click", toggleEssayPreview);
 
   // Diagram upload
   $("#diagram-upload").addEventListener("change", handleDiagramUpload);
@@ -127,24 +192,57 @@ function bindEvents() {
 // DOC CONTENT EXTRACTION
 // =============================================
 
+let extractRetryCount = 0;
+const MAX_EXTRACT_RETRIES = 8;
+
 function extractDocContent() {
+  $("#doc-word-count").textContent = extractRetryCount > 0 ? `Retrying (${extractRetryCount})...` : "Reading...";
+
   chrome.runtime.sendMessage({ type: "EXTRACT_DOC_TEXT" }, (response) => {
     if (chrome.runtime.lastError || !response) {
+      // Retry a few times — content script or background might not be ready
+      if (extractRetryCount < MAX_EXTRACT_RETRIES) {
+        extractRetryCount++;
+        setTimeout(extractDocContent, 2000);
+        return;
+      }
       $("#doc-word-count").textContent = "Unable to read";
+      $("#doc-question-status").textContent = "Unable to detect";
+      $("#doc-question-status").style.color = "#BF6B6B";
       $("#doc-diagram-status").textContent = "Unknown";
       return;
     }
 
+    // If we got a response but no text, retry with increasing delay
+    if ((!response.text || response.text.length < 5) && extractRetryCount < MAX_EXTRACT_RETRIES) {
+      extractRetryCount++;
+      const delay = Math.min(2000 + extractRetryCount * 500, 5000);
+      setTimeout(extractDocContent, delay);
+      return;
+    }
+
     const { text, diagrams } = response;
-    currentEssayText = text || "";
+    const fullText = text || "";
+    currentFullText = fullText;
+
+    // Detect question from document
+    detectedQuestion = detectQuestion(fullText);
+
+    // Extract essay body (text after the question)
+    currentEssayText = extractEssayBody(fullText, detectedQuestion);
 
     const wordCount = currentEssayText.split(/\s+/).filter(Boolean).length;
     $("#doc-word-count").textContent = `${wordCount} words`;
 
-    // Show essay preview
-    if (currentEssayText) {
-      $("#essay-preview").style.display = "block";
-      $("#essay-preview-content").textContent = currentEssayText;
+    // Show detected question
+    if (detectedQuestion) {
+      $("#doc-question-status").textContent = "Detected";
+      $("#doc-question-status").style.color = "#3A7266";
+      $("#question-preview").style.display = "block";
+      $("#question-preview-text").textContent = detectedQuestion;
+    } else {
+      $("#doc-question-status").textContent = "Not found";
+      $("#doc-question-status").style.color = "#BF6B6B";
     }
 
     // Diagram detection
@@ -157,7 +255,6 @@ function extractDocContent() {
       currentDiagramInfo = "none";
       $("#doc-diagram-status").textContent = "Not detected";
       $("#doc-diagram-status").style.color = "#BF6B6B";
-      // Show upload banner for question types that typically need diagrams
       $("#diagram-banner").style.display = "flex";
     }
 
@@ -178,7 +275,6 @@ function handleDiagramUpload(e) {
     currentDiagramBase64 = ev.target.result;
     currentDiagramInfo = "uploaded";
 
-    // Show preview
     $("#diagram-preview").style.display = "block";
     $("#diagram-preview-img").src = currentDiagramBase64;
     $("#diagram-banner").style.display = "none";
@@ -203,17 +299,16 @@ function removeDiagram() {
 // =============================================
 
 function updateGradeButton() {
-  const question = $("#input-question").value.trim();
   const questionType = $("#input-question-type").value;
   const hasText = currentEssayText.length > 0;
-  $("#grade-btn").disabled = !question || !questionType || !hasText;
+  const hasQuestion = detectedQuestion.length > 0;
+  $("#grade-btn").disabled = !questionType || !hasText || !hasQuestion;
 }
 
 async function startGrading() {
-  const question = $("#input-question").value.trim();
   const questionType = $("#input-question-type").value;
 
-  if (!question || !questionType || !currentEssayText) return;
+  if (!questionType || !currentEssayText || !detectedQuestion) return;
 
   showView("loading");
   animateLoadingSteps();
@@ -224,7 +319,7 @@ async function startGrading() {
         type: "GRADE_ESSAY",
         payload: {
           essay: currentEssayText,
-          question,
+          question: detectedQuestion,
           questionType,
           diagramInfo: currentDiagramInfo,
           diagramBase64: currentDiagramBase64,
@@ -260,7 +355,6 @@ function animateLoadingSteps() {
 
   steps.forEach((id, i) => {
     setTimeout(() => {
-      // Mark previous as done
       if (i > 0) {
         $(`#${steps[i - 1]}`).classList.remove("active");
         $(`#${steps[i - 1]}`).classList.add("done");
@@ -286,19 +380,17 @@ async function applyHighlightsToDoc() {
 
   chrome.runtime.sendMessage({
     type: "APPLY_HIGHLIGHTS",
-    payload: { marksEarned, marksLost },
+    payload: { marksEarned, marksLost, fullText: currentFullText },
   });
 }
 
 function setHighlightMode(mode) {
   highlightMode = mode;
 
-  // Update button states
   $$(".highlight-btn").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.mode === mode);
   });
 
-  // Re-apply highlights
   if (mode === "none") {
     chrome.runtime.sendMessage({ type: "CLEAR_HIGHLIGHTS" });
   } else {
@@ -307,7 +399,6 @@ function setHighlightMode(mode) {
 }
 
 function showHighlightDetail(type, data) {
-  // Scroll to and expand the matching feedback item
   const prefix = type === "earned" ? "earned" : "lost";
   const items = $$(`.feedback-item-${prefix}`);
 
@@ -339,13 +430,12 @@ function renderResults(result) {
   levelEl.className = `badge ${LEVEL_BADGE_CLASSES[level] || "badge-level"}`;
 
   // Animate score ring
-  const circumference = 2 * Math.PI * 52; // r=52
+  const circumference = 2 * Math.PI * 52;
   const offset = circumference - (result.overallPercentage / 100) * circumference;
   const ring = $("#score-ring");
   ring.style.strokeDasharray = circumference;
   setTimeout(() => { ring.style.strokeDashoffset = offset; }, 100);
 
-  // Color the ring based on level
   const ringColors = { 5: "#3A7266", 4: "#3B6FAE", 3: "#B89A5C", 2: "#B89A5C", 1: "#BF6B6B" };
   ring.setAttribute("stroke", ringColors[level] || "#3B6FAE");
 
@@ -383,7 +473,7 @@ function renderAOBars(scores, markScheme) {
   ["ao1", "ao2", "ao3", "ao4"].forEach((ao) => {
     const score = scores[ao] || 0;
     const max = markScheme[ao] || 0;
-    if (max === 0) return; // Skip AOs with 0 marks (e.g., define-4 has no ao2/3/4)
+    if (max === 0) return;
 
     const pct = max > 0 ? (score / max) * 100 : 0;
 
@@ -399,7 +489,6 @@ function renderAOBars(scores, markScheme) {
     `;
     container.appendChild(bar);
 
-    // Animate after DOM insertion
     requestAnimationFrame(() => {
       bar.querySelector(".ao-bar-fill").style.width = `${pct}%`;
     });
@@ -410,7 +499,7 @@ function renderFeedbackList(containerId, items, type) {
   const container = $(`#${containerId}`);
   container.innerHTML = "";
 
-  items.forEach((item, idx) => {
+  items.forEach((item) => {
     const el = document.createElement("div");
     el.className = `feedback-item feedback-item-${type}`;
     el.dataset.quote = item.quote || "";
@@ -580,12 +669,22 @@ function copyFeedbackToClipboard() {
 // SETTINGS
 // =============================================
 
+function openSettings() {
+  // Load current API URL into the field
+  chrome.runtime.sendMessage({ type: "GET_API_BASE" }, (resp) => {
+    if (resp && resp.apiBase) {
+      $("#settings-api-url").value = resp.apiBase;
+    }
+  });
+  showModal("settings-modal");
+}
+
 function saveSettings() {
-  const apiBase = $("#settings-api-key").value.trim();
-  if (apiBase) {
+  const apiUrl = $("#settings-api-url").value.trim();
+  if (apiUrl) {
     chrome.runtime.sendMessage({
       type: "SET_API_BASE",
-      payload: apiBase,
+      payload: apiUrl,
     }, () => {
       showToast("Settings saved", "success");
       hideModal("settings-modal");
@@ -612,33 +711,17 @@ function hideModal(id) {
   $(`#${id}`).style.display = "none";
 }
 
-function toggleEssayPreview() {
-  const content = $("#essay-preview-content");
-  const btn = $("#essay-preview-toggle");
-  if (content.style.display === "none") {
-    content.style.display = "block";
-    btn.textContent = "Hide";
-  } else {
-    content.style.display = "none";
-    btn.textContent = "Show";
-  }
-}
-
 function gradeAgain() {
-  // Clear highlights from doc
   chrome.runtime.sendMessage({ type: "CLEAR_HIGHLIGHTS" });
 
-  // Reset state
   gradingResult = null;
   highlightMode = "all";
 
-  // Reset loading step animations
   ["step-extract", "step-analyse", "step-grade", "step-highlight"].forEach((id) => {
     const el = $(`#${id}`);
     el.classList.remove("active", "done");
   });
 
-  // Re-extract doc content (might have changed)
   extractDocContent();
   showView("input");
 }

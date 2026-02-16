@@ -2,6 +2,10 @@
  * EconGrader Chrome Extension — Content Script
  * Injected into Google Docs pages.
  * Handles: text extraction, diagram detection, and highlight overlays.
+ * Supports both DOM-based and canvas-based Google Docs rendering.
+ *
+ * Canvas mode: When Google Docs renders via canvas (no DOM text nodes),
+ * the background script handles text extraction via the export API.
  */
 
 (function () {
@@ -12,60 +16,166 @@
   // =============================================
   let activeHighlights = [];
   let highlightOverlays = [];
-  let observer = null;
   let scrollHandler = null;
   let resizeHandler = null;
+  let isCanvasMode = false;
 
   // =============================================
   // TEXT EXTRACTION FROM GOOGLE DOCS
   // =============================================
 
   /**
-   * Extract all text from Google Docs DOM.
-   * Google Docs renders text in .kix-lineview elements containing
-   * .kix-wordhtmlgenerator-word-node spans.
+   * Detect if Google Docs is in canvas rendering mode.
+   */
+  function detectCanvasMode() {
+    const hasWordNodes = document.querySelectorAll(".kix-wordhtmlgenerator-word-node").length > 0;
+    const hasLineViews = document.querySelectorAll(".kix-lineview").length > 0;
+    const hasCanvasTiles = document.querySelectorAll(".kix-canvas-tile-content").length > 0;
+    isCanvasMode = !hasWordNodes && !hasLineViews && hasCanvasTiles;
+    return isCanvasMode;
+  }
+
+  /**
+   * Extract all text from Google Docs.
+   * Tries DOM-based methods first, then falls back to parsing
+   * DOCS_modelChunk script tags (works for canvas-mode Google Docs).
    */
   function extractDocText() {
-    // Method 1: Try kix word nodes (standard Google Docs rendering)
-    const wordNodes = document.querySelectorAll(".kix-wordhtmlgenerator-word-node");
-    if (wordNodes.length > 0) {
-      let text = "";
-      let lastLineView = null;
+    let text = "";
 
-      wordNodes.forEach((node) => {
-        const lineView = node.closest(".kix-lineview");
-        if (lineView && lineView !== lastLineView) {
-          if (lastLineView !== null) text += "\n";
-          lastLineView = lineView;
+    // Method 1: kix word nodes (classic Google Docs rendering)
+    text = extractViaWordNodes();
+    if (text.length > 10) return text;
+
+    // Method 2: Line views
+    text = extractViaLineViews();
+    if (text.length > 10) return text;
+
+    // Method 3: Page content wrappers
+    text = extractViaPageContent();
+    if (text.length > 10) return text;
+
+    // Method 4: Broad selectors (contenteditable, etc.)
+    text = extractViaBroadSelectors();
+    if (text.length > 10) return text;
+
+    // Method 5: Parse DOCS_modelChunk script tags (canvas mode fallback)
+    text = extractViaModelChunks();
+    if (text.length > 10) return text;
+
+    return "";
+  }
+
+  /**
+   * Parse DOCS_modelChunk / DOCS_modelData script tags embedded in the page.
+   * Google Docs stores the document model as encoded data in <script> tags.
+   * This works even when the doc renders via canvas with no DOM text nodes.
+   */
+  function extractViaModelChunks() {
+    try {
+      const scripts = document.querySelectorAll("script");
+      let modelData = "";
+
+      for (const script of scripts) {
+        const content = script.textContent || "";
+        if (
+          content.includes("DOCS_modelChunk") ||
+          content.includes("DOCS_modelData") ||
+          content.includes("kix-model")
+        ) {
+          modelData += content + "\n";
         }
-        text += node.textContent;
-      });
+      }
 
-      return text.trim();
+      if (!modelData) return "";
+
+      // Extract "s":"..." string values from the model data
+      const strings = [];
+      const sPattern = /"s":"((?:[^"\\]|\\.)*)"/g;
+      let match;
+      while ((match = sPattern.exec(modelData)) !== null) {
+        const decoded = match[1]
+          .replace(/\\n/g, "\n")
+          .replace(/\\t/g, "\t")
+          .replace(/\\"/g, '"')
+          .replace(/\\\\/g, "\\")
+          .replace(/\\u000b/g, "\n")
+          .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) =>
+            String.fromCharCode(parseInt(hex, 16))
+          );
+        if (decoded.trim().length > 0) {
+          strings.push(decoded);
+        }
+      }
+
+      if (strings.length > 0) {
+        const text = strings.join("").trim();
+        if (text.length > 10) {
+          console.log("EconGrader: Extracted", text.length, "chars via DOCS_modelChunk");
+          return text;
+        }
+      }
+
+      return "";
+    } catch (e) {
+      console.debug("EconGrader: Model chunk parsing failed:", e);
+      return "";
     }
+  }
 
-    // Method 2: Try line views directly
+  function extractViaWordNodes() {
+    const wordNodes = document.querySelectorAll(".kix-wordhtmlgenerator-word-node");
+    if (wordNodes.length === 0) return "";
+
+    let text = "";
+    let lastLineView = null;
+
+    wordNodes.forEach((node) => {
+      const lineView = node.closest(".kix-lineview");
+      if (lineView && lineView !== lastLineView) {
+        if (lastLineView !== null) text += "\n";
+        lastLineView = lineView;
+      }
+      text += node.textContent;
+    });
+
+    return text.trim();
+  }
+
+  function extractViaLineViews() {
     const lineViews = document.querySelectorAll(".kix-lineview");
-    if (lineViews.length > 0) {
-      return Array.from(lineViews)
-        .map((lv) => lv.textContent)
-        .join("\n")
-        .trim();
-    }
+    if (lineViews.length === 0) return "";
 
-    // Method 3: Try the content wrapper
-    const contentWrapper = document.querySelector(".kix-appview-editor");
-    if (contentWrapper) {
-      return contentWrapper.textContent.trim();
-    }
+    return Array.from(lineViews)
+      .map((lv) => lv.textContent)
+      .join("\n")
+      .trim();
+  }
 
-    // Method 4: Try pages
+  function extractViaPageContent() {
     const pages = document.querySelectorAll(".kix-page-content-wrapper");
-    if (pages.length > 0) {
-      return Array.from(pages)
-        .map((p) => p.textContent)
-        .join("\n\n")
-        .trim();
+    if (pages.length === 0) return "";
+
+    return Array.from(pages)
+      .map((p) => p.textContent)
+      .join("\n\n")
+      .trim();
+  }
+
+  function extractViaBroadSelectors() {
+    const editorSelectors = [
+      ".docs-editor-container",
+      ".kix-paginateddocumentplugin",
+      '[contenteditable="true"]',
+      ".doc-content",
+    ];
+
+    for (const selector of editorSelectors) {
+      const el = document.querySelector(selector);
+      if (el) {
+        const text = el.innerText || el.textContent || "";
+        if (text.trim().length > 50) return text.trim();
+      }
     }
 
     return "";
@@ -73,33 +183,49 @@
 
   /**
    * Build a map of text positions to DOM nodes for highlighting.
-   * Returns an array of { node, text, globalStart, globalEnd } entries.
    */
   function buildTextNodeMap() {
     const entries = [];
+
     const wordNodes = document.querySelectorAll(".kix-wordhtmlgenerator-word-node");
+    if (wordNodes.length > 0) {
+      let globalPos = 0;
+      let lastLineView = null;
 
-    if (wordNodes.length === 0) return entries;
+      wordNodes.forEach((node) => {
+        const lineView = node.closest(".kix-lineview");
+        if (lineView && lineView !== lastLineView) {
+          if (lastLineView !== null) globalPos++;
+          lastLineView = lineView;
+        }
 
-    let globalPos = 0;
-    let lastLineView = null;
-
-    wordNodes.forEach((node) => {
-      const lineView = node.closest(".kix-lineview");
-      if (lineView && lineView !== lastLineView) {
-        if (lastLineView !== null) globalPos++; // \n
-        lastLineView = lineView;
-      }
-
-      const text = node.textContent;
-      entries.push({
-        node,
-        text,
-        globalStart: globalPos,
-        globalEnd: globalPos + text.length,
+        const text = node.textContent;
+        entries.push({
+          node,
+          text,
+          globalStart: globalPos,
+          globalEnd: globalPos + text.length,
+        });
+        globalPos += text.length;
       });
-      globalPos += text.length;
-    });
+
+      return entries;
+    }
+
+    const lineViews = document.querySelectorAll(".kix-lineview");
+    if (lineViews.length > 0) {
+      let globalPos = 0;
+      lineViews.forEach((lv) => {
+        const text = lv.textContent;
+        entries.push({
+          node: lv,
+          text,
+          globalStart: globalPos,
+          globalEnd: globalPos + text.length,
+        });
+        globalPos += text.length + 1;
+      });
+    }
 
     return entries;
   }
@@ -108,11 +234,6 @@
   // DIAGRAM DETECTION
   // =============================================
 
-  /**
-   * Detect if the Google Doc contains any diagrams/images.
-   * Google Docs embeds images in .kix-embeddedobjectview elements,
-   * or as inline images within drawing elements.
-   */
   function detectDiagrams() {
     const results = {
       found: false,
@@ -121,7 +242,6 @@
       images: [],
     };
 
-    // Check for embedded objects (images, charts, drawings)
     const embeddedObjects = document.querySelectorAll(".kix-embeddedobjectview");
     if (embeddedObjects.length > 0) {
       results.found = true;
@@ -129,7 +249,6 @@
       results.types.push("embedded-object");
     }
 
-    // Check for inline images
     const inlineImages = document.querySelectorAll(
       '.kix-page img:not([src*="docs.google.com/static"]):not([src*="ssl.gstatic.com"])'
     );
@@ -142,23 +261,11 @@
       }
     });
 
-    // Check for Google Drawing elements
     const drawings = document.querySelectorAll(".kix-drawingview");
     if (drawings.length > 0) {
       results.found = true;
       results.count += drawings.length;
       results.types.push("drawing");
-    }
-
-    // Check text content for diagram references
-    const text = extractDocText().toLowerCase();
-    const diagramKeywords = [
-      "diagram", "figure", "fig.", "graph", "chart", "curve",
-      "see above", "see below", "as shown", "illustrated",
-    ];
-    const hasTextReference = diagramKeywords.some((kw) => text.includes(kw));
-    if (hasTextReference) {
-      results.textReferencesFound = true;
     }
 
     return results;
@@ -168,9 +275,6 @@
   // HIGHLIGHT OVERLAY SYSTEM
   // =============================================
 
-  /**
-   * Create the overlay container for highlights.
-   */
   function getOrCreateOverlayContainer() {
     let container = document.getElementById("econgrader-highlight-container");
     if (!container) {
@@ -179,7 +283,6 @@
       container.style.cssText =
         "position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999;";
 
-      // Insert into the editor area
       const editor =
         document.querySelector(".kix-appview-editor") ||
         document.querySelector(".docs-editor-container") ||
@@ -190,9 +293,6 @@
     return container;
   }
 
-  /**
-   * Find text positions in the DOM and create overlay rectangles.
-   */
   function applyHighlightsToDoc(marksEarned, marksLost) {
     clearHighlightsFromDoc();
 
@@ -202,9 +302,7 @@
     const fullText = extractDocText();
     const fullTextLower = fullText.toLowerCase();
     const container = getOrCreateOverlayContainer();
-    const editorRect = container.parentElement.getBoundingClientRect();
 
-    // Find all highlight positions
     const highlights = [];
 
     marksEarned.forEach((mark) => {
@@ -237,7 +335,6 @@
       }
     });
 
-    // Sort and remove overlaps
     highlights.sort((a, b) => a.start - b.start);
     const nonOverlapping = [];
     let lastEnd = 0;
@@ -248,9 +345,7 @@
       }
     }
 
-    // Create overlay elements for each highlight
     nonOverlapping.forEach((highlight) => {
-      // Find the DOM nodes that contain this text range
       const ranges = findDOMRangesForTextRange(textNodeMap, highlight.start, highlight.end);
 
       ranges.forEach((rangeInfo) => {
@@ -310,32 +405,22 @@
               });
             });
 
-            overlay.addEventListener("mouseenter", () => {
-              overlay.style.opacity = "0.8";
-            });
-            overlay.addEventListener("mouseleave", () => {
-              overlay.style.opacity = "1";
-            });
+            overlay.addEventListener("mouseenter", () => { overlay.style.opacity = "0.8"; });
+            overlay.addEventListener("mouseleave", () => { overlay.style.opacity = "1"; });
 
             document.body.appendChild(overlay);
             highlightOverlays.push(overlay);
           }
         } catch (e) {
-          // Skip this range if DOM manipulation fails
           console.debug("EconGrader: Skipping highlight range", e);
         }
       });
     });
 
     activeHighlights = nonOverlapping;
-
-    // Set up scroll/resize handlers to reposition overlays
     setupRepositionHandlers(marksEarned, marksLost);
   }
 
-  /**
-   * Find DOM ranges that correspond to a text range in the full document.
-   */
   function findDOMRangesForTextRange(textNodeMap, start, end) {
     const ranges = [];
     for (const entry of textNodeMap) {
@@ -350,28 +435,16 @@
     return ranges;
   }
 
-  /**
-   * Find the first text node within an element.
-   */
   function findTextNodeInElement(element) {
-    const walker = document.createTreeWalker(
-      element,
-      NodeFilter.SHOW_TEXT,
-      null,
-      false
-    );
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
     return walker.nextNode();
   }
 
-  /**
-   * Clear all highlight overlays from the document.
-   */
   function clearHighlightsFromDoc() {
     highlightOverlays.forEach((el) => el.remove());
     highlightOverlays = [];
     activeHighlights = [];
 
-    // Clean up handlers
     if (scrollHandler) {
       document.removeEventListener("scroll", scrollHandler, true);
       scrollHandler = null;
@@ -382,16 +455,11 @@
     }
   }
 
-  /**
-   * Set up handlers to reposition overlays on scroll/resize.
-   * Uses debouncing to avoid performance issues.
-   */
   function setupRepositionHandlers(marksEarned, marksLost) {
     let timeout;
     const reposition = () => {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
-        // Re-apply highlights (they use fixed positioning based on client rects)
         clearHighlightsFromDoc();
         applyHighlightsToDoc(marksEarned, marksLost);
       }, 150);
@@ -439,9 +507,23 @@
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.type) {
       case "EXTRACT_TEXT": {
+        // Try DOM-based extraction
         const text = extractDocText();
         const diagrams = detectDiagrams();
-        sendResponse({ text, diagrams });
+
+        if (text.length > 10) {
+          // DOM extraction succeeded (classic mode)
+          sendResponse({ text, diagrams });
+        } else {
+          // DOM extraction failed — signal that export API should be used
+          // Return the current URL so background can use export API
+          sendResponse({
+            text: "",
+            diagrams,
+            canvasMode: true,
+            docUrl: window.location.href,
+          });
+        }
         break;
       }
 
@@ -474,18 +556,21 @@
   // INITIALIZE
   // =============================================
 
-  // Wait for Google Docs to fully render, then inject FAB
   function init() {
     const checkReady = setInterval(() => {
-      const editor = document.querySelector(".kix-appview-editor");
-      if (editor) {
+      const classicEditor = document.querySelector(".kix-appview-editor");
+      const canvasEditor = document.querySelector(".docs-editor-container");
+      const anyEditor = classicEditor || canvasEditor;
+
+      if (anyEditor) {
         clearInterval(checkReady);
+        detectCanvasMode();
         injectFAB();
-        console.log("EconGrader: Content script initialized");
+        console.log("EconGrader: Content script initialized (mode: " +
+          (isCanvasMode ? "canvas" : "classic") + ")");
       }
     }, 500);
 
-    // Give up after 30 seconds
     setTimeout(() => clearInterval(checkReady), 30000);
   }
 
