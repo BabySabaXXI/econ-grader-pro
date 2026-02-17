@@ -25,6 +25,12 @@
       "run_at": "document_idle"
     }
   ],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/sidepanel.html", "src/sidepanel.css", "src/sidepanel.js", "src/lib/constants.js"],
+      "matches": ["https://docs.google.com/*"]
+    }
+  ],
   "action": {
     "default_popup": "src/popup.html",
     "default_icon": {

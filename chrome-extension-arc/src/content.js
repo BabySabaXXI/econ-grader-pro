@@ -832,12 +832,17 @@
   }
 
   // =============================================
-  // FLOATING ACTION BUTTON
+  // IN-PAGE PANEL (Arc / Chromium — no sidePanel API)
   // =============================================
+
+  let panelOpen = false;
+  let panelIframe = null;
+  let panelContainer = null;
 
   function injectFAB() {
     if (document.getElementById("econgrader-fab")) return;
 
+    // --- FAB toggle button ---
     const fab = document.createElement("div");
     fab.id = "econgrader-fab";
     fab.innerHTML = `
@@ -855,8 +860,73 @@
     document.body.appendChild(fab);
 
     document.getElementById("econgrader-fab-btn").addEventListener("click", () => {
-      chrome.runtime.sendMessage({ type: "OPEN_SIDE_PANEL" });
+      togglePanel();
     });
+
+    // --- Panel container (fixed sidebar iframe) ---
+    panelContainer = document.createElement("div");
+    panelContainer.id = "econgrader-panel-container";
+    panelContainer.style.cssText = `
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 390px;
+      height: 100vh;
+      z-index: 100000;
+      box-shadow: -4px 0 24px rgba(0,0,0,0.15);
+      background: #F8F9FB;
+      display: none;
+      flex-direction: column;
+      border-left: 1px solid #DDE2EB;
+    `;
+
+    // Close button bar at top
+    const closeBar = document.createElement("div");
+    closeBar.style.cssText = `
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 4px 8px;
+      background: #F0F2F6;
+      border-bottom: 1px solid #DDE2EB;
+      flex-shrink: 0;
+    `;
+    const closeBtn = document.createElement("button");
+    closeBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+    closeBtn.style.cssText = `
+      background: none; border: none; cursor: pointer; padding: 4px;
+      color: #5A6478; border-radius: 4px; display: flex; align-items: center;
+    `;
+    closeBtn.title = "Close EconGrader panel";
+    closeBtn.addEventListener("click", () => togglePanel());
+    closeBar.appendChild(closeBtn);
+    panelContainer.appendChild(closeBar);
+
+    // Iframe loading the sidepanel.html
+    panelIframe = document.createElement("iframe");
+    panelIframe.id = "econgrader-panel-iframe";
+    panelIframe.src = chrome.runtime.getURL("src/sidepanel.html");
+    panelIframe.style.cssText = `
+      flex: 1;
+      width: 100%;
+      border: none;
+      background: #F8F9FB;
+    `;
+    panelContainer.appendChild(panelIframe);
+    document.body.appendChild(panelContainer);
+  }
+
+  function togglePanel() {
+    panelOpen = !panelOpen;
+    if (panelContainer) {
+      panelContainer.style.display = panelOpen ? "flex" : "none";
+    }
+    // Update FAB appearance
+    const fabBtn = document.getElementById("econgrader-fab-btn");
+    if (fabBtn) {
+      const label = fabBtn.querySelector("span");
+      if (label) label.textContent = panelOpen ? "Close" : "Grade";
+    }
   }
 
   // =============================================
