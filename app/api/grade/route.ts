@@ -17,7 +17,7 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
   try {
     const body: GradeRequest = await request.json();
-    const { essay, question, questionType } = body;
+    const { essay, question, questionType, diagramInfo } = body;
 
     if (!essay || !question || !questionType) {
       return NextResponse.json(
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const prompt = buildGradingPrompt(essay, question, questionType, markScheme);
+    const prompt = buildGradingPrompt(essay, question, questionType, markScheme, diagramInfo || "none");
 
     // Call Anthropic API directly via fetch (no SDK dependency)
     const apiKey = process.env.ANTHROPIC_API_KEY;

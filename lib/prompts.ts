@@ -66,14 +66,26 @@ Mark allocation:
 - Minimal analysis
 - No meaningful evaluation
 
+## Diagram Marks & AO3 Scoring
+
+AO3 (Analysis) marks are split between **written analysis** and **diagram analysis**. For longer questions (8+ marks), typically 2-4 of the AO3 marks are specifically for diagram work (drawing, labelling, explaining the diagram). The remaining AO3 marks are for written chains of reasoning and cause-and-effect analysis in the essay text.
+
+**When grading AO3, you MUST separate these two components:**
+- **Written analysis marks**: Grade based on the quality of the essay's chains of reasoning, cause-and-effect explanations, and logical development. A strong essay with excellent written analysis should earn most of the written analysis marks regardless of whether a diagram is present.
+- **Diagram marks**: Only deduct these specific marks if no diagram is provided or the diagram is poor. Do NOT double-penalize by also lowering written analysis marks because of a missing diagram.
+
+**Be fair and encouraging**: If a student writes a strong essay with good chains of reasoning but no diagram, they should still score well on the written analysis portion of AO3. Mention the missing diagram as a specific, separate improvement point — do NOT let it drag down the overall tone or marks for the essay content itself.
+
 ## Your Task
 
-Grade the following essay and provide your assessment as JSON. Be constructive but honest - students benefit from accurate feedback.
+Grade the following essay and provide your assessment as JSON. Be constructive but honest - students benefit from accurate feedback. Focus your marksEarned and marksLost feedback primarily on the essay text quality. If a diagram is missing, note it once clearly in diagramFeedback and as one improvement item — do not repeatedly penalize for it across multiple feedback items.
 
 **Question:** {question}
 
 **Student's Essay:**
 {essay}
+
+{diagramNote}
 
 ## Required Response Format
 
@@ -100,6 +112,8 @@ You must respond with ONLY a valid JSON object in this exact format (no markdown
     "<third improvement if applicable>"
   ],
   "examinerComment": "<2-3 sentence overall assessment in the voice of an experienced examiner>",
+  "diagramPresent": <true|false>,
+  "diagramFeedback": "<feedback on diagram if found, suggestion for what diagram to include if missing, or null>",
   "marksEarned": [
     {
       "quote": "<exact short quote from the essay that earned marks>",
@@ -215,20 +229,31 @@ export function buildGradingPrompt(
   essay: string,
   question: string,
   questionType: string,
-  markScheme: { ao1: number; ao2: number; ao3: number; ao4: number; total: number }
+  markScheme: { ao1: number; ao2: number; ao3: number; ao4: number; total: number },
+  diagramInfo?: string
 ): string {
+  let diagramNote = "";
+  if (diagramInfo === "found") {
+    diagramNote = "**Note:** A diagram was detected in the student's document. Consider this when grading AO3 (Analysis) — proper diagram usage with correct labelling and integration should earn the diagram portion of AO3 marks.";
+  } else if (diagramInfo === "uploaded") {
+    diagramNote = "**Note:** The student has uploaded a diagram image separately. Consider this when grading AO3 (Analysis).";
+  } else {
+    diagramNote = `**Note:** No diagram was detected in the student's document.
+- Deduct only the DIAGRAM-SPECIFIC portion of AO3 marks (typically 2-4 marks depending on question weight), NOT the written analysis marks.
+- The student can still earn the remaining AO3 marks through strong written chains of reasoning.
+- Mention the missing diagram ONCE in diagramFeedback and as ONE improvement item. Do not repeatedly reference the missing diagram across multiple marksLost items.
+- Grade the essay text itself fairly on its own merit — a well-written essay without a diagram is NOT a bad essay.`;
+  }
+
   return GRADING_PROMPT.replace("{questionType}", questionType)
     .replace("{totalMarks}", markScheme.total.toString())
-    .replace("{ao1Max}", markScheme.ao1.toString())
-    .replace("{ao2Max}", markScheme.ao2.toString())
-    .replace("{ao3Max}", markScheme.ao3.toString())
-    .replace("{ao4Max}", markScheme.ao4.toString())
+    .replaceAll("{ao1Max}", markScheme.ao1.toString())
+    .replaceAll("{ao2Max}", markScheme.ao2.toString())
+    .replaceAll("{ao3Max}", markScheme.ao3.toString())
+    .replaceAll("{ao4Max}", markScheme.ao4.toString())
     .replace("{question}", question)
     .replace("{essay}", essay)
-    .replace("{ao1Max}", markScheme.ao1.toString())
-    .replace("{ao2Max}", markScheme.ao2.toString())
-    .replace("{ao3Max}", markScheme.ao3.toString())
-    .replace("{ao4Max}", markScheme.ao4.toString());
+    .replace("{diagramNote}", diagramNote);
 }
 
 export function buildPlannerPrompt(
