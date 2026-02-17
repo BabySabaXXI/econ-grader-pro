@@ -185,9 +185,13 @@ function bindEvents() {
     if (msg.type === "HIGHLIGHT_CLICKED") {
       showHighlightDetail(msg.payload.highlightType, msg.payload.data);
     }
-    // When the active tab changes or page reloads, reset the sidepanel
+    // When user navigates to / refreshes a Google Doc, reset and re-extract
     if (msg.type === "TAB_DOC_CHANGED") {
       resetSidepanel();
+    }
+    // When user switches to a non-Google-Docs tab, show waiting state
+    if (msg.type === "TAB_LEFT_DOC") {
+      showWaitingForDoc();
     }
   });
 }
@@ -783,6 +787,26 @@ function resetSidepanel() {
   setTimeout(() => {
     extractDocContent();
   }, 1000);
+}
+
+/**
+ * Show a "waiting for Google Doc" state when the user is on a non-doc tab.
+ * Clears highlights but preserves grading results so they aren't lost
+ * if the user switches back to the same doc.
+ */
+function showWaitingForDoc() {
+  // Clear highlights on the page (best effort)
+  chrome.runtime.sendMessage({ type: "CLEAR_HIGHLIGHTS" });
+
+  // Show the input view with a waiting message
+  showView("input");
+  $("#doc-word-count").textContent = "Waiting...";
+  $("#doc-question-status").textContent = "—";
+  $("#doc-question-status").style.color = "#7A8599";
+  $("#doc-diagram-status").textContent = "—";
+  $("#doc-diagram-status").style.color = "#7A8599";
+  $("#question-preview").style.display = "none";
+  $("#grade-btn").disabled = true;
 }
 
 // =============================================

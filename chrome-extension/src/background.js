@@ -45,15 +45,24 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 });
 
-// When user switches to a different tab, notify sidepanel to reset
+// When user switches to a different tab, notify sidepanel accordingly
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
   try {
     const tab = await chrome.tabs.get(activeInfo.tabId);
     const isGoogleDoc = tab.url && tab.url.includes("docs.google.com/document");
-    chrome.runtime.sendMessage({
-      type: "TAB_DOC_CHANGED",
-      payload: { tabId: activeInfo.tabId, url: tab.url || "", isGoogleDoc },
-    }).catch(() => {});
+
+    if (isGoogleDoc) {
+      // Switched TO a Google Doc — tell sidepanel to reset and re-extract
+      chrome.runtime.sendMessage({
+        type: "TAB_DOC_CHANGED",
+        payload: { tabId: activeInfo.tabId, url: tab.url },
+      }).catch(() => {});
+    } else {
+      // Switched AWAY from Google Docs — tell sidepanel to pause
+      chrome.runtime.sendMessage({
+        type: "TAB_LEFT_DOC",
+      }).catch(() => {});
+    }
   } catch (e) {
     // Tab might not exist
   }
