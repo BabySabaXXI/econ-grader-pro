@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EconGrader</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- HEADER -->
+    <header id="header">
+      <div class="header-brand">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        <span class="header-title">EconGrader</span>
+        <span class="header-badge">Docs</span>
+      </div>
+      <button id="settings-btn" class="icon-btn" title="Settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+        </svg>
+      </button>
+    </header>
+
+    <!-- INPUT VIEW -->
+    <div id="view-input" class="view">
+      <!-- Doc Status Bar -->
+      <div id="doc-status" class="doc-status">
+        <div class="doc-status-row">
+          <span class="doc-status-label">Document</span>
+          <span id="doc-word-count" class="doc-status-value">Scanning...</span>
+        </div>
+        <div class="doc-status-row">
+          <span class="doc-status-label">Question</span>
+          <span id="doc-question-status" class="doc-status-value">Detecting...</span>
+        </div>
+        <div class="doc-status-row">
+          <span class="doc-status-label">Diagram</span>
+          <span id="doc-diagram-status" class="doc-status-value">Scanning...</span>
+        </div>
+      </div>
+
+      <!-- Detected Question Preview -->
+      <div id="question-preview" class="question-preview" style="display:none;">
+        <div class="question-preview-header">
+          <span class="field-label">Detected Question</span>
+        </div>
+        <div id="question-preview-text" class="question-preview-text"></div>
+      </div>
+
+      <!-- Diagram Banner (shown if no diagram found) -->
+      <div id="diagram-banner" class="banner banner-warning" style="display:none;">
+        <div class="banner-content">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span>No diagram detected. Upload one for better AO3 marks.</span>
+        </div>
+        <label class="btn-sm btn-outline upload-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          Upload
+          <input type="file" id="diagram-upload" accept="image/*" style="display:none;">
+        </label>
+      </div>
+
+      <!-- Diagram Preview (shown after upload) -->
+      <div id="diagram-preview" class="diagram-preview" style="display:none;">
+        <div class="diagram-preview-header">
+          <span class="badge badge-success">Diagram uploaded</span>
+          <button id="diagram-remove-btn" class="icon-btn-sm" title="Remove diagram">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <img id="diagram-preview-img" alt="Uploaded diagram" />
+      </div>
+
+      <!-- Question Type -->
+      <div class="input-section">
+        <label class="field-label">Question Type</label>
+        <select id="input-question-type" class="field field-select">
+          <option value="" disabled selected>Select mark allocation...</option>
+        </select>
+      </div>
+
+      <!-- Grade Button -->
+      <button id="grade-btn" class="btn-primary btn-grade" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 11 12 14 22 4"></polyline>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+        </svg>
+        Grade This Essay
+      </button>
+    </div>
+
+    <!-- LOADING VIEW -->
+    <div id="view-loading" class="view" style="display:none;">
+      <div class="loading-container">
+        <div class="loading-spinner">
+          <div class="spinner-ring"></div>
+          <div class="spinner-ring"></div>
+          <div class="spinner-ring"></div>
+        </div>
+        <h3 class="loading-title">Grading your essay</h3>
+        <p class="loading-subtitle">Analysing against Edexcel mark scheme...</p>
+        <div class="loading-steps">
+          <div class="loading-step active" id="step-extract">
+            <span class="step-dot"></span>
+            <span>Extracting text</span>
+          </div>
+          <div class="loading-step" id="step-analyse">
+            <span class="step-dot"></span>
+            <span>Analysing content</span>
+          </div>
+          <div class="loading-step" id="step-grade">
+            <span class="step-dot"></span>
+            <span>Applying mark scheme</span>
+          </div>
+          <div class="loading-step" id="step-highlight">
+            <span class="step-dot"></span>
+            <span>Highlighting document</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS VIEW -->
+    <div id="view-results" class="view" style="display:none;">
+
+      <!-- Score Card -->
+      <div id="score-card" class="score-card">
+        <div class="score-main">
+          <div class="score-circle">
+            <svg viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="52" fill="none" stroke="#DDE2EB" stroke-width="8"/>
+              <circle id="score-ring" cx="60" cy="60" r="52" fill="none" stroke="#3B6FAE"
+                stroke-width="8" stroke-linecap="round" stroke-dasharray="326.7"
+                stroke-dashoffset="326.7" transform="rotate(-90 60 60)"/>
+            </svg>
+            <div class="score-text">
+              <span id="score-marks" class="score-number">0</span>
+              <span id="score-total" class="score-denom">/0</span>
+            </div>
+          </div>
+          <div class="score-meta">
+            <span id="score-percentage" class="score-pct">0%</span>
+            <span id="score-level" class="badge badge-level">Level --</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AO Breakdown -->
+      <div class="section">
+        <h3 class="section-title">Assessment Objectives</h3>
+        <div id="ao-bars" class="ao-bars"></div>
+      </div>
+
+      <!-- Diagram Feedback (if any) -->
+      <div id="diagram-feedback-section" class="section" style="display:none;">
+        <h3 class="section-title">Diagram Feedback</h3>
+        <div id="diagram-feedback-content" class="feedback-card"></div>
+      </div>
+
+      <!-- Highlight Controls -->
+      <div class="section">
+        <h3 class="section-title">Document Highlights</h3>
+        <div class="highlight-controls">
+          <button class="highlight-btn active" data-mode="all">All</button>
+          <button class="highlight-btn highlight-btn-earned" data-mode="earned">
+            <span class="highlight-dot dot-earned"></span>
+            Earned <span id="earned-count" class="count-badge">0</span>
+          </button>
+          <button class="highlight-btn highlight-btn-lost" data-mode="lost">
+            <span class="highlight-dot dot-lost"></span>
+            Issues <span id="lost-count" class="count-badge">0</span>
+          </button>
+          <button class="highlight-btn" data-mode="none">Off</button>
+        </div>
+      </div>
+
+      <!-- Examiner Comment -->
+      <div class="section">
+        <h3 class="section-title">Examiner Comment</h3>
+        <div id="examiner-comment" class="examiner-card"></div>
+      </div>
+
+      <!-- Marks Earned -->
+      <div class="section">
+        <h3 class="section-title section-title-earned">
+          <span class="section-dot dot-earned"></span>
+          Marks Earned
+        </h3>
+        <div id="marks-earned-list" class="feedback-list"></div>
+      </div>
+
+      <!-- Issues Found -->
+      <div class="section">
+        <h3 class="section-title section-title-lost">
+          <span class="section-dot dot-lost"></span>
+          Issues Found
+        </h3>
+        <div id="marks-lost-list" class="feedback-list"></div>
+      </div>
+
+      <!-- Strengths & Improvements -->
+      <div class="section">
+        <h3 class="section-title">Strengths</h3>
+        <ul id="strengths-list" class="bullet-list bullet-list-success"></ul>
+      </div>
+      <div class="section">
+        <h3 class="section-title">Areas for Improvement</h3>
+        <ul id="improvements-list" class="bullet-list bullet-list-warning"></ul>
+      </div>
+
+      <!-- Actions -->
+      <div class="results-actions">
+        <button id="btn-push-review" class="btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          Push to Review
+        </button>
+        <button id="btn-copy-feedback" class="btn-outline">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          Copy Feedback
+        </button>
+        <button id="btn-grade-again" class="btn-ghost">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          Grade Again
+        </button>
+      </div>
+    </div>
+
+    <!-- REVIEW MODAL -->
+    <div id="review-modal" class="modal-overlay" style="display:none;">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Push to Review</h3>
+          <button id="modal-close-btn" class="icon-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-description">Share this grading feedback with a teacher or reviewer.</p>
+
+          <div class="review-options">
+            <button id="review-copy-all" class="review-option">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <div>
+                <strong>Copy Full Report</strong>
+                <span>Copy formatted feedback to clipboard</span>
+              </div>
+            </button>
+
+            <button id="review-email" class="review-option">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              <div>
+                <strong>Email to Reviewer</strong>
+                <span>Open email client with feedback</span>
+              </div>
+            </button>
+
+            <button id="review-download" class="review-option">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <div>
+                <strong>Download Report</strong>
+                <span>Save as text file</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" class="modal-overlay" style="display:none;">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Settings</h3>
+          <button id="settings-close-btn" class="icon-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="input-section">
+            <label class="field-label">API Server URL</label>
+            <input type="text" id="settings-api-url" class="field" placeholder="https://econ-grader-pro.vercel.app" autocomplete="off">
+          </div>
+          <div class="modal-actions">
+            <button id="settings-save-btn" class="btn-primary">Save</button>
+            <button id="settings-cancel-btn" class="btn-ghost">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="toast" style="display:none;"></div>
+
+  </div>
+
+  <script src="sidepanel.js" type="module"></script>
+</body>
+</html>
